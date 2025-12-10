@@ -300,7 +300,7 @@ Example log output:
 
 ```
 [2025-12-10 14:23:15] Agent: billing-agent | Invocation: inv_abc123 | Session: sess_xyz789
-  State keys: [current_customer, last_transaction_id]
+State keys: [current_customer, last_transaction_id]
 [TOOL] getCustomerAccount(CUST001) - Invocation: inv_abc123
 [CACHE-MISS] cache:getCustomerAccount:{customerId=CUST001} - Tool: getCustomerAccount
 [SECURITY] PASSED: No sensitive keywords detected - Agent: billing-agent
