@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AgentConfiguration {
 
-    @Bean
-    public BaseAgent customerSupportAgent() {
-        return CustomerSupportAgent.createAgent();
-    }
+  @Bean
+  public BaseAgent customerSupportAgent() {
+    return CustomerSupportAgent.createAgent();
+  }
 }
