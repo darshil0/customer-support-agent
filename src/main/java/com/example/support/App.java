@@ -1,11 +1,9 @@
 package com.example.support;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootConfiguration
-@ComponentScan(basePackages = {"com.example.support", "com.google.adk.web"})
+@SpringBootApplication(scanBasePackages = {"com.example.support", "com.google.adk.web"})
 public class App {
 
     public static void main(String[] args) {
