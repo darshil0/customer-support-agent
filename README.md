@@ -410,3 +410,11 @@ Built following best practices from:
 ---
 
 **Built with ❤️ using Google Agent Development Kit for Java by Darshil**
+
+## V1.0.0
+
+- Refactored the agent creation logic to improve code clarity and maintainability.
+- Added robust error handling, input validation, and logging to all tool methods.
+- Added comprehensive unit tests for all tool methods.
+- Formatted the code to ensure consistency and adherence to best practices.
+- Updated the README.md file to reflect the new changes and provide accurate documentation for the project.
