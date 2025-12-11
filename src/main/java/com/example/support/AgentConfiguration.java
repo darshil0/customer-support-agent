@@ -20,6 +20,7 @@ public class AgentConfiguration {
     /**
      * Defines the Root Agent for the customer support system.
      * This agent acts as a Router, deciding which sub-agent (tool) to invoke.
+     * 
      */
     @Bean
     public BaseAgent rootCustomerSupportAgent() {
@@ -27,7 +28,8 @@ public class AgentConfiguration {
                 // Use a descriptive name for the main entry agent
                 .name("customer-support-agent")
                 .description("The main router agent for customer inquiries.")
-                .model("gemini-1.5-flash")
+                // Using a powerful model suitable for complex routing and planning
+                .model("gemini-1.5-flash") 
                 .instruction("You are a helpful customer support agent for Acme Corp. Your job is to analyze the user's request and delegate the task to one of your specialized sub-agents (tools) to handle billing, technical, account, or refund requests. You must only use the tools provided.")
                 // The sub-agents are passed as tools to the root LLMAgent,
                 // allowing it to act as a router/planner.
@@ -49,7 +51,8 @@ public class AgentConfiguration {
                         // Create FunctionTools by referencing the CustomerSupportAgent instance and method name
                         FunctionTool.create(customerSupportAgent, "getCustomerAccount"),
                         FunctionTool.create(customerSupportAgent, "processPayment"),
-                        FunctionTool.create(customerSupportAgent, "getTickets"))
+                        // Note: getTickets tool is available here for payment history
+                        FunctionTool.create(customerSupportAgent, "getTickets")) 
                 .build();
     }
 
@@ -78,7 +81,6 @@ public class AgentConfiguration {
      * Creates a SequentialAgent that enforces a two-step process:
      * 1. Refund eligibility validation
      * 2. Refund processing
-     * 
      */
     private BaseAgent createRefundWorkflow() {
         LlmAgent validator =
@@ -86,12 +88,15 @@ public class AgentConfiguration {
                         .name("refund-validator")
                         .instruction("Your sole task is to determine the customer ID and then call the validateRefundEligibility tool.")
                         .tools(FunctionTool.create(customerSupportAgent, "validateRefundEligibility"))
+                        // FIX: Added outputKey so the validation result is available to the SequentialAgent context
+                        .outputKey("validation_result") 
                         .build();
 
         LlmAgent processor =
                 LlmAgent.builder()
                         .name("refund-processor")
-                        .instruction("Your sole task is to process the refund by calling the processRefund tool, using information passed from the previous step.")
+                        // Instruction emphasizes using context from the previous step
+                        .instruction("Your sole task is to process the refund by calling the processRefund tool, using information passed from the previous step. Ensure eligibility was confirmed by the previous step.") 
                         .tools(FunctionTool.create(customerSupportAgent, "processRefund"))
                         .build();
 
