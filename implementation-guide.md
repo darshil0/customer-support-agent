@@ -2,7 +2,7 @@
 
 ## ⭐ Executive Summary
 
-The project now includes a **complete, production-ready** multi-agent system built using the Google Agent Development Kit (ADK) and Spring Boot. All identified audit issues have been fully resolved, incorporating enhanced security, robust error handling, thread-safe state management, and a comprehensive test suite. The system is ready for immediate testing and deployment.
+The project now includes a **complete, production-ready** multi-agent system built using the **Google Agent Development Kit (ADK) for Java** and Spring Boot. All identified audit issues have been fully resolved, incorporating enhanced security, robust error handling, thread-safe state management, and a comprehensive test suite. The system is ready for immediate testing and deployment.
 
 ## 🎯 Final Project Status
 
@@ -15,6 +15,8 @@ The project now includes a **complete, production-ready** multi-agent system bui
 | **State Management** | ✅ Fixed | Use of thread-safe `ConcurrentHashMap` in `ToolContext`. |
 | **Error Handling** | ✅ Fixed | Structured `try-catch` blocks returning explicit errors (`success: false`). |
 | **Testing** | ✅ Complete | New `CustomerSupportAgentTest.java` with 30+ unit tests. |
+
+-----
 
 ## 📁 Final File Structure Overview
 
@@ -42,7 +44,7 @@ customer-support-agent/
 └── README.md
 ```
 
-## 🛠️ Configuration Files (Missing Content Added)
+## 🛠️ Configuration Files
 
 ### `src/main/resources/application.properties`
 
@@ -64,27 +66,27 @@ spring.main.banner-mode=off
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-    
-    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/application.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
-        </rollingPolicy>
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-    
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
-    </root>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/application.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+    
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
 </configuration>
 ```
 
@@ -92,13 +94,9 @@ spring.main.banner-mode=off
 
 ## 🚀 Quick Start Guide (3 Steps)
 
-### Step 1: Copy the Files
+### Step 1: Set Environment Variable
 
-Ensure all the source files (`App.java`, `CustomerSupportAgent.java`, `Configuration.java`, `ValidationUtils.java`, `TransactionIdGenerator.java`) and the configuration files above are in the correct directories.
-
-### Step 2: Set Environment Variable
-
-The `Configuration.java` file enforces this, ensuring the agent cannot run without the key.
+The agent is configured to rely on this environment variable via `Configuration.java`.
 
 ```bash
 # Linux/Mac
@@ -108,20 +106,29 @@ export GOOGLE_API_KEY="your-api-key-here"
 $env:GOOGLE_API_KEY="your-api-key-here"
 ```
 
-### Step 3: Build, Test, and Run
+### Step 2: Build and Test
+
+The comprehensive test suite in `CustomerSupportAgentTest.java` ensures integrity.
 
 | Command | Purpose |
 | :--- | :--- |
 | `mvn clean install` | **Build** the project and download all dependencies. |
 | `mvn test` | **Run** all 30+ comprehensive unit tests (Expected: **PASS**). |
+
+### Step 3: Run the Agent
+
+| Command | Purpose |
+| :--- | :--- |
 | `mvn spring-boot:run` | **Start** the agent in Web UI mode (Default port 8000). |
-| `java -jar target/*.jar` | **Run** the packaged JAR for deployment. |
+| `java -jar target/*.jar` | **Run** the packaged JAR for production deployment. |
 
-## 🎭 Usage Examples (Architecture Diagram)
+-----
 
-The agent uses a multi-agent architecture to handle complex requests.
+## 🎭 Usage Examples (Sequential Workflow)
 
-### Example 4: Request Refund (Sequential Workflow)
+The agent uses a multi-agent architecture to handle complex requests, as illustrated below.
+
+### Example: Request Refund (Sequential Workflow)
 
 The refund request utilizes a `SequentialAgent` workflow, ensuring validation happens before processing.
 
@@ -137,7 +144,7 @@ The refund request utilizes a `SequentialAgent` workflow, ensuring validation ha
 
 ## 🧪 Testing (Verification)
 
-The test suite ensures the agent is robust:
+The test suite ensures the agent is robust and covers all defined functionality.
 
   * **Test Count:** 30+ unit tests.
   * **Coverage:** 100% of the tools and validation logic.
@@ -147,14 +154,14 @@ The test suite ensures the agent is robust:
 
 ```bash
 # Run tests and generate coverage report
-mvn test jacoco:report 
+mvn test jacoco:report
 ```
 
 -----
 
 ## 🚢 Deployment Options
 
-The clean structure and use of standard technologies (Spring Boot, Maven) make deployment straightforward to various environments.
+The clean structure and use of standard technologies (Spring Boot, Maven) make deployment straightforward.
 
 ### Option 2: Docker
 
@@ -179,10 +186,10 @@ Easily deployable to a serverless platform:
 
 ```bash
 gcloud run deploy customer-support \
-  --source . \
-  --platform managed \
-  --region us-central1 \
-  --set-env-vars GOOGLE_API_KEY=${GOOGLE_API_KEY} 
+  --source . \
+  --platform managed \
+  --region us-central1 \
+  --set-env-vars GOOGLE_API_KEY=${GOOGLE_API_KEY}
 ```
 
 -----
