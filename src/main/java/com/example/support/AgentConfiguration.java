@@ -7,10 +7,16 @@ import com.google.adk.tools.FunctionTool;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Agent Configuration
+ * Defines the hierarchical multi-agent architecture for customer support.
+ * 
+ * @author Darshil
+ * @version 1.0.2 (Fixed)
+ */
 @Configuration
 public class AgentConfiguration {
 
-    // --- Dependency Injection via Constructor (Spring Best Practice) ---
     private final CustomerSupportAgent customerSupportAgent;
 
     public AgentConfiguration(CustomerSupportAgent customerSupportAgent) {
@@ -18,91 +24,118 @@ public class AgentConfiguration {
     }
 
     /**
-     * Defines the Root Agent for the customer support system.
-     * This agent acts as a Router, deciding which sub-agent (tool) to invoke.
-     * 
+     * Root orchestrator agent that routes queries to specialized sub-agents
      */
     @Bean
     public BaseAgent rootCustomerSupportAgent() {
         return LlmAgent.builder()
-                // Use a descriptive name for the main entry agent
-                .name("customer-support-agent")
-                .description("The main router agent for customer inquiries.")
-                // Using a powerful model suitable for complex routing and planning
-                .model("gemini-1.5-flash") 
-                .instruction("You are a helpful customer support agent for Acme Corp. Your job is to analyze the user's request and delegate the task to one of your specialized sub-agents (tools) to handle billing, technical, account, or refund requests. You must only use the tools provided.")
-                // The sub-agents are passed as tools to the root LLMAgent,
-                // allowing it to act as a router/planner.
+                .name("customer-support-orchestrator")
+                .description("Main router agent for customer inquiries")
+                .model("gemini-1.5-flash")
+                .instruction(
+                    "You are a helpful customer support agent for Acme Corp. " +
+                    "Analyze the customer's request and delegate to the appropriate specialist:\n" +
+                    "- billing-agent: For payments, balances, invoices\n" +
+                    "- technical-support-agent: For technical issues, bugs, login problems\n" +
+                    "- account-agent: For account settings, profile updates\n" +
+                    "- refund-processor-workflow: For refund requests\n" +
+                    "Always greet the customer warmly and explain who you're connecting them with."
+                )
                 .tools(
                         createBillingAgent(),
                         createTechnicalSupportAgent(),
                         createAccountAgent(),
-                        createRefundWorkflow())
+                        createRefundWorkflow()
+                )
                 .build();
     }
     
-    // --- Sub-Agents Defined Below ---
-
     private BaseAgent createBillingAgent() {
         return LlmAgent.builder()
                 .name("billing-agent")
-                .description("Handles billing and payment inquiries. Use this agent for customer balance checks, payment processing, or retrieving payment history tickets.")
+                .description("Handles billing and payment inquiries")
+                .model("gemini-1.5-flash")
+                .instruction(
+                    "You are a billing specialist. Handle queries about payments, balances, and invoices. " +
+                    "Always confirm the customer's ID before processing transactions. " +
+                    "After successful payments, provide the new balance and transaction ID."
+                )
                 .tools(
-                        // Create FunctionTools by referencing the CustomerSupportAgent instance and method name
                         FunctionTool.create(customerSupportAgent, "getCustomerAccount"),
                         FunctionTool.create(customerSupportAgent, "processPayment"),
-                        // Note: getTickets tool is available here for payment history
-                        FunctionTool.create(customerSupportAgent, "getTickets")) 
+                        FunctionTool.create(customerSupportAgent, "getTickets")
+                )
                 .build();
     }
 
     private BaseAgent createTechnicalSupportAgent() {
         return LlmAgent.builder()
                 .name("technical-support-agent")
-                .description("Assists with technical issues. Use this agent to create new support tickets or retrieve existing ticket details.")
+                .description("Handles technical issues and troubleshooting")
+                .model("gemini-1.5-flash")
+                .instruction(
+                    "You are a technical support specialist. Troubleshoot technical issues. " +
+                    "If the issue cannot be immediately resolved, create a detailed support ticket. " +
+                    "Inform the customer of the ticket ID and expected response time."
+                )
                 .tools(
                         FunctionTool.create(customerSupportAgent, "getCustomerAccount"),
                         FunctionTool.create(customerSupportAgent, "createTicket"),
-                        FunctionTool.create(customerSupportAgent, "getTickets"))
+                        FunctionTool.create(customerSupportAgent, "getTickets")
+                )
                 .build();
     }
 
     private BaseAgent createAccountAgent() {
         return LlmAgent.builder()
                 .name("account-agent")
-                .description("Manages customer account settings. Use this agent for updating customer contact information or subscription tiers.")
+                .description("Manages account settings and profile updates")
+                .model("gemini-1.5-flash")
+                .instruction(
+                    "You are an account management specialist. Handle changes to email, tier status, " +
+                    "and general profile settings. Only update settings if the customer explicitly " +
+                    "provides the new value. Send confirmation of all updates."
+                )
                 .tools(
                         FunctionTool.create(customerSupportAgent, "getCustomerAccount"),
-                        FunctionTool.create(customerSupportAgent, "updateAccountSettings"))
+                        FunctionTool.create(customerSupportAgent, "updateAccountSettings")
+                )
                 .build();
     }
 
     /**
-     * Creates a SequentialAgent that enforces a two-step process:
-     * 1. Refund eligibility validation
-     * 2. Refund processing
+     * Sequential workflow for refund processing
+     * Step 1: Validate eligibility
+     * Step 2: Process refund (only if eligible)
      */
     private BaseAgent createRefundWorkflow() {
-        LlmAgent validator =
-                LlmAgent.builder()
-                        .name("refund-validator")
-                        .instruction("Your sole task is to determine the customer ID and then call the validateRefundEligibility tool.")
-                        .tools(FunctionTool.create(customerSupportAgent, "validateRefundEligibility"))
-                        // FIX: Added outputKey so the validation result is available to the SequentialAgent context
-                        .outputKey("validation_result") 
-                        .build();
+        LlmAgent validator = LlmAgent.builder()
+                .name("refund-validator")
+                .description("Validates refund eligibility")
+                .model("gemini-1.5-flash")
+                .instruction(
+                    "Validate refund requests by calling validateRefundEligibility. " +
+                    "Store the result in ToolContext. If not eligible, explain the reasons. " +
+                    "If eligible, proceed to the next step."
+                )
+                .tools(FunctionTool.create(customerSupportAgent, "validateRefundEligibility"))
+                .outputKey("validation_result")
+                .build();
 
-        LlmAgent processor =
-                LlmAgent.builder()
-                        .name("refund-processor")
-                        // Instruction emphasizes using context from the previous step
-                        .instruction("Your sole task is to process the refund by calling the processRefund tool, using information passed from the previous step. Ensure eligibility was confirmed by the previous step.") 
-                        .tools(FunctionTool.create(customerSupportAgent, "processRefund"))
-                        .build();
+        LlmAgent processor = LlmAgent.builder()
+                .name("refund-processor")
+                .description("Processes approved refunds")
+                .model("gemini-1.5-flash")
+                .instruction(
+                    "Process approved refunds by checking ToolContext for 'refund_eligible' flag. " +
+                    "If eligible, call processRefund. Explain refund processing times (5-7 business days)."
+                )
+                .tools(FunctionTool.create(customerSupportAgent, "processRefund"))
+                .build();
 
         return SequentialAgent.builder()
                 .name("refund-processor-workflow")
-                .description("A two-step sequential workflow to process customer refunds: first validation, then processing. Use this for all refund requests.")
+                .description("Two-step sequential workflow for refund processing: validation then processing")
                 .subAgents(validator, processor)
                 .build();
     }
