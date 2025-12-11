@@ -1,4 +1,4 @@
-# 🚀 Customer Support Multi-Agent System
+## 🚀 Customer Support Multi-Agent System
 
 A production-ready, intelligent customer support solution built with **Google Agent Development Kit (ADK) for Java**, showcasing enterprise-grade multi-agent orchestration and robust tooling.
 
@@ -6,7 +6,9 @@ A production-ready, intelligent customer support solution built with **Google Ag
 
 ### 🎯 Architecture Overview
 
-The system uses a **hierarchical multi-agent architecture** where a Root Orchestrator delegates tasks to specialized sub-agents (Billing, Tech Support, Account) and complex workflows.
+The system uses a **hierarchical multi-agent architecture** where a Root Orchestrator delegates tasks to specialized sub-agents (Billing, Tech Support, Account) and complex workflows. This structure is implemented by defining sub-agents as callable tools within the primary agent.
+
+The core routing and tool declaration logic is defined in the primary agent class, `CustomerSupportAgent.java`, and the agent orchestration setup (including the Root Orchestrator's behavior and sub-agents) is configured in `AgentConfiguration.java`.
 
 ### 📋 Prerequisites
 
@@ -28,12 +30,12 @@ $env:GOOGLE_API_KEY="your-api-key-here"
 
 ### 2\. Build and Test
 
-The project has comprehensive unit tests covering all tools and validation logic.
+The project has comprehensive **Unit and Integration tests** (30+ combined) consolidated in `CustomerSupportAgentUnifiedTest.java`, covering routing, workflow logic, and tool functionality.
 
 | Command | Purpose |
 | :--- | :--- |
 | `mvn clean install` | **Build** the project and download all dependencies. |
-| `mvn test` | **Run** all 30+ comprehensive unit tests (Expected: **PASS**). |
+| `mvn test` | **Run** all comprehensive **Unit and Integration tests** (Expected: **PASS**). |
 | `mvn package` | Create deployable JAR (`target/customer-support-agent-1.0.0.jar`). |
 
 ### 3\. Run the Agent (Development)
@@ -54,23 +56,23 @@ Then open **http://localhost:8000** in your browser to start chatting.
 
 | Feature | Description | Status |
 | :--- | :--- | :--- |
-| **Input Validation** | Centralized, robust parameter checks on all tool inputs. | ✅ Implemented |
+| **Input Validation** | Centralized, robust parameter checks on all tool inputs in `CustomerSupportAgent.java`. | ✅ Implemented |
 | **Content Safety** | `beforeModelCallback` blocks sensitive data (SSN, credit cards, passwords). | ✅ Implemented |
 | **Error Handling** | Structured `try-catch` blocks return explicit, machine-readable errors. | ✅ Implemented |
 | **Transaction IDs** | Secure, traceable IDs generated for payments and tickets. | ✅ Implemented |
-| **Concurrency** | Thread-safe state management (`ConcurrentHashMap`) for session isolation. | ✅ Implemented |
+| **Test Isolation (Static Mock Data Reset)** | The static mock data in `CustomerSupportAgent` is reset (`CustomerSupportAgent.resetMockData()`) before every unit and integration test run to ensure strict isolation and repeatable results. | ✅ Implemented |
 
-### 🔧 Implemented Tools (6 Production-Ready Functions)
+### 🔧 Implemented Tools (`CustomerSupportAgent.java` Functions)
 
 | Tool Name | Agent Owner | Purpose |
 | :--- | :--- | :--- |
-| `getCustomerAccount` | All | Retrieve customer details (includes caching). |
+| `getCustomerAccount` | All | Retrieve customer details (includes mock caching). |
 | `processPayment` | Billing | Securely update balance and generate transaction ID. |
 | `createTicket` | Tech Support | Create new ticket with auto-generated ID and priority. |
 | `getTickets` | Tech Support | Query existing tickets by customer and status filter. |
-| `updateAccountSettings` | Account | Update email or tier with validation checks. |
-| `validateRefundEligibility` | Refund (Step 1) | Business logic to determine refund eligibility. |
-| `processRefund` | Refund (Step 2) | Final refund processing (deducts from balance). |
+| `updateAccountSettings` | Account | Update email or tier with validation checks against `VALID_TIERS`. |
+| `validateRefundEligibility` | Refund (Step 1) | Business logic to determine refund eligibility (e.g., checks 30-day payment window). |
+| `processRefund` | Refund (Step 2) | Final refund processing (deducts from balance) **only if** validation state is true. |
 
 -----
 
@@ -85,13 +87,13 @@ Then open **http://localhost:8000** in your browser to start chatting.
 
 **Example: Refund Request (Sequential Workflow)**
 
-The `Refund Processor` uses a $\text{SequentialAgent}$ to ensure **validation occurs before the payment action**.
+The `Refund Processor` uses a $\text{SequentialAgent}$ (configured in `AgentConfiguration.java`) to ensure **validation occurs before the payment action**.
 
 1.  **User**: I'd like to request a refund for customer CUST001
-2.  **Validator (LlmAgent)**: Calls `validateRefundEligibility`.
-      * *Result*: Customer is eligible (e.g., payment made 15 days ago).
-3.  **Processor (LlmAgent)**: Receives validation context and calls `processRefund`.
-      * *Result*: Refund processed successfully, ID generated.
+2.  **Validator (LlmAgent)**: Calls `validateRefundEligibility` and **writes `refund_eligible=true/false` to the ToolContext state**.
+      * *Result*: Customer is found to be ineligible (e.g., payment made 45 days ago).
+3.  **Processor (LlmAgent)**: Reads validation context. Since eligibility is false, the process stops.
+      * *Result*: User receives a polite denial and reason (e.g., "Last payment was more than 30 days ago.").
 
 -----
 
@@ -124,3 +126,5 @@ The system is configured for standard deployment via JAR or containerization:
 **Built with ❤️ using Google Agent Development Kit for Java by Darshil**
 
 **V1.0.0** - Fully audited, complete, and production-ready implementation.
+
+-----
