@@ -1,44 +1,26 @@
 package com.example.support;
 
-import java.security.SecureRandom;
-import java.time.LocalDate;
+import java.util.concurrent.atomic.AtomicLong;
 import java.time.format.DateTimeFormatter;
-import java.util.Base64;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 /**
- * Utility class for generating secure, traceable transaction and ticket IDs.
+ * Utility class for generating unique, sequential IDs for transactions and tickets.
  */
 public class TransactionIdGenerator {
 
-    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final AtomicLong SEQUENCE = new AtomicLong(1000);
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
 
-    /**
-     * Generates a traceable transaction ID. Format: TXN-YYYYMMDD-XXXXXX
-     * (where XXXXXX is a secure random suffix).
-     */
     public static String generateTransactionId(String prefix) {
-        String date = LocalDate.now().format(
-            DateTimeFormatter.BASIC_ISO_DATE
-        );
-
-        // Generate 3 random bytes and encode them for a secure, short random suffix
-        byte[] bytes = new byte[3];
-        RANDOM.nextBytes(bytes);
-        String random = Base64.getUrlEncoder()
-            .withoutPadding()
-            .encodeToString(bytes);
-
-        return prefix + "-" + date + "-" + random.toUpperCase();
+        String datePart = LocalDateTime.now().format(DATE_FORMATTER);
+        long sequencePart = SEQUENCE.getAndIncrement();
+        // Format: PREFIX-YYMMDD-SEQUENCE
+        return String.format("%s-%s-%06d", prefix.toUpperCase(), datePart, sequencePart);
     }
 
-    /**
-     * Generates a unique, short ticket ID.
-     */
     public static String generateTicketId() {
-        return "TKT-" + UUID.randomUUID()
-            .toString()
-            .substring(0, 8)
-            .toUpperCase();
+        // Format: TICKET-YYMMDD-SEQUENCE
+        return generateTransactionId("TICKET");
     }
 }
