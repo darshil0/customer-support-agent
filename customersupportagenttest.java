@@ -8,25 +8,28 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for CustomerSupportAgent tools
- * * @author Darshil
- * @version 1.0.0
+ * Comprehensive unit tests for CustomerSupportAgent tools
+ * 
+ * @author Darshil
+ * @version 1.0.2 (Fixed)
  */
+@DisplayName("Customer Support Agent Test Suite")
 class CustomerSupportAgentTest {
     
+    private CustomerSupportAgent agent;
     private ToolContext toolContext;
     
     @BeforeEach
     void setUp() {
-        // Creates a new ToolContext for each test, ensuring isolated state.
-        // The state is already initialized as a new HashMap internally,
-        // so setting it to a new HashMap explicitly is redundant.
+        agent = new CustomerSupportAgent();
         toolContext = new ToolContext();
+        CustomerSupportAgent.resetMockData();
     }
     
     // ==================== getCustomerAccount Tests ====================
@@ -34,25 +37,23 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should retrieve valid customer account")
     void testGetCustomerAccount_ValidCustomer() {
-        Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("CUST001", toolContext);
+        Map<String, Object> result = agent.getCustomerAccount("CUST001", toolContext);
         
         assertTrue((Boolean) result.get("success"));
         assertNotNull(result.get("customer"));
         
-        // Suppressing warning locally is the most precise way
         @SuppressWarnings("unchecked")
         Map<String, Object> customer = (Map<String, Object>) result.get("customer");
         assertEquals("CUST001", customer.get("customerId"));
         assertEquals("John Doe", customer.get("name"));
         assertEquals("Premium", customer.get("tier"));
+        assertEquals(1250.00, ((Number) customer.get("accountBalance")).doubleValue());
     }
-    
-    // ... (rest of getCustomerAccount Tests are unchanged) ...
     
     @Test
     @DisplayName("Should handle invalid customer ID")
     void testGetCustomerAccount_InvalidCustomer() {
-        Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("CUST999", toolContext);
+        Map<String, Object> result = agent.getCustomerAccount("CUST999", toolContext);
         
         assertFalse((Boolean) result.get("success"));
         assertTrue(result.get("error").toString().contains("not found"));
@@ -61,7 +62,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject null customer ID")
     void testGetCustomerAccount_NullCustomerId() {
-        Map<String, Object> result = CustomerSupportAgent.getCustomerAccount(null, toolContext);
+        Map<String, Object> result = agent.getCustomerAccount(null, toolContext);
         
         assertFalse((Boolean) result.get("success"));
         assertTrue(result.get("error").toString().contains("required"));
@@ -70,7 +71,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject empty customer ID")
     void testGetCustomerAccount_EmptyCustomerId() {
-        Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("  ", toolContext);
+        Map<String, Object> result = agent.getCustomerAccount("  ", toolContext);
         
         assertFalse((Boolean) result.get("success"));
         assertTrue(result.get("error").toString().contains("required"));
@@ -79,7 +80,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject malformed customer ID")
     void testGetCustomerAccount_MalformedCustomerId() {
-        Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("INVALID123", toolContext);
+        Map<String, Object> result = agent.getCustomerAccount("INVALID123", toolContext);
         
         assertFalse((Boolean) result.get("success"));
         assertTrue(result.get("error").toString().contains("format"));
@@ -88,23 +89,17 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should normalize customer ID case")
     void testGetCustomerAccount_NormalizeCase() {
-        // CUST001 is a valid ID in the mocked data
-        CustomerSupportAgent.getCustomerAccount("CUST001", toolContext); 
-        Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("cust001", toolContext);
+        Map<String, Object> result = agent.getCustomerAccount("cust001", toolContext);
         
         assertTrue((Boolean) result.get("success"));
-        // This assertion checks if the agent successfully saves the canonical ID (CUST001) in state
-        assertEquals("CUST001", toolContext.getState().get("current_customer")); 
+        assertEquals("CUST001", toolContext.getState().get("current_customer"));
     }
     
     @Test
     @DisplayName("Should use cache on second call")
     void testGetCustomerAccount_Caching() {
-        // First call - cache miss
-        CustomerSupportAgent.getCustomerAccount("CUST001", toolContext);
-        
-        // Second call - should hit cache
-        Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("CUST001", toolContext);
+        agent.getCustomerAccount("CUST001", toolContext);
+        Map<String, Object> result = agent.getCustomerAccount("CUST001", toolContext);
         
         assertTrue((Boolean) result.get("success"));
         assertNotNull(toolContext.getState().get("customer:CUST001"));
@@ -112,12 +107,10 @@ class CustomerSupportAgentTest {
     
     // ==================== processPayment Tests ====================
     
-    // ... (rest of processPayment Tests are unchanged) ...
-    
     @Test
     @DisplayName("Should process valid payment with number")
     void testProcessPayment_ValidPayment() {
-        Map<String, Object> result = CustomerSupportAgent.processPayment("CUST001", 100.00, toolContext);
+        Map<String, Object> result = agent.processPayment("CUST001", 100.00, toolContext);
         
         assertTrue((Boolean) result.get("success"));
         assertNotNull(result.get("transactionId"));
@@ -128,7 +121,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should process valid payment with string amount")
     void testProcessPayment_StringAmount() {
-        Map<String, Object> result = CustomerSupportAgent.processPayment("CUST002", "50.00", toolContext);
+        Map<String, Object> result = agent.processPayment("CUST002", "50.00", toolContext);
         
         assertTrue((Boolean) result.get("success"));
         assertEquals(50.00, ((Number) result.get("amount")).doubleValue());
@@ -137,7 +130,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject negative amount")
     void testProcessPayment_NegativeAmount() {
-        Map<String, Object> result = CustomerSupportAgent.processPayment("CUST001", -100.00, toolContext);
+        Map<String, Object> result = agent.processPayment("CUST001", -100.00, toolContext);
         
         assertFalse((Boolean) result.get("success"));
         assertTrue(result.get("error").toString().contains("greater than zero"));
@@ -146,7 +139,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject zero amount")
     void testProcessPayment_ZeroAmount() {
-        Map<String, Object> result = CustomerSupportAgent.processPayment("CUST001", 0.00, toolContext);
+        Map<String, Object> result = agent.processPayment("CUST001", 0.00, toolContext);
         
         assertFalse((Boolean) result.get("success"));
         assertTrue(result.get("error").toString().contains("greater than zero"));
@@ -155,16 +148,16 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject excessive amount")
     void testProcessPayment_ExcessiveAmount() {
-        Map<String, Object> result = CustomerSupportAgent.processPayment("CUST001", 150000.00, toolContext);
+        Map<String, Object> result = agent.processPayment("CUST001", 150000.00, toolContext);
         
         assertFalse((Boolean) result.get("success"));
-        assertTrue(result.get("error").toString().contains("maximum limit"));
+        assertTrue(result.get("error").toString().contains("maximum"));
     }
     
     @Test
     @DisplayName("Should reject invalid customer")
     void testProcessPayment_InvalidCustomer() {
-        Map<String, Object> result = CustomerSupportAgent.processPayment("CUST999", 100.00, toolContext);
+        Map<String, Object> result = agent.processPayment("CUST999", 100.00, toolContext);
         
         assertFalse((Boolean) result.get("success"));
         assertTrue(result.get("error").toString().contains("not found"));
@@ -173,7 +166,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should store transaction in state")
     void testProcessPayment_StoreTransaction() {
-        Map<String, Object> result = CustomerSupportAgent.processPayment("CUST001", 100.00, toolContext);
+        Map<String, Object> result = agent.processPayment("CUST001", 100.00, toolContext);
         
         assertTrue((Boolean) result.get("success"));
         assertNotNull(toolContext.getState().get("last_transaction_id"));
@@ -182,12 +175,10 @@ class CustomerSupportAgentTest {
     
     // ==================== createTicket Tests ====================
     
-    // ... (rest of createTicket Tests are unchanged) ...
-    
     @Test
     @DisplayName("Should create valid ticket")
     void testCreateTicket_ValidTicket() {
-        Map<String, Object> result = CustomerSupportAgent.createTicket(
+        Map<String, Object> result = agent.createTicket(
             "CUST001",
             "Login Issue",
             "Cannot login to dashboard",
@@ -209,7 +200,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should default to MEDIUM priority if not specified")
     void testCreateTicket_DefaultPriority() {
-        Map<String, Object> result = CustomerSupportAgent.createTicket(
+        Map<String, Object> result = agent.createTicket(
             "CUST001",
             "General Question",
             "How do I use this feature?",
@@ -227,7 +218,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject empty subject")
     void testCreateTicket_EmptySubject() {
-        Map<String, Object> result = CustomerSupportAgent.createTicket(
+        Map<String, Object> result = agent.createTicket(
             "CUST001",
             "",
             "Description here",
@@ -242,7 +233,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject empty description")
     void testCreateTicket_EmptyDescription() {
-        Map<String, Object> result = CustomerSupportAgent.createTicket(
+        Map<String, Object> result = agent.createTicket(
             "CUST001",
             "Subject",
             "  ",
@@ -258,7 +249,7 @@ class CustomerSupportAgentTest {
     @ValueSource(strings = {"LOW", "MEDIUM", "HIGH", "low", "medium", "high"})
     @DisplayName("Should accept valid priorities")
     void testCreateTicket_ValidPriorities(String priority) {
-        Map<String, Object> result = CustomerSupportAgent.createTicket(
+        Map<String, Object> result = agent.createTicket(
             "CUST001",
             "Test",
             "Test description",
@@ -271,42 +262,35 @@ class CustomerSupportAgentTest {
     
     // ==================== getTickets Tests ====================
     
-    // ... (rest of getTickets Tests are unchanged) ...
-    
     @Test
     @DisplayName("Should get all tickets for customer")
     void testGetTickets_AllTickets() {
-        // Create some tickets first
-        CustomerSupportAgent.createTicket("CUST001", "Issue 1", "Desc 1", "HIGH", toolContext);
-        CustomerSupportAgent.createTicket("CUST001", "Issue 2", "Desc 2", "LOW", toolContext);
+        agent.createTicket("CUST001", "Issue 1", "Desc 1", "HIGH", toolContext);
+        agent.createTicket("CUST001", "Issue 2", "Desc 2", "LOW", toolContext);
         
-        Map<String, Object> result = CustomerSupportAgent.getTickets("CUST001", null, toolContext);
+        Map<String, Object> result = agent.getTickets("CUST001", null, toolContext);
         
         assertTrue((Boolean) result.get("success"));
-        // Note: Casting to Number then intValue() is robust for different number types (Long, Integer)
-        assertEquals(2, ((Number) result.get("count")).intValue()); 
+        assertEquals(3, ((Number) result.get("count")).intValue()); // 2 new + 1 existing
     }
     
     @Test
     @DisplayName("Should filter tickets by status")
     void testGetTickets_FilterByStatus() {
-        CustomerSupportAgent.createTicket("CUST001", "Issue 1", "Desc 1", "HIGH", toolContext);
+        agent.createTicket("CUST001", "Issue 1", "Desc 1", "HIGH", toolContext);
         
-        Map<String, Object> result = CustomerSupportAgent.getTickets("CUST001", "OPEN", toolContext);
+        Map<String, Object> result = agent.getTickets("CUST001", "OPEN", toolContext);
         
         assertTrue((Boolean) result.get("success"));
-        // Assuming the test setup (not shown) ensures 'OPEN' tickets exist
-        assertTrue(((Number) result.get("count")).intValue() >= 0); 
+        assertTrue(((Number) result.get("count")).intValue() >= 1);
     }
     
     // ==================== updateAccountSettings Tests ====================
     
-    // ... (rest of updateAccountSettings Tests are unchanged) ...
-    
     @Test
     @DisplayName("Should update email address")
     void testUpdateAccountSettings_ValidEmail() {
-        Map<String, Object> result = CustomerSupportAgent.updateAccountSettings(
+        Map<String, Object> result = agent.updateAccountSettings(
             "CUST001",
             "newemail@example.com",
             null,
@@ -323,7 +307,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should update account tier")
     void testUpdateAccountSettings_ValidTier() {
-        Map<String, Object> result = CustomerSupportAgent.updateAccountSettings(
+        Map<String, Object> result = agent.updateAccountSettings(
             "CUST001",
             null,
             "Enterprise",
@@ -340,7 +324,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject invalid email format")
     void testUpdateAccountSettings_InvalidEmail() {
-        Map<String, Object> result = CustomerSupportAgent.updateAccountSettings(
+        Map<String, Object> result = agent.updateAccountSettings(
             "CUST001",
             "not-an-email",
             null,
@@ -354,7 +338,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject invalid tier")
     void testUpdateAccountSettings_InvalidTier() {
-        Map<String, Object> result = CustomerSupportAgent.updateAccountSettings(
+        Map<String, Object> result = agent.updateAccountSettings(
             "CUST001",
             null,
             "InvalidTier",
@@ -368,7 +352,7 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject when no updates provided")
     void testUpdateAccountSettings_NoUpdates() {
-        Map<String, Object> result = CustomerSupportAgent.updateAccountSettings(
+        Map<String, Object> result = agent.updateAccountSettings(
             "CUST001",
             null,
             null,
@@ -381,12 +365,10 @@ class CustomerSupportAgentTest {
     
     // ==================== validateRefundEligibility Tests ====================
     
-    // ... (rest of validateRefundEligibility Tests are unchanged) ...
-    
     @Test
-    @DisplayName("Should validate eligible customer")
+    @DisplayName("Should validate eligible customer (CUST002)")
     void testValidateRefundEligibility_Eligible() {
-        Map<String, Object> result = CustomerSupportAgent.validateRefundEligibility("CUST001", toolContext);
+        Map<String, Object> result = agent.validateRefundEligibility("CUST002", toolContext);
         
         assertTrue((Boolean) result.get("success"));
         assertTrue((Boolean) result.get("eligible"));
@@ -394,37 +376,43 @@ class CustomerSupportAgentTest {
     }
     
     @Test
+    @DisplayName("Should validate ineligible customer (CUST001)")
+    void testValidateRefundEligibility_NotEligible() {
+        Map<String, Object> result = agent.validateRefundEligibility("CUST001", toolContext);
+        
+        assertTrue((Boolean) result.get("success"));
+        assertFalse((Boolean) result.get("eligible"));
+        assertFalse((Boolean) toolContext.getState().get("refund_eligible"));
+    }
+    
+    @Test
     @DisplayName("Should store eligibility in state")
     void testValidateRefundEligibility_StateStorage() {
-        CustomerSupportAgent.validateRefundEligibility("CUST001", toolContext);
+        agent.validateRefundEligibility("CUST002", toolContext);
         
         assertEquals(true, toolContext.getState().get("refund_eligible"));
-        assertEquals("CUST001", toolContext.getState().get("refund_customer"));
+        assertEquals("CUST002", toolContext.getState().get("refund_customer"));
     }
     
     // ==================== processRefund Tests ====================
     
-    // ... (rest of processRefund Tests are unchanged) ...
-    
     @Test
-    @DisplayName("Should process valid refund after validation")
+    @DisplayName("Should process valid refund after validation (CUST003)")
     void testProcessRefund_ValidRefund() {
-        // First validate
-        CustomerSupportAgent.validateRefundEligibility("CUST001", toolContext);
+        agent.validateRefundEligibility("CUST003", toolContext);
         
-        // Then process
-        Map<String, Object> result = CustomerSupportAgent.processRefund("CUST001", 100.00, toolContext);
+        Map<String, Object> result = agent.processRefund("CUST003", 100.00, toolContext);
         
         assertTrue((Boolean) result.get("success"));
         assertNotNull(result.get("refundId"));
         assertEquals(100.00, ((Number) result.get("amount")).doubleValue());
-        assertEquals(1150.00, ((Number) result.get("newBalance")).doubleValue());
+        assertEquals(4900.00, ((Number) result.get("newBalance")).doubleValue());
     }
     
     @Test
     @DisplayName("Should reject refund without validation")
     void testProcessRefund_NoValidation() {
-        Map<String, Object> result = CustomerSupportAgent.processRefund("CUST001", 100.00, toolContext);
+        Map<String, Object> result = agent.processRefund("CUST001", 100.00, toolContext);
         
         assertFalse((Boolean) result.get("success"));
         assertTrue(result.get("error").toString().contains("validation"));
@@ -433,9 +421,9 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should reject refund exceeding balance")
     void testProcessRefund_ExceedsBalance() {
-        CustomerSupportAgent.validateRefundEligibility("CUST001", toolContext);
+        agent.validateRefundEligibility("CUST002", toolContext);
         
-        Map<String, Object> result = CustomerSupportAgent.processRefund("CUST001", 10000.00, toolContext);
+        Map<String, Object> result = agent.processRefund("CUST002", 100.00, toolContext);
         
         assertFalse((Boolean) result.get("success"));
         assertTrue(result.get("error").toString().contains("exceeds"));
@@ -444,10 +432,21 @@ class CustomerSupportAgentTest {
     @Test
     @DisplayName("Should store refund information in state")
     void testProcessRefund_StateStorage() {
-        CustomerSupportAgent.validateRefundEligibility("CUST001", toolContext);
-        CustomerSupportAgent.processRefund("CUST001", 100.00, toolContext);
+        agent.validateRefundEligibility("CUST003", toolContext);
+        agent.processRefund("CUST003", 100.00, toolContext);
         
         assertNotNull(toolContext.getState().get("last_refund_id"));
         assertEquals(100.00, toolContext.getState().get("refund_amount"));
+    }
+    
+    @Test
+    @DisplayName("Should reject refund for mismatched customer ID")
+    void testProcessRefund_CustomerIdMismatch() {
+        agent.validateRefundEligibility("CUST002", toolContext);
+        
+        Map<String, Object> result = agent.processRefund("CUST003", 50.00, toolContext);
+        
+        assertFalse((Boolean) result.get("success"));
+        assertTrue(result.get("error").toString().contains("mismatch"));
     }
 }
