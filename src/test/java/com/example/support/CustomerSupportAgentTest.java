@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 import com.google.adk.tools.ToolContext;
-import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,17 +13,20 @@ import org.mockito.MockitoAnnotations;
 
 public class CustomerSupportAgentTest {
 
-    // Since tool methods are static, we don't need to instantiate the class, 
-    // but we use a mock for ToolContext.
-
     @Mock private ToolContext toolContext;
     @Mock private Map<String, Object> stateMap; // Mock the state map inside ToolContext
 
     @BeforeEach
     public void setUp() {
+        // Initialize Mocks
         MockitoAnnotations.openMocks(this);
+        
         // Configure the mock ToolContext to return a state map
         when(toolContext.getState()).thenReturn(stateMap);
+
+        // FIX: Reset the static mock database before every test. 
+        // This ensures test isolation (critical for production stability).
+        CustomerSupportAgent.resetMockData(); 
     }
 
     // --- Data Retrieval Tests (getCustomerAccount) ---
@@ -32,24 +34,23 @@ public class CustomerSupportAgentTest {
     @Test
     @DisplayName("Successfully retrieve a valid customer account")
     public void testGetCustomerAccount_success() {
-        // CUST001 exists in the mock database
+        // CUST001 exists in the mock database with initial balance 1250.00
         Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("CUST001", toolContext);
         
-        assertTrue((Boolean) result.get("success"));
+        assertTrue((Boolean) result.get("success"), "Result should indicate success");
+        
         @SuppressWarnings("unchecked")
         Map<String, Object> customer = (Map<String, Object>) result.get("customer");
         
         assertEquals("CUST001", customer.get("customerId"));
-        // Asserting against a specific key from the actual mock data structure
         assertEquals(1250.00, customer.get("accountBalance")); 
     }
 
     @Test
     @DisplayName("Fail when Customer ID is null")
     public void testGetCustomerAccount_nullId() {
-        // Assertions.assertThrows is used for tools that throw exceptions on validation failures
         Map<String, Object> result = CustomerSupportAgent.getCustomerAccount(null, toolContext);
-        assertFalse((Boolean) result.get("success"));
+        assertFalse((Boolean) result.get("success"), "Result should fail on null ID");
         assertTrue(result.get("error").toString().contains("Customer ID is required"));
     }
     
@@ -57,7 +58,7 @@ public class CustomerSupportAgentTest {
     @DisplayName("Fail when Customer ID format is invalid")
     public void testGetCustomerAccount_invalidFormat() {
         Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("123", toolContext);
-        assertFalse((Boolean) result.get("success"));
+        assertFalse((Boolean) result.get("success"), "Result should fail on invalid format");
         assertTrue(result.get("error").toString().contains("Invalid customer ID format"));
     }
 
@@ -66,22 +67,21 @@ public class CustomerSupportAgentTest {
     @Test
     @DisplayName("Successfully process a payment")
     public void testProcessPayment_success() {
-        // Note: CUST001 starts with a balance of 1250.00
+        // CUST001 starts with a balance of 1250.00. This test runs in isolation due to the fix.
         Map<String, Object> result = CustomerSupportAgent.processPayment("CUST001", 100.00, toolContext);
         
-        assertTrue((Boolean) result.get("success"));
+        assertTrue((Boolean) result.get("success"), "Payment processing should succeed");
         assertTrue(result.containsKey("transactionId"));
-        // New balance should be 1250.00 + 100.00 = 1350.00 (This test impacts the static mock DB)
+        // New balance should be 1250.00 + 100.00 = 1350.00
         assertEquals(1350.00, result.get("newBalance")); 
     }
 
     @Test
     @DisplayName("Fail when processing payment with invalid amount")
     public void testProcessPayment_invalidAmount() {
-        // The tool returns a map with "success: false" and "error" key on validation failure.
         Map<String, Object> result = CustomerSupportAgent.processPayment("CUST001", -100.00, toolContext);
         
-        assertFalse((Boolean) result.get("success"));
+        assertFalse((Boolean) result.get("success"), "Result should fail on negative amount");
         assertTrue(result.get("error").toString().contains("Amount must be a positive value"));
     }
 
@@ -99,12 +99,13 @@ public class CustomerSupportAgentTest {
             toolContext
         );
         
-        assertTrue((Boolean) result.get("success"));
+        assertTrue((Boolean) result.get("success"), "Ticket creation should succeed");
+        
         @SuppressWarnings("unchecked")
         Map<String, Object> ticket = (Map<String, Object>) result.get("ticket");
         
         assertTrue(ticket.containsKey("ticketId"));
-        assertEquals("OPEN", ticket.get("status")); // Asserting against the actual key and default value
+        assertEquals("OPEN", ticket.get("status")); 
     }
 
     @Test
@@ -117,7 +118,7 @@ public class CustomerSupportAgentTest {
             "MEDIUM", 
             toolContext
         );
-        assertFalse((Boolean) result.get("success"));
+        assertFalse((Boolean) result.get("success"), "Result should fail on null subject");
         assertTrue(result.get("error").toString().contains("Subject is required"));
     }
 
@@ -134,19 +135,20 @@ public class CustomerSupportAgentTest {
         // Retrieve tickets for CUST003
         Map<String, Object> result = CustomerSupportAgent.getTickets("CUST003", "OPEN", toolContext);
         
-        assertTrue((Boolean) result.get("success"));
+        assertTrue((Boolean) result.get("success"), "Ticket retrieval should succeed");
         assertTrue(result.containsKey("tickets"));
         
         @SuppressWarnings("unchecked")
         int count = (Integer) result.get("count");
-        assertTrue(count > 0); 
+        // We know at least one was created above
+        assertTrue(count > 0, "Should retrieve at least one ticket"); 
     }
 
     @Test
     @DisplayName("Fail getting tickets with null Customer ID")
     public void testGetTickets_nullCustomerId() {
         Map<String, Object> result = CustomerSupportAgent.getTickets(null, "OPEN", toolContext);
-        assertFalse((Boolean) result.get("success"));
+        assertFalse((Boolean) result.get("success"), "Result should fail on null Customer ID");
         assertTrue(result.get("error").toString().contains("Customer ID is required"));
     }
 
@@ -155,7 +157,7 @@ public class CustomerSupportAgentTest {
     @Test
     @DisplayName("Successfully update customer email and tier")
     public void testUpdateAccountSettings_success() {
-        // Correct signature: (customerId, email, tier, toolContext)
+        // CUST003 starts as Enterprise tier
         Map<String, Object> result = CustomerSupportAgent.updateAccountSettings(
             "CUST003", 
             "bob.new@example.com", 
@@ -163,13 +165,14 @@ public class CustomerSupportAgentTest {
             toolContext
         );
         
-        assertTrue((Boolean) result.get("success"));
+        assertTrue((Boolean) result.get("success"), "Settings update should succeed");
         assertEquals("Account settings updated successfully", result.get("message"));
         
         @SuppressWarnings("unchecked")
         Map<String, String> updates = (Map<String, String>) result.get("updates");
         assertTrue(updates.containsKey("email"));
         assertTrue(updates.containsKey("tier"));
+        assertEquals("Premium", updates.get("tier"));
     }
 
     @Test
@@ -181,7 +184,7 @@ public class CustomerSupportAgentTest {
             null, // tier is null
             toolContext
         );
-        assertFalse((Boolean) result.get("success"));
+        assertFalse((Boolean) result.get("success"), "Result should fail when no updates are provided");
         assertTrue(result.get("error").toString().contains("No valid updates provided"));
     }
 
@@ -190,22 +193,21 @@ public class CustomerSupportAgentTest {
     @Test
     @DisplayName("Successfully validate eligible customer for refund (CUST002)")
     public void testValidateRefundEligibility_eligible() {
-        // CUST002 has a recent payment date (2024-12-01) and active status.
-        // Mock ToolContext state is used implicitly by the tool.
+        // CUST002 is configured to be eligible (e.g., recent payment).
         Map<String, Object> result = CustomerSupportAgent.validateRefundEligibility("CUST002", toolContext);
         
-        assertTrue((Boolean) result.get("success"));
-        assertTrue((Boolean) result.get("eligible")); // Correct key is 'eligible'
+        assertTrue((Boolean) result.get("success"), "Validation call should succeed");
+        assertTrue((Boolean) result.get("eligible"), "CUST002 should be eligible"); 
     }
 
     @Test
     @DisplayName("Fail validation for customer not eligible (CUST001 - old payment)")
     public void testValidateRefundEligibility_notEligible() {
-        // CUST001 has an old lastPaymentDate ("2024-11-25"), which will fail the 30-day check as of 2025-12-10 (current time context).
+        // CUST001 is configured to be ineligible (e.g., old payment date).
         Map<String, Object> result = CustomerSupportAgent.validateRefundEligibility("CUST001", toolContext);
         
-        assertTrue((Boolean) result.get("success"));
-        assertFalse((Boolean) result.get("eligible")); 
+        assertTrue((Boolean) result.get("success"), "Validation call should succeed even if ineligible");
+        assertFalse((Boolean) result.get("eligible"), "CUST001 should not be eligible"); 
         
         @SuppressWarnings("unchecked")
         java.util.List<String> reasons = (java.util.List<String>) result.get("reasons");
@@ -215,14 +217,14 @@ public class CustomerSupportAgentTest {
     @Test
     @DisplayName("Successfully process refund after validation")
     public void testProcessRefund_success() {
-        // 1. Manually set state for eligibility, as this is sequential workflow dependency
+        // 1. Manually set state for eligibility (mimics the sequential agent step)
         when(stateMap.get("refund_eligible")).thenReturn(true);
-        // Note: CUST003 starts with 5000.00
+        // CUST003 starts with 5000.00
         
         // 2. Process refund
         Map<String, Object> result = CustomerSupportAgent.processRefund("CUST003", 50.00, toolContext);
         
-        assertTrue((Boolean) result.get("success"));
+        assertTrue((Boolean) result.get("success"), "Refund should process successfully");
         assertTrue(result.containsKey("refundId"));
         // New balance is 5000.00 - 50.00 = 4950.00
         assertEquals(4950.00, result.get("newBalance")); 
@@ -232,10 +234,12 @@ public class CustomerSupportAgentTest {
     @Test
     @DisplayName("Fail processing refund without prior validation")
     public void testProcessRefund_noValidation() {
-        // Default stateMap mock will return null for "refund_eligible"
+        // Mock state returns null for "refund_eligible"
+        when(stateMap.get("refund_eligible")).thenReturn(null); 
+        
         Map<String, Object> result = CustomerSupportAgent.processRefund("CUST003", 50.00, toolContext);
         
-        assertFalse((Boolean) result.get("success"));
+        assertFalse((Boolean) result.get("success"), "Result should fail without validation flag");
         assertTrue(result.get("error").toString().contains("Refund validation must be completed first"));
     }
 
@@ -245,7 +249,7 @@ public class CustomerSupportAgentTest {
         when(stateMap.get("refund_eligible")).thenReturn(true);
         Map<String, Object> result = CustomerSupportAgent.processRefund("CUST003", -50.00, toolContext);
         
-        assertFalse((Boolean) result.get("success"));
+        assertFalse((Boolean) result.get("success"), "Result should fail on negative refund amount");
         assertTrue(result.get("error").toString().contains("Amount must be a positive value"));
     }
 }
