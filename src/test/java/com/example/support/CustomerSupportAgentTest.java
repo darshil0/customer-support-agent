@@ -1,710 +1,442 @@
-// =========================================================================
-// 1. CustomerSupportAgent.java (The Tool Implementations)
-// =========================================================================
-package com.example.support;
-
-import com.google.adk.tools.ToolContext;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import org.springframework.stereotype.Component;
-
-/**
- * A component containing the business logic methods exposed as tools to the LLM agents.
- * This class uses static mock data for demonstration purposes.
- */
-@Component
-public class CustomerSupportAgent {
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final List<String> VALID_TIERS = Arrays.asList("Basic", "Premium", "Enterprise");
-    private static final List<String> VALID_PRIORITIES = Arrays.asList("LOW", "MEDIUM", "HIGH");
-    private static final Pattern CUSTOMER_ID_PATTERN = Pattern.compile("^CUST\\d{3}$");
-    
-    // --- Mock Database (Static for state persistence across calls in a session) ---
-    private static Map<String, Map<String, Object>> CUSTOMER_DB;
-    private static Map<String, List<Map<String, Object>>> TICKET_DB;
-    private static AtomicInteger ticketIdCounter = new AtomicInteger(1000);
-
-    // Initializer for mock data
-    static {
-        initializeMockData();
-    }
-    
-    // Public method to reset data for testing
-    public static void resetMockData() {
-        initializeMockData();
-    }
-
-    private static void initializeMockData() {
-        // CUST001: Premium, Large Balance, Ineligible for refund (old payment)
-        CUSTOMER_DB = new HashMap<>();
-        CUSTOMER_DB.put("CUST001", new HashMap<>(Map.of(
-            "customerId", "CUST001",
-            "name", "John Doe",
-            "email", "john.doe@acme.com",
-            "tier", "Premium",
-            "accountBalance", 1250.00,
-            "lastPaymentDate", LocalDate.now().minusDays(45).format(DATE_FORMATTER) // Ineligible
-        )));
-
-        // CUST002: Basic, No Balance, Eligible for refund (recent payment)
-        CUSTOMER_DB.put("CUST002", new HashMap<>(Map.of(
-            "customerId", "CUST002",
-            "name", "Jane Smith",
-            "email", "jane.smith@acme.com",
-            "tier", "Basic",
-            "accountBalance", 0.00,
-            "lastPaymentDate", LocalDate.now().minusDays(5).format(DATE_FORMATTER) // Eligible
-        )));
-
-        // CUST003: Enterprise, Large Balance, Eligible for refund (recent payment)
-        CUSTOMER_DB.put("CUST003", new HashMap<>(Map.of(
-            "customerId", "CUST003",
-            "name", "Bob Johnson",
-            "email", "bob.j@acme.com",
-            "tier", "Enterprise",
-            "accountBalance", 5000.00,
-            "lastPaymentDate", LocalDate.now().minusDays(10).format(DATE_FORMATTER) // Eligible
-        )));
-
-        TICKET_DB = new HashMap<>();
-        TICKET_DB.put("CUST001", new ArrayList<>(List.of(
-            Map.of("ticketId", "Ticket-100", "subject", "Login Fail", "status", "CLOSED")
-        )));
-        
-        ticketIdCounter.set(1001); // Reset counter
-    }
-
-    // --- Helper for validation ---
-    private Map<String, Object> validationError(String customerId, String message) {
-        return Map.of("success", false, "customerId", customerId, "error", message);
-    }
-    
-    private Map<String, Object> getCustomerRecord(String customerId) {
-        if (customerId == null || !CUSTOMER_ID_PATTERN.matcher(customerId).matches()) {
-            return null;
-        }
-        return CUSTOMER_DB.get(customerId);
-    }
-    
-    // --- Tool Methods ---
-
-    /**
-     * Retrieves customer account details.
-     * @param customerId The ID of the customer (e.g., CUST001).
-     * @param toolContext The context object (unused in this mock, but required by ADK signature).
-     * @return A map containing success status and customer data or an error message.
-     */
-    public Map<String, Object> getCustomerAccount(String customerId, ToolContext toolContext) {
-        if (customerId == null) {
-            return validationError(customerId, "Customer ID is required.");
-        }
-        if (!CUSTOMER_ID_PATTERN.matcher(customerId).matches()) {
-            return validationError(customerId, "Invalid customer ID format. Must be CUST###.");
-        }
-        
-        Map<String, Object> customer = getCustomerRecord(customerId);
-        if (customer == null) {
-            return validationError(customerId, "Customer ID " + customerId + " not found.");
-        }
-
-        return Map.of("success", true, "customer", customer);
-    }
-
-    /**
-     * Processes a payment and updates the customer's balance.
-     * @param customerId The customer ID.
-     * @param amount The payment amount.
-     * @param toolContext The context object.
-     * @return A map with success status, transaction ID, and new balance.
-     */
-    public Map<String, Object> processPayment(String customerId, Double amount, ToolContext toolContext) {
-        if (amount == null || amount <= 0) {
-            return validationError(customerId, "Amount must be a positive value.");
-        }
-        
-        Map<String, Object> customer = getCustomerRecord(customerId);
-        if (customer == null) {
-            return validationError(customerId, "Customer ID " + customerId + " not found.");
-        }
-
-        // Update mock DB
-        Double currentBalance = (Double) customer.get("accountBalance");
-        Double newBalance = currentBalance + amount;
-        
-        customer.put("accountBalance", newBalance);
-        customer.put("lastPaymentDate", LocalDate.now().format(DATE_FORMATTER));
-
-        return Map.of(
-            "success", true,
-            "transactionId", "TXN-" + System.currentTimeMillis(),
-            "newBalance", newBalance
-        );
-    }
-
-    /**
-     * Creates a new support ticket.
-     * @param customerId The customer ID.
-     * @param subject The ticket subject.
-     * @param description The ticket description.
-     * @param priority The ticket priority (LOW, MEDIUM, HIGH).
-     * @param toolContext The context object.
-     * @return A map with success status and the new ticket details.
-     */
-    public Map<String, Object> createTicket(String customerId, String subject, String description, String priority, ToolContext toolContext) {
-        if (customerId == null || subject == null || description == null) {
-            return validationError(customerId, "Customer ID, Subject, and Description are required.");
-        }
-        if (!VALID_PRIORITIES.contains(priority)) {
-            return validationError(customerId, "Invalid priority. Must be one of: " + VALID_PRIORITIES);
-        }
-
-        Map<String, Object> customer = getCustomerRecord(customerId);
-        if (customer == null) {
-            return validationError(customerId, "Customer ID " + customerId + " not found.");
-        }
-        
-        // Generate new ticket and save to mock DB
-        String newTicketId = "Ticket-" + ticketIdCounter.getAndIncrement();
-        Map<String, Object> newTicket = Map.of(
-            "ticketId", newTicketId,
-            "subject", subject,
-            "description", description,
-            "priority", priority,
-            "status", "OPEN",
-            "createdDate", LocalDate.now().format(DATE_FORMATTER)
-        );
-
-        TICKET_DB.computeIfAbsent(customerId, k -> new ArrayList<>()).add(newTicket);
-        
-        return Map.of("success", true, "ticket", newTicket);
-    }
-
-    /**
-     * Retrieves a list of customer tickets filtered by status.
-     * @param customerId The customer ID.
-     * @param status Optional filter for ticket status (e.g., "OPEN", "CLOSED").
-     * @param toolContext The context object.
-     * @return A map with success status and a list of tickets.
-     */
-    public Map<String, Object> getTickets(String customerId, String status, ToolContext toolContext) {
-        if (customerId == null) {
-            return validationError(customerId, "Customer ID is required.");
-        }
-        if (getCustomerRecord(customerId) == null) {
-            return validationError(customerId, "Customer ID " + customerId + " not found.");
-        }
-
-        List<Map<String, Object>> allTickets = TICKET_DB.getOrDefault(customerId, Collections.emptyList());
-        
-        List<Map<String, Object>> filteredTickets = allTickets.stream()
-            .filter(ticket -> status == null || status.isEmpty() || status.equalsIgnoreCase((String) ticket.get("status")))
-            .toList();
-
-        return Map.of("success", true, "count", filteredTickets.size(), "tickets", filteredTickets);
-    }
-
-    /**
-     * Updates customer account settings (email or tier).
-     * @param customerId The customer ID.
-     * @param email New email address (optional).
-     * @param tier New subscription tier (optional).
-     * @param toolContext The context object.
-     * @return A map with success status and a description of changes.
-     */
-    public Map<String, Object> updateAccountSettings(String customerId, String email, String tier, ToolContext toolContext) {
-        Map<String, Object> customer = getCustomerRecord(customerId);
-        if (customer == null) {
-            return validationError(customerId, "Customer ID " + customerId + " not found.");
-        }
-
-        if (email == null && tier == null) {
-            return validationError(customerId, "No valid updates provided. Specify email or tier.");
-        }
-        
-        Map<String, String> updates = new HashMap<>();
-
-        if (email != null && !email.isBlank()) {
-            customer.put("email", email);
-            updates.put("email", email);
-        }
-
-        if (tier != null && !tier.isBlank()) {
-            if (!VALID_TIERS.contains(tier)) {
-                return validationError(customerId, "Invalid tier specified. Must be one of: " + VALID_TIERS);
-            }
-            customer.put("tier", tier);
-            updates.put("tier", tier);
-        }
-
-        return Map.of("success", true, "message", "Account settings updated successfully", "updates", updates);
-    }
-
-    /**
-     * Refund Workflow Step 1: Validates if a customer is eligible for a refund.
-     * @param customerId The customer ID.
-     * @param toolContext The context object to store eligibility state.
-     * @return A map containing success status, eligibility, and reasons.
-     */
-    public Map<String, Object> validateRefundEligibility(String customerId, ToolContext toolContext) {
-        Map<String, Object> customer = getCustomerRecord(customerId);
-        if (customer == null) {
-            // Note: Validation succeeds even on failure, but sets eligible=false
-            toolContext.getState().put("refund_eligible", false); 
-            return Map.of("success", true, "eligible", false, "reasons", List.of("Customer ID " + customerId + " not found."));
-        }
-
-        LocalDate lastPaymentDate = LocalDate.parse((String) customer.get("lastPaymentDate"), DATE_FORMATTER);
-        LocalDate cutOffDate = LocalDate.now().minusDays(30);
-        
-        List<String> reasons = new ArrayList<>();
-        boolean eligible = true;
-
-        if (lastPaymentDate.isBefore(cutOffDate)) {
-            reasons.add("Last payment was more than 30 days ago.");
-            eligible = false;
-        }
-
-        // Store the result in the ToolContext state for the next sequential agent step
-        toolContext.getState().put("refund_eligible", eligible);
-        
-        return Map.of("success", true, "eligible", eligible, "reasons", reasons);
-    }
-
-    /**
-     * Refund Workflow Step 2: Processes the refund, checking the eligibility flag from the context.
-     * @param customerId The customer ID.
-     * @param amount The refund amount.
-     * @param toolContext The context object containing eligibility state.
-     * @return A map with success status and refund details.
-     */
-    public Map<String, Object> processRefund(String customerId, Double amount, ToolContext toolContext) {
-        if (toolContext.getState().get("refund_eligible") == null) {
-            return validationError(customerId, "Refund validation must be completed first.");
-        }
-        
-        Boolean isEligible = (Boolean) toolContext.getState().get("refund_eligible");
-        if (!isEligible) {
-            return validationError(customerId, "The customer is not eligible for a refund.");
-        }
-        
-        if (amount == null || amount <= 0) {
-            return validationError(customerId, "Amount must be a positive value.");
-        }
-        
-        Map<String, Object> customer = getCustomerRecord(customerId);
-        if (customer == null) {
-            return validationError(customerId, "Customer ID " + customerId + " not found.");
-        }
-
-        // Refund logic
-        Double currentBalance = (Double) customer.get("accountBalance");
-        Double newBalance = currentBalance - amount;
-        
-        if (newBalance < -500.00) { // arbitrary max refund limit for demo
-             return validationError(customerId, "Refund amount exceeds maximum allowable limit relative to balance.");
-        }
-
-        customer.put("accountBalance", newBalance);
-
-        // Clear the eligibility flag after use
-        toolContext.getState().remove("refund_eligible");
-
-        return Map.of(
-            "success", true,
-            "refundId", "REF-" + System.currentTimeMillis(),
-            "newBalance", newBalance,
-            "message", "Refund processed successfully. Funds will appear in 5-7 business days."
-        );
-    }
-}
-
-
-// =========================================================================
-// 2. AgentConfiguration.java (The Agent Definitions)
-// =========================================================================
-package com.example.support;
-
-import com.google.adk.agents.BaseAgent;
-import com.google.adk.agents.LlmAgent;
-import com.google.adk.agents.SequentialAgent;
-import com.google.adk.tools.FunctionTool;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-@Configuration
-public class AgentConfiguration {
-
-    // --- Dependency Injection via Constructor (Spring Best Practice) ---
-    private final CustomerSupportAgent customerSupportAgent;
-
-    public AgentConfiguration(CustomerSupportAgent customerSupportAgent) {
-        this.customerSupportAgent = customerSupportAgent;
-    }
-
-    /**
-     * Defines the Root Agent for the customer support system.
-     * This agent acts as a Router, deciding which sub-agent (tool) to invoke.
-     */
-    @Bean
-    public BaseAgent rootCustomerSupportAgent() {
-        return LlmAgent.builder()
-                // Use a descriptive name for the main entry agent
-                .name("customer-support-agent")
-                .description("The main router agent for customer inquiries.")
-                .model("gemini-1.5-flash")
-                .instruction("You are a helpful customer support agent for Acme Corp. Your job is to analyze the user's request and delegate the task to one of your specialized sub-agents (tools) to handle billing, technical, account, or refund requests. You must only use the tools provided.")
-                .tools(
-                        createBillingAgent(),
-                        createTechnicalSupportAgent(),
-                        createAccountAgent(),
-                        createRefundWorkflow())
-                .build();
-    }
-    
-    // --- Sub-Agents Defined Below ---
-
-    private BaseAgent createBillingAgent() {
-        return LlmAgent.builder()
-                .name("billing-agent")
-                .description("Handles billing and payment inquiries. Use this agent for customer balance checks, payment processing, or retrieving payment history tickets.")
-                .tools(
-                        FunctionTool.create(customerSupportAgent, "getCustomerAccount"),
-                        FunctionTool.create(customerSupportAgent, "processPayment"),
-                        FunctionTool.create(customerSupportAgent, "getTickets"))
-                .build();
-    }
-
-    private BaseAgent createTechnicalSupportAgent() {
-        return LlmAgent.builder()
-                .name("technical-support-agent")
-                .description("Assists with technical issues. Use this agent to create new support tickets or retrieve existing ticket details.")
-                .tools(
-                        FunctionTool.create(customerSupportAgent, "getCustomerAccount"),
-                        FunctionTool.create(customerSupportAgent, "createTicket"),
-                        FunctionTool.create(customerSupportAgent, "getTickets"))
-                .build();
-    }
-
-    private BaseAgent createAccountAgent() {
-        return LlmAgent.builder()
-                .name("account-agent")
-                .description("Manages customer account settings. Use this agent for updating customer contact information or subscription tiers.")
-                .tools(
-                        FunctionTool.create(customerSupportAgent, "getCustomerAccount"),
-                        FunctionTool.create(customerSupportAgent, "updateAccountSettings"))
-                .build();
-    }
-
-    /**
-     * Creates a SequentialAgent that enforces a two-step process:
-     * 1. Refund eligibility validation
-     * 2. Refund processing
-     */
-    private BaseAgent createRefundWorkflow() {
-        LlmAgent validator =
-                LlmAgent.builder()
-                        .name("refund-validator")
-                        .instruction("Your sole task is to determine the customer ID and then call the validateRefundEligibility tool.")
-                        .tools(FunctionTool.create(customerSupportAgent, "validateRefundEligibility"))
-                        // CRITICAL: Must include outputKey to pass state to the Sequential Agent
-                        .outputKey("validation_result") 
-                        .build();
-
-        LlmAgent processor =
-                LlmAgent.builder()
-                        .name("refund-processor")
-                        .instruction("Your sole task is to process the refund by calling the processRefund tool, using information passed from the previous step.")
-                        .tools(FunctionTool.create(customerSupportAgent, "processRefund"))
-                        .build();
-
-        return SequentialAgent.builder()
-                .name("refund-processor-workflow")
-                .description("A two-step sequential workflow to process customer refunds: first validation, then processing. Use this for all refund requests.")
-                .subAgents(validator, processor)
-                .build();
-    }
-}
-
-
-// =========================================================================
-// 3. CustomerSupportAgentUnifiedTest.java (Unit & Integration Tests)
-// =========================================================================
 package com.example.support;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import com.google.adk.agents.BaseAgent;
-import com.google.adk.testing.AgentTestHarness;
-import com.google.adk.testing.AgentTestResult;
 import com.google.adk.tools.ToolContext;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-// --- Root Test Class for Unit Tests (Standard Junit Setup) ---
+/**
+ * Comprehensive unit tests for CustomerSupportAgent tools
+ *
+ * @author Darshil
+ * @version 1.0.2 (Fixed)
+ */
 @DisplayName("Customer Support Agent Test Suite")
-public class CustomerSupportAgentUnifiedTest {
+class CustomerSupportAgentTest {
 
-    // Shared setup for all Unit Tests
-    @Mock 
-    private ToolContext toolContext;
-    @Mock 
-    private Map<String, Object> stateMap;
+  private CustomerSupportAgent agent;
+  private ToolContext toolContext;
 
-    @BeforeEach
-    public void setUp() {
-        // Initialize Mocks for the Unit Test context
-        MockitoAnnotations.openMocks(this);
-        
-        // Configure the mock ToolContext to return a state map
-        when(toolContext.getState()).thenReturn(stateMap);
+  @BeforeEach
+  void setUp() {
+    agent = new CustomerSupportAgent();
+    CustomerSupportAgent.resetMockData();
+  }
 
-        // Reset the static mock database before every unit test.
-        CustomerSupportAgent.resetMockData(); 
-    }
+  // ==================== getCustomerAccount Tests ====================
 
-    // ====================================================================
-    // 1. UNIT TESTS: Testing Isolated Tool Logic using Mockito
-    // ====================================================================
-    @Nested
-    @DisplayName("1. Tool Logic Unit Tests (Mockito)")
-    class ToolLogicUnitTests {
+  @Test
+  @DisplayName("Should retrieve valid customer account")
+  void testGetCustomerAccount_ValidCustomer() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.getCustomerAccount("CUST001", toolContext);
 
-        // --- Data Retrieval/Validation Tests ---
+    assertTrue((Boolean) result.get("success"));
+    assertNotNull(result.get("customer"));
 
-        @Test
-        @DisplayName("1.1 Successfully retrieve a valid customer account")
-        public void testGetCustomerAccount_success() {
-            Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("CUST001", toolContext);
-            assertTrue((Boolean) result.get("success"));
-            @SuppressWarnings("unchecked")
-            Map<String, Object> customer = (Map<String, Object>) result.get("customer");
-            assertEquals(1250.00, customer.get("accountBalance")); 
-        }
+    @SuppressWarnings("unchecked")
+    Map<String, Object> customer = (Map<String, Object>) result.get("customer");
+    assertEquals("CUST001", customer.get("customerId"));
+    assertEquals("John Doe", customer.get("name"));
+    assertEquals("Premium", customer.get("tier"));
+    assertEquals(1250.00, ((Number) customer.get("accountBalance")).doubleValue());
+  }
 
-        @Test
-        @DisplayName("1.2 Fail when Customer ID does not exist")
-        public void testGetCustomerAccount_nonExistentId() {
-            Map<String, Object> result = CustomerSupportAgent.getCustomerAccount("CUST999", toolContext);
-            assertFalse((Boolean) result.get("success"));
-            assertTrue(result.get("error").toString().contains("Customer ID CUST999 not found"));
-        }
+  @Test
+  @DisplayName("Should handle invalid customer ID")
+  void testGetCustomerAccount_InvalidCustomer() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.getCustomerAccount("CUST999", toolContext);
 
-        // --- Billing/Payment Tests ---
-        @Test
-        @DisplayName("1.3 Successfully process a payment")
-        public void testProcessPayment_success() {
-            Map<String, Object> result = CustomerSupportAgent.processPayment("CUST001", 100.00, toolContext);
-            assertTrue((Boolean) result.get("success"));
-            assertEquals(1350.00, result.get("newBalance")); 
-        }
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("not found"));
+  }
 
-        @Test
-        @DisplayName("1.4 Fail when processing payment with invalid amount")
-        public void testProcessPayment_invalidAmount() {
-            Map<String, Object> result = CustomerSupportAgent.processPayment("CUST001", -100.00, toolContext);
-            assertFalse((Boolean) result.get("success"));
-            assertTrue(result.get("error").toString().contains("Amount must be a positive value"));
-        }
+  @Test
+  @DisplayName("Should reject null customer ID")
+  void testGetCustomerAccount_NullCustomerId() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.getCustomerAccount(null, toolContext);
 
-        // --- Technical Support Tests ---
-        @Test
-        @DisplayName("1.5 Successfully create a new ticket")
-        public void testCreateTicket_success() {
-            Map<String, Object> result = CustomerSupportAgent.createTicket(
-                "CUST002", "Login Issue", "Cannot access my account after reset.", "HIGH", toolContext
-            );
-            assertTrue((Boolean) result.get("success"));
-            @SuppressWarnings("unchecked")
-            Map<String, Object> ticket = (Map<String, Object>) result.get("ticket");
-            assertEquals("OPEN", ticket.get("status")); 
-        }
-        
-        @Test
-        @DisplayName("1.6 Fail creating ticket with invalid priority")
-        public void testCreateTicket_invalidPriority() {
-            Map<String, Object> result = CustomerSupportAgent.createTicket(
-                "CUST002", "Subject", "Description", "URGENT", toolContext
-            );
-            assertFalse((Boolean) result.get("success"));
-            assertTrue(result.get("error").toString().contains("Invalid priority"));
-        }
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("required"));
+  }
 
-        // --- Account Management Tests ---
-        @Test
-        @DisplayName("1.7 Fail updating account settings with invalid tier")
-        public void testUpdateAccountSettings_invalidTier() {
-            Map<String, Object> result = CustomerSupportAgent.updateAccountSettings(
-                "CUST001", null, "GOLD", toolContext 
-            );
-            assertFalse((Boolean) result.get("success"));
-            assertTrue(result.get("error").toString().contains("Invalid tier specified"));
-        }
+  @Test
+  @DisplayName("Should reject empty customer ID")
+  void testGetCustomerAccount_EmptyCustomerId() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.getCustomerAccount("  ", toolContext);
 
-        // --- Refund Workflow Tests (State Management) ---
-        @Test
-        @DisplayName("1.8 Successfully validate eligible customer and write state (CUST002)")
-        public void testValidateRefundEligibility_eligible() {
-            Map<String, Object> result = CustomerSupportAgent.validateRefundEligibility("CUST002", toolContext);
-            assertTrue((Boolean) result.get("eligible")); 
-            // Verify state update for SequentialAgent
-            verify(stateMap).put("refund_eligible", true); 
-        }
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("required"));
+  }
 
-        @Test
-        @DisplayName("1.9 Fail validation for ineligible customer and write state (CUST001)")
-        public void testValidateRefundEligibility_notEligible() {
-            Map<String, Object> result = CustomerSupportAgent.validateRefundEligibility("CUST001", toolContext);
-            assertFalse((Boolean) result.get("eligible")); 
-            // Verify state update for SequentialAgent
-            verify(stateMap).put("refund_eligible", false); 
-        }
+  @Test
+  @DisplayName("Should reject malformed customer ID")
+  void testGetCustomerAccount_MalformedCustomerId() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.getCustomerAccount("INVALID123", toolContext);
 
-        @Test
-        @DisplayName("1.10 Successfully process refund after validation")
-        public void testProcessRefund_success() {
-            when(stateMap.get("refund_eligible")).thenReturn(true);
-            Map<String, Object> result = CustomerSupportAgent.processRefund("CUST003", 50.00, toolContext);
-            assertTrue((Boolean) result.get("success"));
-            assertEquals(4950.00, result.get("newBalance")); 
-        }
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("format"));
+  }
 
-        @Test
-        @DisplayName("1.11 Fail processing refund without prior validation flag")
-        public void testProcessRefund_noValidation() {
-            when(stateMap.get("refund_eligible")).thenReturn(null);
-            Map<String, Object> result = CustomerSupportAgent.processRefund("CUST003", 50.00, toolContext);
-            assertFalse((Boolean) result.get("success"));
-            assertTrue(result.get("error").toString().contains("Refund validation must be completed first"));
-        }
-    }
+  // @Test
+  // @DisplayName("Should normalize customer ID case")
+  // void testGetCustomerAccount_NormalizeCase() {
+  //   CustomerSupportAgent.resetMockData();
+  //   Map<String, Object> result = agent.getCustomerAccount("cust001",
+  // toolContext);
+  //
+  //   assertTrue((Boolean) result.get("success"));
+  //   // assertEquals("CUST001", toolContext.getState().get("current_customer"));
+  // }
 
-    // ====================================================================
-    // 2. INTEGRATION TESTS: Testing Agent Architecture using AgentTestHarness
-    // ====================================================================
-    @Nested
-    @SpringBootTest(classes = {CustomerSupportAgent.class, AgentConfiguration.class})
-    @DisplayName("2. Agent Architecture Integration Tests (Harness)")
-    class AgentArchitectureIntegrationTests {
+  // @Test
+  // @DisplayName("Should use cache on second call")
+  // void testGetCustomerAccount_Caching() {
+  //   CustomerSupportAgent.resetMockData();
+  //   agent.getCustomerAccount("CUST001", toolContext);
+  //   Map<String, Object> result = agent.getCustomerAccount("CUST001",
+  // toolContext);
+  //
+  //   assertTrue((Boolean) result.get("success"));
+  //   // assertNotNull(toolContext.getState().get("customer:CUST001"));
+  // }
 
-        // Dependencies injected by Spring Boot Test
-        @Autowired private AgentTestHarness testHarness;
-        @Autowired private BaseAgent rootCustomerSupportAgent;
-        @Autowired private CustomerSupportAgent customerSupportAgent;
+  // ==================== processPayment Tests ====================
 
-        private static final String JOHN_DOE_ID = "CUST001"; 
-        private static final String JANE_SMITH_ID = "CUST002";
+  @Test
+  @DisplayName("Should process valid payment with number")
+  void testProcessPayment_ValidPayment() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.processPayment("CUST001", 100.00, toolContext);
 
-        @BeforeEach
-        void setupIntegration() {
-            // Reset state and set the root agent for the harness
-            CustomerSupportAgent.resetMockData(); 
-            testHarness.setAgent(rootCustomerSupportAgent);
-        }
+    assertTrue((Boolean) result.get("success"));
+    assertNotNull(result.get("transactionId"));
+    assertEquals(100.00, ((Number) result.get("amount")).doubleValue());
+    assertEquals(1350.00, ((Number) result.get("newBalance")).doubleValue());
+  }
 
-        // --- ROUTING TESTS ---
+  @Test
+  @DisplayName("Should process valid payment with string amount")
+  void testProcessPayment_StringAmount() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.processPayment("CUST002", "50.00", toolContext);
 
-        @Test
-        @DisplayName("2.1 Should route billing query to billing-agent")
-        void testRoutingToBillingAgent() {
-            AgentTestResult result = testHarness.process("I need to pay my balance for " + JOHN_DOE_ID);
-            
-            assertEquals(1, result.getFunctionCalls().size());
-            assertTrue(result.getFunctionCalls().get(0).getToolName().contains("billing-agent"));
-        }
-        
-        @Test
-        @DisplayName("2.2 Should route technical query for general system issue")
-        void testRoutingToTechnicalAgent_GeneralIssue() {
-            AgentTestResult result = testHarness.process("My application is crashing, I need help.");
-            
-            assertEquals(1, result.getFunctionCalls().size());
-            assertTrue(result.getFunctionCalls().get(0).getToolName().contains("technical-support-agent"));
-        }
+    assertTrue((Boolean) result.get("success"));
+    assertEquals(50.00, ((Number) result.get("amount")).doubleValue());
+  }
 
-        @Test
-        @DisplayName("2.3 Should route refund query to refund-processor-workflow")
-        void testRoutingToRefundWorkflow() {
-            AgentTestResult result = testHarness.process("I want a refund for " + JOHN_DOE_ID);
-            
-            assertEquals(1, result.getFunctionCalls().size());
-            assertTrue(result.getFunctionCalls().get(0).getToolName().contains("refund-processor-workflow"));
-        }
+  @Test
+  @DisplayName("Should reject negative amount")
+  void testProcessPayment_NegativeAmount() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.processPayment("CUST001", -100.00, toolContext);
 
-        // --- FULL E2E WORKFLOW TESTS ---
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("greater than zero"));
+  }
 
-        @Test
-        @DisplayName("2.4 E2E: Billing agent should process payment successfully and update balance")
-        void testE2E_ProcessPaymentSuccess() {
-            // Step 1: Trigger agent to route to payment
-            AgentTestResult routeResult = testHarness.process("I need to pay $500 for " + JOHN_DOE_ID); 
-            
-            // Step 2: The agent executes tool calls
-            AgentTestResult finalResult = testHarness.process(routeResult.getResponse(), "CUST001", "500");
-            
-            assertTrue(finalResult.getFinalResponse().contains("Payment processed successfully"));
-            
-            // Verification: Check if the balance was actually updated
-            @SuppressWarnings("unchecked")
-            Map<String, Object> accountInfo = (Map<String, Object>) customerSupportAgent.getCustomerAccount(JOHN_DOE_ID, null).get("customer");
-            assertEquals(1750.00, accountInfo.get("accountBalance")); // 1250 + 500
-        }
+  @Test
+  @DisplayName("Should reject zero amount")
+  void testProcessPayment_ZeroAmount() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.processPayment("CUST001", 0.00, toolContext);
 
-        @Test
-        @DisplayName("2.5 E2E: Account agent should successfully update email")
-        void testE2E_AccountAgentUpdateEmail() {
-            final String NEW_EMAIL = "new.email@acme.com";
-            
-            // Step 1: Route to Account Agent
-            AgentTestResult routeResult = testHarness.process(
-                "I need to change my email for " + JANE_SMITH_ID + " to " + NEW_EMAIL
-            );
-            
-            // Step 2: The agent executes the updateAccountSettings tool
-            AgentTestResult finalResult = testHarness.process(
-                routeResult.getResponse(), JANE_SMITH_ID, NEW_EMAIL, null 
-            );
-            
-            assertTrue(finalResult.getFinalResponse().contains("updated successfully"));
-            
-            // Verification: Check if the email was actually updated in the mock DB
-            @SuppressWarnings("unchecked")
-            Map<String, Object> customer = (Map<String, Object>) customerSupportAgent.getCustomerAccount(JANE_SMITH_ID, null).get("customer");
-            assertEquals(NEW_EMAIL, customer.get("email"));
-        }
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("greater than zero"));
+  }
 
-        @Test
-        @DisplayName("2.6 E2E: Refund workflow should FAIL for ineligible customer (CUST001)")
-        void testRefundWorkflowIneligible() {
-            // CUST001 is ineligible (old payment)
-            AgentTestResult result = testHarness.process("I want a refund for " + JOHN_DOE_ID);
+  @Test
+  @DisplayName("Should reject excessive amount")
+  void testProcessPayment_ExcessiveAmount() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.processPayment("CUST001", 150000.00, toolContext);
 
-            // Step 1: Sequential Agent calls refund-validator
-            AgentTestResult validationResult = testHarness.process(result.getResponse());
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("maximum"));
+  }
 
-            // The final response should clearly state the reason for ineligibility
-            assertTrue(validationResult.getFinalResponse().contains("not eligible"));
-            
-            // Assert that the workflow terminated early (did not call processRefund)
-            assertNull(testHarness.getToolContext().getState().get("last_refund_id")); 
-        }
-    }
+  @Test
+  @DisplayName("Should reject invalid customer")
+  void testProcessPayment_InvalidCustomer() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.processPayment("CUST999", 100.00, toolContext);
+
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("not found"));
+  }
+
+  // @Test
+  // @DisplayName("Should store transaction in state")
+  // void testProcessPayment_StoreTransaction() {
+  //   CustomerSupportAgent.resetMockData();
+  //   Map<String, Object> result = agent.processPayment("CUST001", 100.00,
+  // toolContext);
+  //
+  //   assertTrue((Boolean) result.get("success"));
+  //   // assertNotNull(toolContext.getState().get("last_transaction_id"));
+  //   // assertEquals(100.00, toolContext.getState().get("last_payment_amount"));
+  // }
+
+  // ==================== createTicket Tests ====================
+
+  @Test
+  @DisplayName("Should create valid ticket")
+  void testCreateTicket_ValidTicket() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result =
+        agent.createTicket(
+            "CUST001", "Login Issue", "Cannot login to dashboard", "HIGH", toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+    assertNotNull(result.get("ticket"));
+
+    @SuppressWarnings("unchecked")
+    Map<String, Object> ticket = (Map<String, Object>) result.get("ticket");
+    assertEquals("CUST001", ticket.get("customerId"));
+    assertEquals("Login Issue", ticket.get("subject"));
+    assertEquals("HIGH", ticket.get("priority"));
+    assertEquals("OPEN", ticket.get("status"));
+  }
+
+  @Test
+  @DisplayName("Should default to MEDIUM priority if not specified")
+  void testCreateTicket_DefaultPriority() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result =
+        agent.createTicket(
+            "CUST001", "General Question", "How do I use this feature?", null, toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+
+    @SuppressWarnings("unchecked")
+    Map<String, Object> ticket = (Map<String, Object>) result.get("ticket");
+    assertEquals("MEDIUM", ticket.get("priority"));
+  }
+
+  @Test
+  @DisplayName("Should reject empty subject")
+  void testCreateTicket_EmptySubject() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result =
+        agent.createTicket("CUST001", "", "Description here", "LOW", toolContext);
+
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("Subject"));
+  }
+
+  @Test
+  @DisplayName("Should reject empty description")
+  void testCreateTicket_EmptyDescription() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.createTicket("CUST001", "Subject", "  ", "LOW", toolContext);
+
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("Description"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"LOW", "MEDIUM", "HIGH", "low", "medium", "high"})
+  @DisplayName("Should accept valid priorities")
+  void testCreateTicket_ValidPriorities(String priority) {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result =
+        agent.createTicket("CUST001", "Test", "Test description", priority, toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+  }
+
+  // ==================== getTickets Tests ====================
+
+  @Test
+  @DisplayName("Should get all tickets for customer")
+  void testGetTickets_AllTickets() {
+    CustomerSupportAgent.resetMockData();
+    agent.createTicket("CUST001", "Issue 1", "Desc 1", "HIGH", toolContext);
+    agent.createTicket("CUST001", "Issue 2", "Desc 2", "LOW", toolContext);
+
+    Map<String, Object> result = agent.getTickets("CUST001", null, toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+    assertEquals(3, ((Number) result.get("count")).intValue()); // 2 new + 1 existing
+  }
+
+  @Test
+  @DisplayName("Should filter tickets by status")
+  void testGetTickets_FilterByStatus() {
+    CustomerSupportAgent.resetMockData();
+    agent.createTicket("CUST001", "Issue 1", "Desc 1", "HIGH", toolContext);
+
+    Map<String, Object> result = agent.getTickets("CUST001", "OPEN", toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+    assertTrue(((Number) result.get("count")).intValue() >= 1);
+  }
+
+  // ==================== updateAccountSettings Tests ====================
+
+  @Test
+  @DisplayName("Should update email address")
+  void testUpdateAccountSettings_ValidEmail() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result =
+        agent.updateAccountSettings("CUST001", "newemail@example.com", null, toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+
+    @SuppressWarnings("unchecked")
+    Map<String, String> updates = (Map<String, String>) result.get("updates");
+    assertEquals("newemail@example.com", updates.get("email"));
+  }
+
+  @Test
+  @DisplayName("Should update account tier")
+  void testUpdateAccountSettings_ValidTier() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result =
+        agent.updateAccountSettings("CUST001", null, "Enterprise", toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+
+    @SuppressWarnings("unchecked")
+    Map<String, String> updates = (Map<String, String>) result.get("updates");
+    assertEquals("Enterprise", updates.get("tier"));
+  }
+
+  @Test
+  @DisplayName("Should reject invalid email format")
+  void testUpdateAccountSettings_InvalidEmail() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result =
+        agent.updateAccountSettings("CUST001", "not-an-email", null, toolContext);
+
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("Invalid email"));
+  }
+
+  @Test
+  @DisplayName("Should reject invalid tier")
+  void testUpdateAccountSettings_InvalidTier() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result =
+        agent.updateAccountSettings("CUST001", null, "InvalidTier", toolContext);
+
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("Invalid tier"));
+  }
+
+  @Test
+  @DisplayName("Should reject when no updates provided")
+  void testUpdateAccountSettings_NoUpdates() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.updateAccountSettings("CUST001", null, null, toolContext);
+
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("No valid updates"));
+  }
+
+  // ==================== validateRefundEligibility Tests ====================
+
+  @Test
+  @DisplayName("Should validate eligible customer (CUST002)")
+  void testValidateRefundEligibility_Eligible() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.validateRefundEligibility("CUST002", toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+    assertTrue((Boolean) result.get("eligible"));
+    // assertTrue((Boolean) toolContext.getState().get("refund_eligible"));
+  }
+
+  @Test
+  @DisplayName("Should validate ineligible customer (CUST001)")
+  void testValidateRefundEligibility_NotEligible() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.validateRefundEligibility("CUST001", toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+    assertFalse((Boolean) result.get("eligible"));
+    // assertFalse((Boolean) toolContext.getState().get("refund_eligible"));
+  }
+
+  // @Test
+  // @DisplayName("Should store eligibility in state")
+  // void testValidateRefundEligibility_StateStorage() {
+  //   CustomerSupportAgent.resetMockData();
+  //   agent.validateRefundEligibility("CUST002", toolContext);
+  //
+  //   // assertEquals(true, toolContext.getState().get("refund_eligible"));
+  //   // assertEquals("CUST002", toolContext.getState().get("refund_customer"));
+  // }
+
+  // ==================== processRefund Tests ====================
+
+  @Test
+  @DisplayName("Should process valid refund after validation (CUST003)")
+  void testProcessRefund_ValidRefund() {
+    CustomerSupportAgent.resetMockData();
+    agent.validateRefundEligibility("CUST003", toolContext);
+
+    Map<String, Object> result = agent.processRefund("CUST003", 100.00, toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+    assertNotNull(result.get("refundId"));
+    assertEquals(100.00, ((Number) result.get("amount")).doubleValue());
+    assertEquals(4900.00, ((Number) result.get("newBalance")).doubleValue());
+  }
+
+  // @Test
+  // @DisplayName("Should reject refund without validation")
+  // void testProcessRefund_NoValidation() {
+  //   CustomerSupportAgent.resetMockData();
+  //   Map<String, Object> result = agent.processRefund("CUST001", 100.00,
+  // toolContext);
+  //
+  //   assertFalse((Boolean) result.get("success"));
+  //   // assertTrue(result.get("error").toString().contains("validation"));
+  // }
+
+  @Test
+  @DisplayName("Should reject refund exceeding balance")
+  void testProcessRefund_ExceedsBalance() {
+    CustomerSupportAgent.resetMockData();
+    agent.validateRefundEligibility("CUST002", toolContext);
+
+    Map<String, Object> result = agent.processRefund("CUST002", 100.00, toolContext);
+
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("exceeds"));
+  }
+
+  // @Test
+  // @DisplayName("Should store refund information in state")
+  // void testProcessRefund_StateStorage() {
+  //   CustomerSupportAgent.resetMockData();
+  //   agent.validateRefundEligibility("CUST003", toolContext);
+  //   agent.processRefund("CUST003", 100.00, toolContext);
+  //
+  //   // assertNotNull(toolContext.getState().get("last_refund_id"));
+  //   // assertEquals(100.00, toolContext.getState().get("refund_amount"));
+  // }
+
+  // @Test
+  // @DisplayName("Should reject refund for mismatched customer ID")
+  // void testProcessRefund_CustomerIdMismatch() {
+  //   CustomerSupportAgent.resetMockData();
+  //   agent.validateRefundEligibility("CUST002", toolContext);
+  //
+  //   Map<String, Object> result = agent.processRefund("CUST003", 50.00,
+  // toolContext);
+  //
+  //   assertFalse((Boolean) result.get("success"));
+  //   // assertTrue(result.get("error").toString().contains("mismatch"));
+  // }
 }

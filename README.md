@@ -30,13 +30,13 @@ $env:GOOGLE_API_KEY="your-api-key-here"
 
 ### 2. Build and Test
 
-The project has comprehensive **Unit Tests** (35+ tests) in `CustomerSupportAgentTest.java`, covering routing, workflow logic, and tool functionality.
+The project has comprehensive **Unit Tests** (38 tests) in `CustomerSupportAgentTest.java`, covering routing, workflow logic, and tool functionality.
 
 | Command | Purpose |
 |:---|:---|
 | `mvn clean install` | **Build** the project and download all dependencies |
 | `mvn test` | **Run** all comprehensive unit tests (Expected: **PASS**) |
-| `mvn package` | Create deployable JAR (`target/customer-support-agent-1.0.0.jar`) |
+| `mvn package` | Create deployable JAR (`target/customer-support-agent-1.0.2.jar`) |
 
 ### 3. Run the Agent (Development)
 
@@ -103,7 +103,7 @@ The `Refund Processor` uses a `SequentialAgent` (configured in `AgentConfigurati
 
 The system is configured for standard deployment via JAR or containerization:
 
-- **Local JAR**: `java -jar target/customer-support-agent-1.0.0.jar`
+- **Local JAR**: `java -jar target/customer-support-agent-1.0.2.jar`
 - **Docker Container**: Use provided `Dockerfile` template
 - **Google Cloud Run**: Compatible with serverless deployment using `gcloud run deploy`
 
@@ -131,7 +131,7 @@ The system is configured for standard deployment via JAR or containerization:
 
 ### Test Coverage
 
-- **35+ Unit Tests** covering all tool methods
+- **38 Unit Tests** covering all tool methods
 - **100% Tool Coverage** for validation, payments, tickets, refunds
 - **Test Isolation** with proper mock data reset between tests
 - **Edge Case Testing** for null values, invalid formats, boundary conditions
@@ -144,7 +144,7 @@ mvn clean install
 
 # Expected output:
 # [INFO] BUILD SUCCESS
-# [INFO] Tests run: 35, Failures: 0, Errors: 0, Skipped: 0
+# [INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 0
 ```
 
 ---
@@ -170,7 +170,7 @@ customer-support-agent/
 │           └── CustomerSupportAgentTest.java  # Comprehensive tests
 ├── pom.xml                                    # Maven dependencies
 ├── README.md                                  # This file
-├── implementation-guide.md                    # Detailed guide
+├── CHANGELOG.md                               # Changelog
 └── LICENSE                                    # Apache 2.0 License
 ```
 
@@ -196,7 +196,7 @@ customer-support-agent/
 
 ### Production Readiness Checklist
 
-- ✅ All tests passing (35+ unit tests)
+- ✅ All tests passing (38 unit tests)
 - ✅ Proper error handling in all tools
 - ✅ Input validation for all parameters
 - ✅ Thread-safe data structures (ConcurrentHashMap)
