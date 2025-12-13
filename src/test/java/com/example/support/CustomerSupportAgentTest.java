@@ -2,6 +2,7 @@ package com.example.support;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.google.adk.sessions.State;
 import com.google.adk.tools.ToolContext;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 
 /**
  * Comprehensive unit tests for CustomerSupportAgent tools
@@ -21,11 +23,15 @@ class CustomerSupportAgentTest {
 
   private CustomerSupportAgent agent;
   private ToolContext toolContext;
+  private State state;
 
   @BeforeEach
   void setUp() {
     agent = new CustomerSupportAgent();
     CustomerSupportAgent.resetMockData();
+    toolContext = Mockito.mock(ToolContext.class);
+    state = new State(new java.util.concurrent.ConcurrentHashMap<>());
+    Mockito.when(toolContext.state()).thenReturn(state);
   }
 
   // ==================== getCustomerAccount Tests ====================
@@ -87,28 +93,26 @@ class CustomerSupportAgentTest {
     assertTrue(result.get("error").toString().contains("format"));
   }
 
-  // @Test
-  // @DisplayName("Should normalize customer ID case")
-  // void testGetCustomerAccount_NormalizeCase() {
-  //   CustomerSupportAgent.resetMockData();
-  //   Map<String, Object> result = agent.getCustomerAccount("cust001",
-  // toolContext);
-  //
-  //   assertTrue((Boolean) result.get("success"));
-  //   // assertEquals("CUST001", toolContext.getState().get("current_customer"));
-  // }
+  @Test
+  @DisplayName("Should normalize customer ID case")
+  void testGetCustomerAccount_NormalizeCase() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.getCustomerAccount("cust001", toolContext);
 
-  // @Test
-  // @DisplayName("Should use cache on second call")
-  // void testGetCustomerAccount_Caching() {
-  //   CustomerSupportAgent.resetMockData();
-  //   agent.getCustomerAccount("CUST001", toolContext);
-  //   Map<String, Object> result = agent.getCustomerAccount("CUST001",
-  // toolContext);
-  //
-  //   assertTrue((Boolean) result.get("success"));
-  //   // assertNotNull(toolContext.getState().get("customer:CUST001"));
-  // }
+    assertTrue((Boolean) result.get("success"));
+    assertEquals("CUST001", toolContext.state().get("current_customer"));
+  }
+
+  @Test
+  @DisplayName("Should use cache on second call")
+  void testGetCustomerAccount_Caching() {
+    CustomerSupportAgent.resetMockData();
+    agent.getCustomerAccount("CUST001", toolContext);
+    Map<String, Object> result = agent.getCustomerAccount("CUST001", toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+    assertNotNull(toolContext.state().get("customer:CUST001"));
+  }
 
   // ==================== processPayment Tests ====================
 
@@ -174,17 +178,16 @@ class CustomerSupportAgentTest {
     assertTrue(result.get("error").toString().contains("not found"));
   }
 
-  // @Test
-  // @DisplayName("Should store transaction in state")
-  // void testProcessPayment_StoreTransaction() {
-  //   CustomerSupportAgent.resetMockData();
-  //   Map<String, Object> result = agent.processPayment("CUST001", 100.00,
-  // toolContext);
-  //
-  //   assertTrue((Boolean) result.get("success"));
-  //   // assertNotNull(toolContext.getState().get("last_transaction_id"));
-  //   // assertEquals(100.00, toolContext.getState().get("last_payment_amount"));
-  // }
+  @Test
+  @DisplayName("Should store transaction in state")
+  void testProcessPayment_StoreTransaction() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.processPayment("CUST001", 100.00, toolContext);
+
+    assertTrue((Boolean) result.get("success"));
+    assertNotNull(toolContext.state().get("last_transaction_id"));
+    assertEquals(100.00, toolContext.state().get("last_payment_amount"));
+  }
 
   // ==================== createTicket Tests ====================
 
@@ -364,18 +367,18 @@ class CustomerSupportAgentTest {
 
     assertTrue((Boolean) result.get("success"));
     assertFalse((Boolean) result.get("eligible"));
-    // assertFalse((Boolean) toolContext.getState().get("refund_eligible"));
+    assertFalse((Boolean) toolContext.state().get("refund_eligible"));
   }
 
-  // @Test
-  // @DisplayName("Should store eligibility in state")
-  // void testValidateRefundEligibility_StateStorage() {
-  //   CustomerSupportAgent.resetMockData();
-  //   agent.validateRefundEligibility("CUST002", toolContext);
-  //
-  //   // assertEquals(true, toolContext.getState().get("refund_eligible"));
-  //   // assertEquals("CUST002", toolContext.getState().get("refund_customer"));
-  // }
+  @Test
+  @DisplayName("Should store eligibility in state")
+  void testValidateRefundEligibility_StateStorage() {
+    CustomerSupportAgent.resetMockData();
+    agent.validateRefundEligibility("CUST002", toolContext);
+
+    assertEquals(true, toolContext.state().get("refund_eligible"));
+    assertEquals("CUST002", toolContext.state().get("refund_customer"));
+  }
 
   // ==================== processRefund Tests ====================
 
@@ -393,16 +396,15 @@ class CustomerSupportAgentTest {
     assertEquals(4900.00, ((Number) result.get("newBalance")).doubleValue());
   }
 
-  // @Test
-  // @DisplayName("Should reject refund without validation")
-  // void testProcessRefund_NoValidation() {
-  //   CustomerSupportAgent.resetMockData();
-  //   Map<String, Object> result = agent.processRefund("CUST001", 100.00,
-  // toolContext);
-  //
-  //   assertFalse((Boolean) result.get("success"));
-  //   // assertTrue(result.get("error").toString().contains("validation"));
-  // }
+  @Test
+  @DisplayName("Should reject refund without validation")
+  void testProcessRefund_NoValidation() {
+    CustomerSupportAgent.resetMockData();
+    Map<String, Object> result = agent.processRefund("CUST001", 100.00, toolContext);
+
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("validation"));
+  }
 
   @Test
   @DisplayName("Should reject refund exceeding balance")
@@ -416,27 +418,26 @@ class CustomerSupportAgentTest {
     assertTrue(result.get("error").toString().contains("exceeds"));
   }
 
-  // @Test
-  // @DisplayName("Should store refund information in state")
-  // void testProcessRefund_StateStorage() {
-  //   CustomerSupportAgent.resetMockData();
-  //   agent.validateRefundEligibility("CUST003", toolContext);
-  //   agent.processRefund("CUST003", 100.00, toolContext);
-  //
-  //   // assertNotNull(toolContext.getState().get("last_refund_id"));
-  //   // assertEquals(100.00, toolContext.getState().get("refund_amount"));
-  // }
+  @Test
+  @DisplayName("Should store refund information in state")
+  void testProcessRefund_StateStorage() {
+    CustomerSupportAgent.resetMockData();
+    agent.validateRefundEligibility("CUST003", toolContext);
+    agent.processRefund("CUST003", 100.00, toolContext);
 
-  // @Test
-  // @DisplayName("Should reject refund for mismatched customer ID")
-  // void testProcessRefund_CustomerIdMismatch() {
-  //   CustomerSupportAgent.resetMockData();
-  //   agent.validateRefundEligibility("CUST002", toolContext);
-  //
-  //   Map<String, Object> result = agent.processRefund("CUST003", 50.00,
-  // toolContext);
-  //
-  //   assertFalse((Boolean) result.get("success"));
-  //   // assertTrue(result.get("error").toString().contains("mismatch"));
-  // }
+    assertNotNull(toolContext.state().get("last_refund_id"));
+    assertEquals(100.00, toolContext.state().get("refund_amount"));
+  }
+
+  @Test
+  @DisplayName("Should reject refund for mismatched customer ID")
+  void testProcessRefund_CustomerIdMismatch() {
+    CustomerSupportAgent.resetMockData();
+    agent.validateRefundEligibility("CUST002", toolContext);
+
+    Map<String, Object> result = agent.processRefund("CUST003", 50.00, toolContext);
+
+    assertFalse((Boolean) result.get("success"));
+    assertTrue(result.get("error").toString().contains("mismatch"));
+  }
 }

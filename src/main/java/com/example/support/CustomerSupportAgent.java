@@ -138,15 +138,14 @@ public class CustomerSupportAgent {
 
       customerId = ValidationUtils.validateCustomerId(customerId);
 
-      // String cacheKey = "customer:" + customerId;
-      // @SuppressWarnings("unchecked")
-      // Map<String, Object> cachedResult = (Map<String, Object>)
-      // toolContext.getState().get(cacheKey);
+      String cacheKey = "customer:" + customerId;
+      @SuppressWarnings("unchecked")
+      Map<String, Object> cachedResult = (Map<String, Object>) toolContext.state().get(cacheKey);
 
-      // if (cachedResult != null) {
-      // logger.info("[CACHE-HIT] Retrieved from cache: " + customerId);
-      // return cachedResult;
-      // }
+      if (cachedResult != null) {
+        logger.info("[CACHE-HIT] Retrieved from cache: " + customerId);
+        return cachedResult;
+      }
 
       Map<String, Object> customer = mockDatabase.get(customerId);
       if (customer == null) {
@@ -158,8 +157,8 @@ public class CustomerSupportAgent {
       result.put("success", true);
       result.put("customer", new HashMap<>(customer));
 
-      // toolContext.getState().put(cacheKey, result);
-      // toolContext.getState().put("current_customer", customerId);
+      toolContext.state().put(cacheKey, result);
+      toolContext.state().put("current_customer", customerId);
 
       logger.info("[SUCCESS] Customer retrieved: " + customerId);
       return result;
@@ -203,8 +202,8 @@ public class CustomerSupportAgent {
       customer.put("accountBalance", Math.round(newBalance * 100.0) / 100.0);
       customer.put("lastPaymentDate", LocalDate.now().format(DATE_FORMATTER));
 
-      // toolContext.getState().put("last_transaction_id", transactionId);
-      // toolContext.getState().put("last_payment_amount", amount);
+      toolContext.state().put("last_transaction_id", transactionId);
+      toolContext.state().put("last_payment_amount", amount);
 
       result.put("success", true);
       result.put("transactionId", transactionId);
@@ -400,7 +399,7 @@ public class CustomerSupportAgent {
       if (customer == null) {
         result.put("success", false);
         result.put("error", "Customer not found: " + customerId);
-        // toolContext.getState().put("refund_eligible", false);
+        toolContext.state().put("refund_eligible", false);
         return result;
       }
 
@@ -431,8 +430,8 @@ public class CustomerSupportAgent {
       result.put("tier", customer.get("tier"));
       result.put("reasons", reasons);
 
-      // toolContext.getState().put("refund_eligible", eligible);
-      // toolContext.getState().put("refund_customer", customerId);
+      toolContext.state().put("refund_eligible", eligible);
+      toolContext.state().put("refund_customer", customerId);
 
       logger.info("[SUCCESS] Validation complete: " + customerId + " - Eligible: " + eligible);
       return result;
@@ -461,25 +460,23 @@ public class CustomerSupportAgent {
     try {
       logger.info("[TOOL] processRefund called for: " + customerId);
 
-      // Boolean eligible = (Boolean) toolContext.getState().get("refund_eligible");
-      // String contextCustomerId = (String)
-      // toolContext.getState().get("refund_customer");
+      Boolean eligible = (Boolean) toolContext.state().get("refund_eligible");
+      String contextCustomerId = (String) toolContext.state().get("refund_customer");
 
-      // if (eligible == null || !eligible) {
-      // result.put("success", false);
-      // result.put(
-      // "error", "Refund validation must be completed first and customer must be
-      // eligible");
-      // return result;
-      // }
+      if (eligible == null || !eligible) {
+        result.put("success", false);
+        result.put(
+            "error", "Refund validation must be completed first and customer must be eligible");
+        return result;
+      }
 
       customerId = ValidationUtils.validateCustomerId(customerId);
 
-      // if (!customerId.equals(contextCustomerId)) {
-      // result.put("success", false);
-      // result.put("error", "Customer ID mismatch with validation");
-      // return result;
-      // }
+      if (!customerId.equals(contextCustomerId)) {
+        result.put("success", false);
+        result.put("error", "Customer ID mismatch with validation");
+        return result;
+      }
 
       double amount = ValidationUtils.validateAmount(amountObj);
 
@@ -502,10 +499,10 @@ public class CustomerSupportAgent {
       double newBalance = currentBalance - amount;
       customer.put("accountBalance", Math.round(newBalance * 100.0) / 100.0);
 
-      // toolContext.getState().put("last_refund_id", refundId);
-      // toolContext.getState().put("refund_amount", amount);
-      // toolContext.getState().remove("refund_eligible");
-      // toolContext.getState().remove("refund_customer");
+      toolContext.state().put("last_refund_id", refundId);
+      toolContext.state().put("refund_amount", amount);
+      toolContext.state().remove("refund_eligible");
+      toolContext.state().remove("refund_customer");
 
       result.put("success", true);
       result.put("refundId", refundId);
