@@ -34,19 +34,6 @@ mvn spring-boot:run
 ```
 **Open**: http://localhost:8000 ✅
 
-## 🛠️ Tools (All Tested)
-
-| Tool | Agent | Tests | Status |
-|------|-------|-------|--------|
-| `getCustomerAccount` | All | 7 | ✅ |
-| `processPayment` | Billing | 7 | ✅ |
-| `createTicket` | Tech Support | 5 | ✅ |
-| `getTickets` | Tech Support | 3 | ✅ |
-| `updateAccountSettings` | Account | 5 | ✅ |
-| `validateRefundEligibility` | Refund (Step 1) | 3 | ✅ |
-| `processRefund` | Refund (Step 2) | 6 | ✅ |
-| **Total** | | **27** | **✅ 100%** |
-
 ## 📁 Project Structure
 
 ```
