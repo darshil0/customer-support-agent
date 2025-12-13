@@ -3,7 +3,7 @@
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and all the unit tests passing.
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen) 
-![Tests](https://img.shields.io/badge/tests-39%2F39-blue) 
+![Tests](https://img.shields.io/badge/tests-36%2F36-blue) 
 ![Version](https://img.shields.io/badge/version-1.0.3-green)
 
 ## ✨ Features
