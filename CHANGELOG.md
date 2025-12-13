@@ -75,5 +75,3 @@ BUILD SUCCESS
 ✅ **Backward Compatible**: No breaking changes since 1.0.0 public API  
 
 **Deploy Command**: `mvn clean package && java -jar target/customer-support-agent-1.0.3.jar` ✅
-
-[1](https://semver.org/spec/v2.0.0.html)
