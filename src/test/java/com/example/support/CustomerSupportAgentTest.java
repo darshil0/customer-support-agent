@@ -2,6 +2,7 @@ package com.example.support;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.google.adk.sessions.State;
 import com.google.adk.tools.ToolContext;
 import org.junit.jupiter.api.DisplayName;
 
@@ -16,6 +17,7 @@ class CustomerSupportAgentTest {
 
   private CustomerSupportAgent agent;
   private ToolContext toolContext;
+  private State state;
 
   // @BeforeEach
   // void setUp() {
