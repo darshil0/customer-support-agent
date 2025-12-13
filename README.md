@@ -10,7 +10,7 @@
 
 - **✅ Hierarchical Multi-Agent**: Root Orchestrator → Billing/Tech Support/Account sub-agents
 - **✅ Sequential Workflows**: Refund validation → processing (2-step safety)
-- **✅ 39 Unit Tests**: 100% tool coverage, production verified
+- **✅ 36 Unit Tests**: 100% tool coverage, production verified
 - **✅ Web UI**: http://localhost:8000 (Spring Boot)
 - **✅ Robust Tooling**: Accounts, payments, tickets, refunds, settings
 
@@ -45,7 +45,7 @@ mvn spring-boot:run
 | `updateAccountSettings` | Account | 5 | ✅ |
 | `validateRefundEligibility` | Refund (Step 1) | 3 | ✅ |
 | `processRefund` | Refund (Step 2) | 6 | ✅ |
-| **Total** | | **39** | **✅ 100%** |
+| **Total** | | **36** | **✅ 100%** |
 
 ## 📁 Project Structure
 
@@ -81,7 +81,7 @@ docker run -p 8000:8000 -e GOOGLE_API_KEY=$GOOGLE_API_KEY support-agent:1.0.3
 | Status | Verification |
 |--------|-------------|
 | ✅ **Compiles** | `mvn clean compile` |
-| ✅ **39 Tests** | `mvn test` |
+| ✅ **36 Tests** | `mvn test` |
 | ✅ **Starts** | `mvn spring-boot:run` |
 | ✅ **Web UI** | http://localhost:8000 |
 | ✅ **All Tools** | Full coverage verified |
@@ -90,13 +90,13 @@ docker run -p 8000:8000 -e GOOGLE_API_KEY=$GOOGLE_API_KEY support-agent:1.0.3
 
 ```
 mvn test
-Tests run: 39, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 36, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
 ## 🤝 Contributing
 
-1. `mvn clean install` (must pass 39 tests)
+1. `mvn clean install` (must pass 36 tests)
 2. Add tests first → implementation
 3. Keep test isolation (`resetMockData()`)
 4. PR with test coverage
@@ -111,8 +111,8 @@ Apache 2.0 - see [LICENSE](LICENSE)
 
 ## Key Updates Applied:
 
-✅ **Version**: 1.0.3 (39 tests confirmed)  
-✅ **Test Badge**: 39/39 passing  
+✅ **Version**: 1.0.3 (36 tests confirmed)  
+✅ **Test Badge**: 36/36 passing  
 ✅ **Status**: Production ready (not "under development")  
 ✅ **Quick Start**: Verified commands  
 ✅ **Checklist**: All green  
