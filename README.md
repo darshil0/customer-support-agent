@@ -59,7 +59,7 @@ src/main/java/com/example/support/
 └── ValidationUtils.java
 
 src/test/java/com/example/support/
-└── CustomerSupportAgentTest.java # 39 tests
+└── CustomerSupportAgentTest.java # 36 tests
 
 pom.xml | README.md | CHANGELOG.md
 ```
