@@ -1,8 +1,6 @@
-# README.md (Updated - v1.0.3)
-
 # 🚀 Customer Support Multi-Agent System v1.0.3
 
-**Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **39/39 passing tests**.
+**Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and all the unit tests passing.
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen) 
 ![Tests](https://img.shields.io/badge/tests-39%2F39-blue) 
@@ -108,7 +106,7 @@ Apache 2.0 - see [LICENSE](LICENSE)
 
 ---
 
-**🚀 v1.0.3 PRODUCTION READY** | **39/39 Tests** | **Multi-Agent** | **Darshil + AI Fixed**
+**🚀 v1.0.3 PRODUCTION READY** | **39/39 Tests Passed** | **Multi-Agent**  
 ```
 
 ## Key Updates Applied:
