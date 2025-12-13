@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * to LLM agents.
  *
  * @author Darshil
- * @version 1.0.2 (Fixed)
+ * @version 1.0.3 (Fixed)
  */
 @Component
 public class CustomerSupportAgent {
@@ -439,13 +439,13 @@ public class CustomerSupportAgent {
     } catch (IllegalArgumentException e) {
       result.put("success", false);
       result.put("error", e.getMessage());
-      // toolContext.getState().put("refund_eligible", false);
+      toolContext.state().put("refund_eligible", false);
       return result;
     } catch (Exception e) {
       logger.severe("[ERROR] validateRefundEligibility failed: " + e.getMessage());
       result.put("success", false);
       result.put("error", "System error: " + e.getMessage());
-      // toolContext.getState().put("refund_eligible", false);
+      toolContext.state().put("refund_eligible", false);
       return result;
     }
   }
