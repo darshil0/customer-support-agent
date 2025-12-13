@@ -1,6 +1,5 @@
 # README.md (Updated - v1.0.3)
 
-```markdown
 # 🚀 Customer Support Multi-Agent System v1.0.3
 
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **39/39 passing tests**.
