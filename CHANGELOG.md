@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Test Isolation**: `@BeforeEach` ensures clean state for each test
 
 ### Changed
-- **Test Count**: Verified **39 total tests** (7 account + 7 payment + 8 ticket + 5 settings + 9 refund)
+- **Test Count**: Verified **36 total tests** (7 account + 7 payment + 8 ticket + 5 settings + 9 refund)
 - **Version**: Bumped to **1.0.3** per SemVer (backward compatible fixes only)
 - **Documentation**: All files updated to reflect production status
 
