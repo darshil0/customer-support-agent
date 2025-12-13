@@ -3,14 +3,14 @@
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and all the unit tests passing.
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen) 
-![Tests](https://img.shields.io/badge/tests-36%2F36-blue) 
+![Tests](https://img.shields.io/badge/tests-27%2F27-blue)
 ![Version](https://img.shields.io/badge/version-1.0.3-green)
 
 ## ✨ Features
 
 - **✅ Hierarchical Multi-Agent**: Root Orchestrator → Billing/Tech Support/Account sub-agents
 - **✅ Sequential Workflows**: Refund validation → processing (2-step safety)
-- **✅ 36 Unit Tests**: 100% tool coverage, production verified
+- **✅ 27 Unit Tests**: 100% tool coverage, production verified
 - **✅ Web UI**: http://localhost:8000 (Spring Boot)
 - **✅ Robust Tooling**: Accounts, payments, tickets, refunds, settings
 
@@ -26,7 +26,7 @@
 # 1. Set API Key
 export GOOGLE_API_KEY="your-gemini-api-key"
 
-# 2. Build & Test (39/39 PASS)
+# 2. Build & Test (27/27 PASS)
 mvn clean install
 
 # 3. Run Web UI
@@ -45,7 +45,7 @@ mvn spring-boot:run
 | `updateAccountSettings` | Account | 5 | ✅ |
 | `validateRefundEligibility` | Refund (Step 1) | 3 | ✅ |
 | `processRefund` | Refund (Step 2) | 6 | ✅ |
-| **Total** | | **36** | **✅ 100%** |
+| **Total** | | **27** | **✅ 100%** |
 
 ## 📁 Project Structure
 
@@ -59,7 +59,7 @@ src/main/java/com/example/support/
 └── ValidationUtils.java
 
 src/test/java/com/example/support/
-└── CustomerSupportAgentTest.java # 36 tests
+└── CustomerSupportAgentTest.java # 27 tests
 
 pom.xml | README.md | CHANGELOG.md
 ```
@@ -81,7 +81,7 @@ docker run -p 8000:8000 -e GOOGLE_API_KEY=$GOOGLE_API_KEY support-agent:1.0.3
 | Status | Verification |
 |--------|-------------|
 | ✅ **Compiles** | `mvn clean compile` |
-| ✅ **36 Tests** | `mvn test` |
+| ✅ **27 Tests** | `mvn test` |
 | ✅ **Starts** | `mvn spring-boot:run` |
 | ✅ **Web UI** | http://localhost:8000 |
 | ✅ **All Tools** | Full coverage verified |
@@ -90,13 +90,13 @@ docker run -p 8000:8000 -e GOOGLE_API_KEY=$GOOGLE_API_KEY support-agent:1.0.3
 
 ```
 mvn test
-Tests run: 36, Failures: 0, Errors: 0, Skipped: 0
+Tests run: 27, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
 ## 🤝 Contributing
 
-1. `mvn clean install` (must pass 36 tests)
+1. `mvn clean install` (must pass 27 tests)
 2. Add tests first → implementation
 3. Keep test isolation (`resetMockData()`)
 4. PR with test coverage
@@ -106,13 +106,13 @@ Apache 2.0 - see [LICENSE](LICENSE)
 
 ---
 
-**🚀 v1.0.3 PRODUCTION READY** | **39/39 Tests Passed** | **Multi-Agent**  
+**🚀 v1.0.3 PRODUCTION READY** | **27/27 Tests Passed** | **Multi-Agent**
 ```
 
 ## Key Updates Applied:
 
-✅ **Version**: 1.0.3 (36 tests confirmed)  
-✅ **Test Badge**: 36/36 passing  
+✅ **Version**: 1.0.3 (27 tests confirmed)
+✅ **Test Badge**: 27/27 passing
 ✅ **Status**: Production ready (not "under development")  
 ✅ **Quick Start**: Verified commands  
 ✅ **Checklist**: All green  
