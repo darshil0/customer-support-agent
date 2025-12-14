@@ -1,16 +1,10 @@
-# Build directories
-target/
-build/
-out/
-bin/
-
 # Compiled class files
 *.class
 
 # Log files
 *.log
 
-# Package files
+# Package Files
 *.jar
 *.war
 *.nar
@@ -20,6 +14,7 @@ bin/
 *.rar
 
 # Maven
+target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -30,73 +25,114 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# Gradle
-.gradle/
-gradle-app.setting
-!gradle-wrapper.jar
-.gradletasknamecache
-
-# IDE files
-## IntelliJ IDEA
+# IDE Files
 .idea/
 *.iml
 *.iws
 *.ipr
-
-## Eclipse
+.vscode/
+.settings/
 .classpath
 .project
-.settings/
 .metadata/
+bin/
 
-## NetBeans
+# Eclipse
+.externalToolBuilders/
+*.launch
+.buildpath
+.target
+.tern-project
+.texlipse
+.springBeans
+.recommenders/
+
+# IntelliJ
+.idea/
+*.iml
+*.iws
+out/
+
+# NetBeans
 nbproject/private/
+build/
 nbbuild/
 dist/
 nbdist/
 .nb-gradle/
 
-## VS Code
-.vscode/
-*.code-workspace
-
-# OS files
-## macOS
+# MacOS
 .DS_Store
 .AppleDouble
 .LSOverride
+._*
 
-## Windows
+# Windows
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+$RECYCLE.BIN/
 
-## Linux
+# Linux
 *~
+.fuse_hidden*
+.directory
+.Trash-*
 
-# Environment and configuration
+# Environment Variables
 .env
 .env.local
 .env.*.local
-*.properties.local
-application-local.properties
-application-local.yml
 
-# Test coverage reports
-*.lcov
-coverage/
-.nyc_output/
+# Spring Boot
+spring-boot-*.log
+application-*.yml
+application-*.yaml
+application-*.properties
+
+# Logs
+logs/
+*.log
+*.log.*
 
 # Temporary files
 *.tmp
-*.bak
+*.temp
 *.swp
-*~.nib
-*.orig
+*.swo
+*~
 
-# Security
-*.key
-*.pem
-*.p12
-*.jks
-secrets.yml
+# Test coverage
+coverage/
+.nyc_output/
+
+# JUnit
+*.out
+
+# H2 Database
+*.db
+*.mv.db
+*.trace.db
+
+# Backup files
+*.bak
+*.backup
+
+# API Keys (IMPORTANT!)
+**/*api*key*
+**/*secret*
+credentials.json
+
+# Generated files
+generated/
+.factorypath
+
+# Docker
+docker-compose.override.yml
+
+# Misc
+*.cache
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
