@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * AgentConfiguration defines the hierarchical multi-agent architecture
- * for customer support, including billing, technical, account, and refund workflows.
+ * AgentConfiguration defines the hierarchical multi-agent architecture for customer support,
+ * including billing, technical, account, and refund workflows.
  *
  * @author Darshil
  * @version 1.0.3
@@ -23,9 +23,7 @@ public class AgentConfiguration {
     this.customerSupportAgent = customerSupportAgent;
   }
 
-  /** 
-   * Root orchestrator agent that routes queries to specialized sub-agents.
-   */
+  /** Root orchestrator agent that routes queries to specialized sub-agents. */
   @Bean
   public BaseAgent rootCustomerSupportAgent() {
     return LlmAgent.builder()
@@ -41,14 +39,15 @@ public class AgentConfiguration {
                 + "- refund-processor-workflow: For refund requests\n"
                 + "Always greet the customer warmly and explain who you're connecting them with.")
         .subAgents(
-            createBillingAgent(),
-            createTechnicalSupportAgent(),
-            createAccountAgent(),
-            createRefundWorkflow())
+            billingAgent(),
+            technicalSupportAgent(),
+            accountAgent(),
+            refundWorkflow())
         .build();
   }
 
-  private LlmAgent createBillingAgent() {
+  @Bean
+  public LlmAgent billingAgent() {
     return LlmAgent.builder()
         .name("billing-agent")
         .description("Handles billing and payment inquiries")
@@ -64,7 +63,8 @@ public class AgentConfiguration {
         .build();
   }
 
-  private LlmAgent createTechnicalSupportAgent() {
+  @Bean
+  public LlmAgent technicalSupportAgent() {
     return LlmAgent.builder()
         .name("technical-support-agent")
         .description("Handles technical issues and troubleshooting")
@@ -80,7 +80,8 @@ public class AgentConfiguration {
         .build();
   }
 
-  private LlmAgent createAccountAgent() {
+  @Bean
+  public LlmAgent accountAgent() {
     return LlmAgent.builder()
         .name("account-agent")
         .description("Manages account settings and profile updates")
@@ -96,11 +97,11 @@ public class AgentConfiguration {
   }
 
   /**
-   * Sequential workflow for refund processing.
-   * Step 1: Validate eligibility.
-   * Step 2: Process refund (if eligible).
+   * Sequential workflow for refund processing. Step 1: Validate eligibility. Step 2: Process refund
+   * (if eligible).
    */
-  private SequentialAgent createRefundWorkflow() {
+  @Bean
+  public SequentialAgent refundWorkflow() {
     LlmAgent validator =
         LlmAgent.builder()
             .name("refund-validator")
