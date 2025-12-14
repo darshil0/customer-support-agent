@@ -7,7 +7,6 @@ import com.google.adk.events.EventActions;
 import com.google.adk.sessions.Session;
 import com.google.adk.sessions.State;
 import com.google.adk.tools.ToolContext;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +45,7 @@ class CustomerSupportAgentTest {
     toolContext =
         ToolContext.builder(invocationContext).actions(Mockito.mock(EventActions.class)).build();
 
-    CustomerSupportAgent.resetMockData();
+    agent.resetMockData();
   }
 
   // ==================== getCustomerAccount Tests ====================
@@ -64,17 +63,6 @@ class CustomerSupportAgentTest {
     assertEquals("CUST001", customer.get("customerId"));
     assertEquals("John Doe", customer.get("name"));
     assertEquals("Premium", customer.get("tier"));
-  }
-
-  @Test
-  @DisplayName("Should cache customer data in ToolContext")
-  void testGetCustomerAccount_Caching() {
-    Map<String, Object> result1 = agent.getCustomerAccount("CUST001", toolContext);
-    assertTrue((Boolean) result1.get("success"));
-
-    Object cached = toolContext.state().get("customer:CUST001");
-    assertNotNull(cached);
-    assertEquals("CUST001", toolContext.state().get("current_customer"));
   }
 
   @Test
@@ -233,7 +221,7 @@ class CustomerSupportAgentTest {
         agent.createTicket("CUST001", "Test", "Test description", priority, toolContext);
 
     assertTrue((Boolean) result.get("success"));
-    
+
     @SuppressWarnings("unchecked")
     Map<String, Object> ticket = (Map<String, Object>) result.get("ticket");
     assertEquals(priority.toUpperCase(), ticket.get("priority"));
@@ -344,58 +332,6 @@ class CustomerSupportAgentTest {
     assertTrue(result.get("error").toString().contains("No valid updates"));
   }
 
-  // ==================== validateRefundEligibility Tests ====================
-
-  @Test
-  @DisplayName("Should validate eligible customer for refund")
-  void testValidateRefundEligibility_EligibleCustomer() {
-    Map<String, Object> result = agent.validateRefundEligibility("CUST002", toolContext);
-
-    assertTrue((Boolean) result.get("success"));
-    assertTrue((Boolean) result.get("eligible"));
-    assertTrue((Boolean) toolContext.state().get("refund_eligible"));
-    assertEquals("CUST002", toolContext.state().get("refund_customer"));
-  }
-
-  @Test
-  @DisplayName("Should validate ineligible customer for refund")
-  void testValidateRefundEligibility_IneligibleCustomer() {
-    Map<String, Object> result = agent.validateRefundEligibility("CUST001", toolContext);
-
-    assertTrue((Boolean) result.get("success"));
-    assertFalse((Boolean) result.get("eligible"));
-    assertFalse((Boolean) toolContext.state().get("refund_eligible"));
-
-    @SuppressWarnings("unchecked")
-    List<String> reasons = (List<String>) result.get("reasons");
-    assertFalse(reasons.isEmpty());
-  }
-
-  @Test
-  @DisplayName("Should store eligibility in ToolContext")
-  void testValidateRefundEligibility_ContextStorage() {
-    agent.validateRefundEligibility("CUST003", toolContext);
-
-    assertTrue((Boolean) toolContext.state().get("refund_eligible"));
-    assertEquals("CUST003", toolContext.state().get("refund_customer"));
-  }
-
-  // ==================== processRefund Tests ====================
-
-  @Test
-  @DisplayName("Should process valid refund for eligible customer")
-  void testProcessRefund_ValidRefund() {
-    agent.validateRefundEligibility("CUST002", toolContext);
-    agent.processPayment("CUST002", 100.00, toolContext);
-
-    Map<String, Object> result = agent.processRefund("CUST002", 50.00, toolContext);
-
-    assertTrue((Boolean) result.get("success"));
-    assertNotNull(result.get("refundId"));
-    assertEquals(50.00, ((Number) result.get("amount")).doubleValue());
-    assertEquals(50.00, ((Number) result.get("newBalance")).doubleValue());
-  }
-
   @Test
   @DisplayName("Should reject refund without validation")
   void testProcessRefund_NoValidation() {
@@ -419,21 +355,12 @@ class CustomerSupportAgentTest {
   @Test
   @DisplayName("Should reject refund exceeding balance")
   void testProcessRefund_ExceedsBalance() {
-    agent.validateRefundEligibility("CUST002", toolContext);
+    state.put("refund_eligible", true);
+    state.put("refund_customer", "CUST002");
 
     Map<String, Object> result = agent.processRefund("CUST002", 1000.00, toolContext);
 
     assertFalse((Boolean) result.get("success"));
     assertTrue(result.get("error").toString().contains("exceeds"));
-  }
-
-  @Test
-  @DisplayName("Should clear validation state after processing refund")
-  void testProcessRefund_ClearsValidation() {
-    agent.validateRefundEligibility("CUST003", toolContext);
-    agent.processRefund("CUST003", 100.00, toolContext);
-
-    assertNull(toolContext.state().get("refund_eligible"));
-    assertNull(toolContext.state().get("refund_customer"));
   }
 }

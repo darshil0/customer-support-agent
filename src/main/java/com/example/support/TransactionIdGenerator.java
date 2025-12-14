@@ -7,16 +7,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Utility class for generating unique, sequential IDs
- * for transactions and support tickets.
- * <p>
- * Format examples:
+ * Utility class for generating unique, sequential IDs for transactions and support tickets.
+ *
+ * <p>Format examples:
+ *
  * <ul>
- *   <li>{@code TXN-251212-000123}</li>
- *   <li>{@code REF-251212-000124}</li>
- *   <li>{@code TICKET-251212-000125}</li>
+ *   <li>{@code TXN-251212-000123}
+ *   <li>{@code REF-251212-000124}
+ *   <li>{@code TICKET-251212-000125}
  * </ul>
- * </p>
  */
 public final class TransactionIdGenerator {
 
@@ -28,8 +27,7 @@ public final class TransactionIdGenerator {
   }
 
   /**
-   * Generates a unique ID with a given prefix.
-   * Thread-safe and sequential within each prefix type.
+   * Generates a unique ID with a given prefix. Thread-safe and sequential within each prefix type.
    *
    * @param prefix ID type prefix (e.g., "TXN", "REF", "TICKET")
    * @return Formatted ID like TXN-251212-000231
@@ -42,16 +40,12 @@ public final class TransactionIdGenerator {
     return String.format("%s-%s-%06d", type, datePart, seq);
   }
 
-  /**
-   * Generates a unique ticket ID.
-   */
+  /** Generates a unique ticket ID. */
   public static String generateTicketId() {
     return generateTransactionId("TICKET");
   }
 
-  /**
-   * Resets all sequence counters. Useful for testing.
-   */
+  /** Resets all sequence counters. Useful for testing. */
   public static void resetSequences() {
     SEQUENCE_MAP.clear();
   }

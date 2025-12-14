@@ -4,11 +4,10 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Utility class for common data validation routines.
- * Provides strict type and format validation for customer IDs,
- * emails, transaction amounts, tiers, and ticket priorities.
+ * Utility class for common data validation routines. Provides strict type and format validation for
+ * customer IDs, emails, transaction amounts, tiers, and ticket priorities.
  *
- * @author 
+ * @author
  * @version 1.0.3
  */
 public final class ValidationUtils {
@@ -45,10 +44,10 @@ public final class ValidationUtils {
 
     double amount;
     try {
-      if (amountObj instanceof String s) {
-        amount = Double.parseDouble(s);
-      } else if (amountObj instanceof Number n) {
-        amount = n.doubleValue();
+      if (amountObj instanceof String) {
+        amount = Double.parseDouble((String) amountObj);
+      } else if (amountObj instanceof Number) {
+        amount = ((Number) amountObj).doubleValue();
       } else {
         throw new IllegalArgumentException("Amount must be a number");
       }
@@ -86,7 +85,8 @@ public final class ValidationUtils {
 
     String normalizedTier = tier.trim().toUpperCase();
     if (!VALID_TIERS.contains(normalizedTier)) {
-      throw new IllegalArgumentException("Invalid tier. Must be one of: Basic, Premium, Enterprise");
+      throw new IllegalArgumentException(
+          "Invalid tier. Must be one of: Basic, Premium, Enterprise");
     }
 
     return capitalize(normalizedTier);

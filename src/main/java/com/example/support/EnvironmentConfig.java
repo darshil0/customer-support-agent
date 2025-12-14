@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Handles application configuration, particularly API key management and validation
- * for Google ADK and related services.
+ * Handles application configuration, particularly API key management and validation for Google ADK
+ * and related services.
  */
 public final class EnvironmentConfig {
 

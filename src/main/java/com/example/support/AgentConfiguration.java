@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * AgentConfiguration defines the hierarchical multi-agent architecture
- * for customer support, including billing, technical, account, and refund workflows.
+ * AgentConfiguration defines the hierarchical multi-agent architecture for customer support,
+ * including billing, technical, account, and refund workflows.
  *
  * @author Darshil
  * @version 1.0.3
@@ -23,9 +23,7 @@ public class AgentConfiguration {
     this.customerSupportAgent = customerSupportAgent;
   }
 
-  /** 
-   * Root orchestrator agent that routes queries to specialized sub-agents.
-   */
+  /** Root orchestrator agent that routes queries to specialized sub-agents. */
   @Bean
   public BaseAgent rootCustomerSupportAgent() {
     return LlmAgent.builder()
@@ -96,9 +94,8 @@ public class AgentConfiguration {
   }
 
   /**
-   * Sequential workflow for refund processing.
-   * Step 1: Validate eligibility.
-   * Step 2: Process refund (if eligible).
+   * Sequential workflow for refund processing. Step 1: Validate eligibility. Step 2: Process refund
+   * (if eligible).
    */
   private SequentialAgent createRefundWorkflow() {
     LlmAgent validator =
