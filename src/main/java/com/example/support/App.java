@@ -23,6 +23,7 @@ public class App {
     ConfigurableApplicationContext context = null;
     try {
       EnvironmentConfig.validateConfiguration();
+      SpringApplication.run(App.class, args);
       context = SpringApplication.run(App.class, args);
       logger.info("✅ Customer Support Agent System started successfully.");
     } catch (IllegalStateException e) {
