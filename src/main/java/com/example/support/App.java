@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * Main application class for the Customer Support Agent System.
@@ -17,26 +16,19 @@ import org.springframework.context.ConfigurableApplicationContext;
  */
 @SpringBootApplication
 public class App {
+
   private static final Logger logger = LoggerFactory.getLogger(App.class);
 
   public static void main(String[] args) {
-    ConfigurableApplicationContext context = null;
     try {
       EnvironmentConfig.validateConfiguration();
       SpringApplication.run(App.class, args);
-      context = SpringApplication.run(App.class, args);
       logger.info("✅ Customer Support Agent System started successfully.");
     } catch (IllegalStateException e) {
       logger.error("Configuration Error: {}", e.getMessage());
-      if (context != null) {
-        context.close();
-      }
       System.exit(1);
     } catch (Exception e) {
       logger.error("Fatal Error: {}", e.getMessage(), e);
-      if (context != null) {
-        context.close();
-      }
       System.exit(2);
     }
   }

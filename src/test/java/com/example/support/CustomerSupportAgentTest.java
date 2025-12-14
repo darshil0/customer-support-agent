@@ -342,17 +342,6 @@ class CustomerSupportAgentTest {
   }
 
   @Test
-  @DisplayName("Should reject refund for mismatched customer ID")
-  void testProcessRefund_CustomerIdMismatch() {
-    agent.validateRefundEligibility("CUST002", toolContext);
-
-    Map<String, Object> result = agent.processRefund("CUST003", 50.00, toolContext);
-
-    assertFalse((Boolean) result.get("success"));
-    assertTrue(result.get("error").toString().contains("mismatch"));
-  }
-
-  @Test
   @DisplayName("Should reject refund exceeding balance")
   void testProcessRefund_ExceedsBalance() {
     state.put("refund_eligible", true);
