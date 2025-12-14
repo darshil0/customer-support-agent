@@ -1,107 +1,126 @@
 package com.example.support;
 
-import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Utility class for common data validation routines. Provides strict type and format validation for
- * customer IDs, emails, transaction amounts, tiers, and ticket priorities.
- *
- * @author
- * @version 1.0.3
+ * Utility class for input validation and sanitization.
  */
-public final class ValidationUtils {
-
-  private static final Pattern CUSTOMER_ID_PATTERN = Pattern.compile("CUST\\d{3}");
-  private static final Pattern EMAIL_PATTERN =
-      Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
-
-  private static final Set<String> VALID_TIERS = Set.of("BASIC", "PREMIUM", "ENTERPRISE");
-  private static final Set<String> VALID_PRIORITIES = Set.of("LOW", "MEDIUM", "HIGH");
-
-  private static final double MAX_TRANSACTION_AMOUNT = 100_000.00;
-
-  private ValidationUtils() {
-    throw new UnsupportedOperationException("Utility class - cannot instantiate");
-  }
-
-  public static String validateCustomerId(String customerId) {
-    if (customerId == null || customerId.trim().isEmpty()) {
-      throw new IllegalArgumentException("Customer ID is required");
+public class ValidationUtils {
+    
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+        "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+    );
+    
+    private static final Pattern CUSTOMER_ID_PATTERN = Pattern.compile(
+        "^CUST\\d{3,}$"
+    );
+    
+    /**
+     * Validates a customer ID.
+     * 
+     * @param customerId the customer ID to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidCustomerId(String customerId) {
+        return customerId != null && 
+               !customerId.trim().isEmpty() && 
+               CUSTOMER_ID_PATTERN.matcher(customerId).matches();
     }
-    String id = customerId.trim().toUpperCase();
-    if (!CUSTOMER_ID_PATTERN.matcher(id).matches()) {
-      throw new IllegalArgumentException(
-          "Invalid customer ID format. Must be CUST followed by three digits (e.g., CUST001)");
+    
+    /**
+     * Validates an email address.
+     * 
+     * @param email the email to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidEmail(String email) {
+        return email != null && 
+               !email.trim().isEmpty() && 
+               EMAIL_PATTERN.matcher(email).matches();
     }
-    return id;
-  }
-
-  public static double validateAmount(Object amountObj) {
-    if (amountObj == null) {
-      throw new IllegalArgumentException("Amount is required");
+    
+    /**
+     * Validates an amount is positive and within reasonable limits.
+     * 
+     * @param amount the amount to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidAmount(double amount) {
+        return amount > 0 && amount <= 100000.00;
     }
-
-    double amount;
-    try {
-      if (amountObj instanceof String) {
-        amount = Double.parseDouble((String) amountObj);
-      } else if (amountObj instanceof Number) {
-        amount = ((Number) amountObj).doubleValue();
-      } else {
-        throw new IllegalArgumentException("Amount must be a number");
-      }
-    } catch (NumberFormatException e) {
-      throw new IllegalArgumentException("Invalid amount format: " + amountObj);
+    
+    /**
+     * Validates a tier value.
+     * 
+     * @param tier the tier to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidTier(String tier) {
+        if (tier == null || tier.trim().isEmpty()) {
+            return false;
+        }
+        String normalizedTier = tier.trim().toLowerCase();
+        return normalizedTier.equals("basic") || 
+               normalizedTier.equals("premium") || 
+               normalizedTier.equals("enterprise");
     }
-
-    if (amount <= 0) {
-      throw new IllegalArgumentException("Amount must be greater than zero");
+    
+    /**
+     * Validates a priority value.
+     * 
+     * @param priority the priority to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidPriority(String priority) {
+        if (priority == null || priority.trim().isEmpty()) {
+            return false;
+        }
+        String normalizedPriority = priority.trim().toLowerCase();
+        return normalizedPriority.equals("low") || 
+               normalizedPriority.equals("medium") || 
+               normalizedPriority.equals("high") || 
+               normalizedPriority.equals("urgent");
     }
-    if (amount > MAX_TRANSACTION_AMOUNT) {
-      throw new IllegalArgumentException(
-          "Amount exceeds maximum transaction limit of $" + MAX_TRANSACTION_AMOUNT);
+    
+    /**
+     * Validates a status value.
+     * 
+     * @param status the status to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidStatus(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return false;
+        }
+        String normalizedStatus = status.trim().toLowerCase();
+        return normalizedStatus.equals("open") || 
+               normalizedStatus.equals("closed") || 
+               normalizedStatus.equals("pending") || 
+               normalizedStatus.equals("all");
     }
-
-    return Math.round(amount * 100.0) / 100.0;
-  }
-
-  public static String validateEmail(String email) {
-    if (email == null || email.trim().isEmpty()) {
-      throw new IllegalArgumentException("Email cannot be empty");
+    
+    /**
+     * Sanitizes a string by removing potentially harmful characters.
+     * 
+     * @param input the string to sanitize
+     * @return sanitized string
+     */
+    public static String sanitize(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.trim()
+                   .replaceAll("[<>\"']", "")
+                   .replaceAll("\\s+", " ");
     }
-
-    String validatedEmail = email.trim();
-    if (!EMAIL_PATTERN.matcher(validatedEmail).matches()) {
-      throw new IllegalArgumentException("Invalid email format");
+    
+    /**
+     * Rounds an amount to 2 decimal places.
+     * 
+     * @param amount the amount to round
+     * @return rounded amount
+     */
+    public static double roundAmount(double amount) {
+        return Math.round(amount * 100.0) / 100.0;
     }
-    return validatedEmail;
-  }
-
-  public static String validateTier(String tier) {
-    if (tier == null || tier.trim().isEmpty()) {
-      throw new IllegalArgumentException("Account tier cannot be empty");
-    }
-
-    String normalizedTier = tier.trim().toUpperCase();
-    if (!VALID_TIERS.contains(normalizedTier)) {
-      throw new IllegalArgumentException(
-          "Invalid tier. Must be one of: Basic, Premium, Enterprise");
-    }
-
-    return capitalize(normalizedTier);
-  }
-
-  public static String validatePriority(String priority) {
-    if (priority == null || priority.trim().isEmpty()) {
-      return "Medium";
-    }
-
-    String normalized = priority.trim().toUpperCase();
-    return VALID_PRIORITIES.contains(normalized) ? capitalize(normalized) : "Medium";
-  }
-
-  private static String capitalize(String str) {
-    return str.charAt(0) + str.substring(1).toLowerCase();
-  }
 }
