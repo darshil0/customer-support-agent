@@ -8,6 +8,8 @@ interface TickerTrackerProps {
 }
 
 const STORAGE_KEY = 'finagent_tickers';
+const COMPARE_STORAGE_KEY = 'finagent_compare_list';
+
 type SortKey = 'symbol' | 'price' | 'change';
 type SortDirection = 'asc' | 'desc';
 
@@ -164,15 +166,20 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
   // Comparison State
   const [compareList, setCompareList] = useState<string[]>([]);
 
-  // Load tickers from local storage on mount
+  // Load tickers and comparison list from local storage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        setTickers(JSON.parse(saved));
+      const savedTickers = localStorage.getItem(STORAGE_KEY);
+      if (savedTickers) {
+        setTickers(JSON.parse(savedTickers));
+      }
+
+      const savedCompare = localStorage.getItem(COMPARE_STORAGE_KEY);
+      if (savedCompare) {
+        setCompareList(JSON.parse(savedCompare));
       }
     } catch (e) {
-      console.error('Failed to load tickers', e);
+      console.error('Failed to load data from local storage', e);
     }
   }, []);
 
@@ -180,6 +187,11 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tickers));
   }, [tickers]);
+
+  // Save comparison list when changed
+  useEffect(() => {
+    localStorage.setItem(COMPARE_STORAGE_KEY, JSON.stringify(compareList));
+  }, [compareList]);
 
   // Fetch data when tickers change or refresh triggered
   useEffect(() => {
