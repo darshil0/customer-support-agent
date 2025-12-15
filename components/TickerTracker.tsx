@@ -112,10 +112,14 @@ const ComparisonSection = ({
        
        <div className="flex items-center justify-between mb-4 relative z-10">
           <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-             <i className="fas fa-chart-area text-blue-400"></i>
+             <i className="fas fa-chart-area text-blue-400" aria-hidden="true"></i>
              Performance Comparison <span className="text-xs font-normal text-slate-500">(5-Day Trend)</span>
           </h4>
-          <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300 bg-slate-800/50 hover:bg-slate-700 px-2 py-1 rounded transition-colors">
+          <button 
+             onClick={onClose}
+             aria-label="Close comparison chart"
+             className="text-xs text-slate-500 hover:text-slate-300 bg-slate-800/50 hover:bg-slate-700 px-2 py-1 rounded transition-colors"
+          >
              Close
           </button>
        </div>
@@ -283,9 +287,9 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
     <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700">
       <h3 className="text-white font-semibold mb-4 flex items-center justify-between">
         <span className="flex items-center gap-2">
-          <i className="fas fa-list-ul text-emerald-500"></i> Watchlist
+          <i className="fas fa-list-ul text-emerald-500" aria-hidden="true"></i> Watchlist
         </span>
-        {loading && <i className="fas fa-circle-notch fa-spin text-emerald-500 text-xs"></i>}
+        {loading && <i className="fas fa-circle-notch fa-spin text-emerald-500 text-xs" aria-hidden="true"></i>}
       </h3>
 
       <form onSubmit={handleAddTicker} className="flex gap-2 mb-4">
@@ -302,7 +306,7 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
           disabled={!inputVal.trim()}
           aria-label="Add Ticker"
         >
-          <i className="fas fa-plus"></i>
+          <i className="fas fa-plus" aria-hidden="true"></i>
         </button>
       </form>
 
@@ -322,7 +326,7 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
             <div className="flex gap-2 mb-3">
                 <div className="relative group flex-1">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                        <i className="fas fa-search text-slate-500 group-focus-within:text-emerald-500 transition-colors text-xs"></i>
+                        <i className="fas fa-search text-slate-500 group-focus-within:text-emerald-500 transition-colors text-xs" aria-hidden="true"></i>
                     </div>
                     <input 
                         type="text" 
@@ -339,30 +343,34 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
                         onClick={() => handleSort('symbol')}
                         className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${sortKey === 'symbol' ? 'bg-slate-700 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
                         title="Sort by Symbol"
+                        aria-label="Sort by Symbol"
                      >
-                        <i className="fas fa-font text-xs"></i>
+                        <i className="fas fa-font text-xs" aria-hidden="true"></i>
                      </button>
                      <button
                         onClick={() => handleSort('price')}
                         className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${sortKey === 'price' ? 'bg-slate-700 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
                         title="Sort by Price"
+                        aria-label="Sort by Price"
                      >
-                        <i className="fas fa-dollar-sign text-xs"></i>
+                        <i className="fas fa-dollar-sign text-xs" aria-hidden="true"></i>
                      </button>
                      <button
                         onClick={() => handleSort('change')}
                         className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${sortKey === 'change' ? 'bg-slate-700 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
                         title="Sort by Performance"
+                        aria-label="Sort by Performance"
                      >
-                        <i className="fas fa-chart-line text-xs"></i>
+                        <i className="fas fa-chart-line text-xs" aria-hidden="true"></i>
                      </button>
                      <div className="w-px h-4 bg-slate-700 mx-1"></div>
                      <button
                         onClick={() => setSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
                         className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-white transition-colors"
                         title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+                        aria-label={`Sort order: ${sortDirection}`}
                      >
-                        <i className={`fas fa-sort-amount-${sortDirection === 'asc' ? 'down' : 'up'} text-xs`}></i>
+                        <i className={`fas fa-sort-amount-${sortDirection === 'asc' ? 'down' : 'up'} text-xs`} aria-hidden="true"></i>
                      </button>
                 </div>
             </div>
@@ -392,8 +400,10 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
                                       disabled={!canCompare && !isComparing}
                                       className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${isComparing ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500 hover:text-blue-400'} ${!canCompare && !isComparing ? 'opacity-30 cursor-not-allowed' : ''}`}
                                       title={isComparing ? "Remove from comparison" : (canCompare ? "Add to comparison" : "Max 3 selected")}
+                                      aria-pressed={isComparing}
+                                      aria-label={isComparing ? `Remove ${ticker} from comparison` : `Add ${ticker} to comparison`}
                                    >
-                                     <i className="fas fa-balance-scale text-xs"></i>
+                                     <i className="fas fa-balance-scale text-xs" aria-hidden="true"></i>
                                    </button>
                                    <div className="flex flex-col w-16">
                                        <span className="font-bold text-slate-200">{ticker}</span>
@@ -427,9 +437,9 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
                                     <button 
                                         onClick={() => handleRemoveTicker(ticker)}
                                         className="text-slate-600 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-                                        aria-label={`Remove ${ticker}`}
+                                        aria-label={`Remove ${ticker} from watchlist`}
                                     >
-                                        <i className="fas fa-times"></i>
+                                        <i className="fas fa-times" aria-hidden="true"></i>
                                     </button>
                                 </div>
                             </div>
