@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { SectorData } from '../types';
+import { SectorData, GroundingChunk } from '../types';
 import { fetchSectorWeights } from '../services/geminiService';
 
 // Fallback data in case API fails
@@ -20,6 +20,7 @@ const COLORS = ['#10b981', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'
 
 export const MarketChart: React.FC = () => {
   const [data, setData] = useState<SectorData[]>([]);
+  const [sources, setSources] = useState<GroundingChunk[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,14 +30,19 @@ export const MarketChart: React.FC = () => {
       try {
         const result = await fetchSectorWeights();
         if (isMounted) {
-          if (result && result.length > 0) {
-            setData(result);
+          if (result.data && result.data.length > 0) {
+            setData(result.data);
+            setSources(result.sources);
           } else {
             setData(FALLBACK_DATA);
+            setSources([]);
           }
         }
       } catch (err) {
-        if (isMounted) setData(FALLBACK_DATA);
+        if (isMounted) {
+            setData(FALLBACK_DATA);
+            setSources([]);
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -104,9 +110,20 @@ export const MarketChart: React.FC = () => {
             </ResponsiveContainer>
         )}
       </div>
-      <p className="text-xs text-slate-500 mt-4 text-center italic opacity-60">
-         Data retrieved via AI search grounding.
-      </p>
+      <div className="mt-4">
+        <p className="text-xs text-slate-500 text-center italic opacity-60 mb-2">
+           Data retrieved via AI search grounding.
+        </p>
+        {sources.length > 0 && (
+            <div className="flex flex-wrap gap-2 justify-center">
+                {sources.map((s, i) => (
+                    <a key={i} href={s.web?.uri} target="_blank" rel="noreferrer" className="text-[10px] text-blue-400 hover:underline">
+                        {s.web?.title}
+                    </a>
+                ))}
+            </div>
+        )}
+      </div>
     </div>
   );
 };

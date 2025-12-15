@@ -6,40 +6,99 @@ interface ReportViewProps {
 }
 
 export const ReportView: React.FC<ReportViewProps> = ({ report }) => {
-  // Simple function to process markdown-like text into React nodes
-  // This avoids heavy dependencies for this specific environment
+  
+  // Helper to parse inline styles (currently just bold)
+  const parseInline = (text: string) => {
+    // Split by bold syntax **text**
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <span key={index} className="font-bold text-slate-100">
+            {part.slice(2, -2)}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   const renderContent = (text: string) => {
-    return text.split('\n').map((line, index) => {
-      if (line.startsWith('## ')) {
-        return <h2 key={index} className="text-2xl font-bold text-emerald-400 mt-6 mb-3">{line.replace('## ', '')}</h2>;
+    const lines = text.split('\n');
+    const elements: React.ReactNode[] = [];
+    let currentListItems: React.ReactNode[] = [];
+
+    const flushList = () => {
+      if (currentListItems.length > 0) {
+        elements.push(
+          <ul key={`list-${elements.length}`} className="list-disc pl-6 mb-4 space-y-2 text-slate-300 marker:text-emerald-500">
+            {currentListItems}
+          </ul>
+        );
+        currentListItems = [];
       }
-      if (line.startsWith('### ')) {
-        return <h3 key={index} className="text-xl font-semibold text-sky-400 mt-4 mb-2">{line.replace('### ', '')}</h3>;
-      }
-      if (line.startsWith('**') && line.endsWith('**')) {
-         return <p key={index} className="font-bold text-slate-200 my-2">{line.replace(/\*\*/g, '')}</p>;
-      }
-      if (line.trim().startsWith('- ')) {
-        return <li key={index} className="ml-4 text-slate-300 mb-1 list-disc pl-2">{line.replace('- ', '').replace(/\*\*/g, '')}</li>;
-      }
-      if (line.trim().startsWith('* ')) {
-        return <li key={index} className="ml-4 text-slate-300 mb-1 list-disc pl-2">{line.replace('* ', '').replace(/\*\*/g, '')}</li>;
-      }
-      if (line.trim() === '') {
-        return <div key={index} className="h-2"></div>;
-      }
-      // Handle bolding within text crudely
-      const parts = line.split('**');
-      if (parts.length > 1) {
-          return (
-              <p key={index} className="text-slate-300 leading-relaxed mb-2">
-                  {parts.map((part, i) => i % 2 === 1 ? <span key={i} className="font-bold text-slate-100">{part}</span> : part)}
-              </p>
-          )
+    };
+
+    lines.forEach((line, i) => {
+      const trimmedLine = line.trim();
+
+      // Skip completely empty lines, but flush lists
+      if (!trimmedLine) {
+        flushList();
+        return;
       }
 
-      return <p key={index} className="text-slate-300 leading-relaxed mb-2">{line}</p>;
+      // Headings
+      if (trimmedLine.startsWith('## ')) {
+        flushList();
+        elements.push(
+          <h2 key={`h2-${i}`} className="text-2xl font-bold text-emerald-400 mt-8 mb-4 border-b border-slate-700 pb-2">
+            {parseInline(trimmedLine.replace(/^##\s+/, ''))}
+          </h2>
+        );
+        return;
+      }
+      if (trimmedLine.startsWith('### ')) {
+        flushList();
+        elements.push(
+          <h3 key={`h3-${i}`} className="text-xl font-semibold text-sky-400 mt-6 mb-3">
+            {parseInline(trimmedLine.replace(/^###\s+/, ''))}
+          </h3>
+        );
+        return;
+      }
+       if (trimmedLine.startsWith('# ')) {
+        flushList();
+        elements.push(
+          <h1 key={`h1-${i}`} className="text-3xl font-bold text-white mt-8 mb-6">
+            {parseInline(trimmedLine.replace(/^#\s+/, ''))}
+          </h1>
+        );
+        return;
+      }
+
+      // List Items (Bullets)
+      if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+        const content = trimmedLine.replace(/^[-*]\s+/, '');
+        currentListItems.push(
+          <li key={`li-${i}`} className="pl-1">
+            {parseInline(content)}
+          </li>
+        );
+        return;
+      }
+
+      // Regular Paragraphs (flushes previous list if any)
+      flushList();
+      elements.push(
+        <p key={`p-${i}`} className="text-slate-300 leading-relaxed mb-3">
+          {parseInline(trimmedLine)}
+        </p>
+      );
     });
+
+    flushList(); // Final flush in case the text ends with a list
+    return elements;
   };
 
   return (

@@ -55,7 +55,7 @@ export const generateDailyReport = async (): Promise<MarketReport> => {
   }
 };
 
-export const fetchSectorWeights = async (): Promise<SectorData[]> => {
+export const fetchSectorWeights = async (): Promise<{data: SectorData[], sources: GroundingChunk[]}> => {
   const prompt = `
     Find the latest available S&P 500 sector weightings (percentage allocation).
     
@@ -75,21 +75,28 @@ export const fetchSectorWeights = async (): Promise<SectorData[]> => {
       },
     });
 
+    // Extract grounding chunks (sources)
+    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+    const validSources: GroundingChunk[] = chunks.filter(
+      (chunk: any) => chunk.web?.uri && chunk.web?.title
+    );
+
     let text = response.text || "[]";
     // Sanitize in case model adds markdown blocks
     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
     const data = JSON.parse(text);
     
+    let parsedData: SectorData[] = [];
     if (Array.isArray(data) && data.length > 0) {
-        return data.map((item: any) => ({
+        parsedData = data.map((item: any) => ({
             name: item.name || 'Unknown',
             value: Number(item.value) || 0
         }));
     }
-    return [];
+    return { data: parsedData, sources: validSources };
   } catch (error) {
     console.error("Failed to fetch sector weights:", error);
-    return []; // Return empty array to trigger fallback in UI
+    return { data: [], sources: [] };
   }
 };

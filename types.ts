@@ -21,4 +21,5 @@ export enum ReportStatus {
 export interface SectorData {
   name: string;
   value: number;
+  [key: string]: any;
 }
