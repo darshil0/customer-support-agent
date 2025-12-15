@@ -14,8 +14,6 @@ Upon loading the application, you will see the landing page.
     *   **Top Movers**: Significant stock movements.
     *   **Outlook**: What to expect next.
 
-> **Tip**: You can export this analysis by clicking the **"Export PDF"** button at the top right of the report view.
-
 ## 2. Exploring Market Data
 
 ### Sector Allocation Chart
@@ -23,7 +21,6 @@ On the right sidebar (or below the report on mobile), you will find the **S&P 50
 
 *   **View Details**: Hover over any slice of the pie chart to see the specific sector name and percentage weight.
 *   **Select Sector**: Click a slice or a legend item to "lock" the selection. A detailed card will appear below the chart showing the exact value.
-*   **Refresh**: Use the refresh icon in the chart header to fetch the absolute latest weightings.
 
 ### Sources & Grounding
 FinAgent Pro prioritizes transparency.
@@ -61,15 +58,8 @@ Manage large watchlists easily with the toolbar above the list:
     *   **Performance** (%): Click the **Chart** icon.
 3.  **Direction**: Click the **Sort Order** icon (bars) to toggle between Ascending and Descending order.
 
-## 4. Automation & History
+## 4. History
 
-### Auto-Refresh
-Keep your dashboard running on a dedicated screen?
-*   Locate the **Auto-Refresh** card in the sidebar.
-*   Select an interval (e.g., "Every 5 Minutes").
-*   The app will automatically regenerate the report and refresh stock data at the chosen cadence.
-
-### History
 *   Previous reports are saved locally.
 *   Use the **"Recent History"** list to reload a report from earlier in the day or a previous session.
 *   Click **"Clear"** to wipe your local history.

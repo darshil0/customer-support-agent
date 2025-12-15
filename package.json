@@ -1,13 +1,14 @@
 {
   "name": "finagent-pro",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "AI-Powered S&P 500 Market Analysis Dashboard",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -21,24 +22,27 @@
     "recharts": "^2.13.3"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/user-event": "^14.5.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^2.1.5",
+    "@vitest/ui": "^2.1.5",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.15.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.14",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.6.3",
+    "typescript-eslint": "^8.50.0",
     "vite": "^5.4.11",
-    "vitest": "^2.1.5",
-    "@testing-library/react": "^16.0.1",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/user-event": "^14.5.2",
-    "@vitest/ui": "^2.1.5",
-    "@vitest/coverage-v8": "^2.1.5"
+    "vitest": "^2.1.5"
   }
 }

@@ -1,130 +1,131 @@
-import React from 'react';
+// App.test.tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 import * as geminiService from './services/geminiService';
+import { vi } from 'vitest';
 
-declare const jest: any;
-declare const describe: any;
-declare const beforeEach: any;
-declare const it: any;
-declare const expect: any;
-
-// Mock the services
-jest.mock('./services/geminiService');
-const mockGenerateReport = geminiService.generateDailyReport as any;
-const mockFetchSector = geminiService.fetchSectorWeights as any;
-const mockFetchStock = geminiService.fetchStockPerformance as any;
-
-// Mock child components that might need resizing/external deps
-jest.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-  PieChart: ({ children }: any) => <div>{children}</div>,
-  Pie: () => <div>Pie Slice</div>,
-  Tooltip: () => null,
-  Legend: () => null,
-  Cell: () => null,
-}));
+// Mock the entire geminiService module
+vi.mock('./services/geminiService');
 
 describe('App Integration', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    // Reset mocks and localStorage before each test
+    vi.clearAllMocks();
     localStorage.clear();
-    mockFetchSector.mockResolvedValue({ data: [], sources: [] });
-    mockFetchStock.mockResolvedValue([]);
   });
 
   it('renders the landing page correctly', () => {
     render(<App />);
-    expect(screen.getByText(/Daily S&P 500/i)).toBeInTheDocument();
+    expect(screen.getByText(/Market Analysis Report/i)).toBeInTheDocument();
     expect(screen.getByTestId('generate-report-btn')).toBeInTheDocument();
   });
 
   it('handles report generation flow: loading -> success', async () => {
-    // Setup Mocks
-    mockGenerateReport.mockImplementation(() =>
-      new Promise(resolve => setTimeout(() => resolve({
-        content: '# Analysis\nMarket is good.',
-        sources: [],
-        timestamp: new Date().toISOString(),
-      }), 50))
-    );
+    const mockReport = {
+      text: '## Market is Up!',
+      groundingSources: [{ title: 'Source 1', uri: 'https://source1.com' }],
+    };
+
+    // Mock the generateMarketReport function
+    vi.spyOn(geminiService, 'generateMarketReport').mockResolvedValue(mockReport);
 
     render(<App />);
 
-    // Click Generate
+    // Click the generate report button
     fireEvent.click(screen.getByTestId('generate-report-btn'));
 
-    // Check Loading State
+    // Check for loading state
     expect(screen.getByTestId('loading-state')).toBeInTheDocument();
 
-    // Wait for Success State
+    // Wait for the report to be displayed
     await waitFor(() => {
       expect(screen.getByTestId('report-container')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Market is good.')).toBeInTheDocument();
+    // Check that the report content is displayed
+    expect(screen.getByText('Market is Up!')).toBeInTheDocument();
+
+    // Check that the TickerTracker and MarketChart are displayed
+    expect(screen.getByTestId('ticker-tracker')).toBeInTheDocument();
     expect(screen.getByTestId('market-chart-container')).toBeInTheDocument();
   });
 
-  it('displays error state if generation fails', async () => {
-    mockGenerateReport.mockRejectedValue(new Error('API Fail'));
+  it('displays an error state if report generation fails', async () => {
+    // Mock the generateMarketReport function to reject with an error
+    vi.spyOn(geminiService, 'generateMarketReport').mockRejectedValue(new Error('API Error'));
 
     render(<App />);
+
+    // Click the generate report button
     fireEvent.click(screen.getByTestId('generate-report-btn'));
 
+    // Wait for the error state to be displayed
     await waitFor(() => {
       expect(screen.getByTestId('error-state')).toBeInTheDocument();
     });
-    
-    expect(screen.getByText('API Fail')).toBeInTheDocument();
+
+    // Check that the error message is displayed
+    expect(screen.getByText('API Error')).toBeInTheDocument();
   });
 
   it('persists and loads history', async () => {
     const mockReport = {
-      content: 'Historical Report Content',
-      sources: [],
-      timestamp: new Date('2024-01-01').toISOString(),
+      text: '## Historical Report',
+      groundingSources: [],
     };
+    vi.spyOn(geminiService, 'generateMarketReport').mockResolvedValue(mockReport);
 
-    mockGenerateReport.mockResolvedValue(mockReport);
-
-    render(<App />);
-    
-    // Generate first report
-    fireEvent.click(screen.getByTestId('generate-report-btn'));
-    await waitFor(() => screen.getByTestId('report-container'));
-
-    // Reload Page (simulate by unmounting and remounting)
     const { unmount } = render(<App />);
+
+    // Generate a report
+    fireEvent.click(screen.getByTestId('generate-report-btn'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Historical Report')).toBeInTheDocument();
+    });
+
+    // Unmount the component to simulate a page reload
     unmount();
-    
-    // Check local storage directly for persistence
-    const stored = localStorage.getItem('finagent_history');
-    expect(stored).toContain('Historical Report Content');
+
+    // Re-render the component
+    render(<App />);
+
+    // Check that the historical report is loaded from localStorage
+    expect(screen.getByText('Historical Report')).toBeInTheDocument();
   });
 
   it('handles manual refresh of analysis', async () => {
-     mockGenerateReport.mockResolvedValue({
-        content: 'Report 1',
-        sources: [],
-        timestamp: new Date().toISOString(),
-      });
-      
-      render(<App />);
-      fireEvent.click(screen.getByTestId('generate-report-btn'));
-      await waitFor(() => screen.getByTestId('report-container'));
+    const mockReport1 = {
+      text: '## Report 1',
+      groundingSources: [],
+    };
+    const mockReport2 = {
+      text: '## Report 2',
+      groundingSources: [],
+    };
 
-      mockGenerateReport.mockResolvedValue({
-        content: 'Report 2',
-        sources: [],
-        timestamp: new Date().toISOString(),
-      });
+    // Mock the generateMarketReport function
+    const mockFn = vi.spyOn(geminiService, 'generateMarketReport')
+      .mockResolvedValueOnce(mockReport1)
+      .mockResolvedValueOnce(mockReport2);
 
-      const refreshBtn = screen.getByTestId('refresh-analysis-btn');
-      fireEvent.click(refreshBtn);
-      
-      await waitFor(() => {
-          expect(screen.getByText('Report 2')).toBeInTheDocument();
-      });
+    render(<App />);
+
+    // Generate the first report
+    fireEvent.click(screen.getByTestId('generate-report-btn'));
+    await waitFor(() => {
+      expect(screen.getByText('Report 1')).toBeInTheDocument();
+    });
+
+    // Click the refresh button
+    fireEvent.click(screen.getByTestId('refresh-analysis-btn'));
+
+    // Wait for the second report to be displayed
+    await waitFor(() => {
+      expect(screen.getByText('Report 2')).toBeInTheDocument();
+    });
+
+    // Check that the mock function was called twice
+    expect(mockFn).toHaveBeenCalledTimes(2);
   });
 });

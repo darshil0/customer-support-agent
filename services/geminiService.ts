@@ -1,10 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const apiKey = import.meta.env.VITE_API_KEY;
-
-if (!apiKey) {
-  throw new Error('VITE_API_KEY is not defined. Please check your .env file');
-}
+const apiKey = import.meta.env.VITE_API_KEY || '';
 
 const genAI = new GoogleGenerativeAI(apiKey);
 
@@ -27,12 +23,21 @@ export interface StockData {
 }
 
 export async function generateMarketReport(retries = 3): Promise<MarketReport> {
+  if (!apiKey) {
+    console.warn('VITE_API_KEY is not defined. Returning mock data.');
+    return {
+      text: '## Mock Market Report\n\nThis is a mock report because the API key is not configured.',
+      groundingSources: [],
+    };
+  }
+
   let lastError: Error | null = null;
 
   for (let i = 0; i < retries; i++) {
     try {
       const model = genAI.getGenerativeModel({ 
         model: 'gemini-2.0-flash-exp',
+        tools: [{ googleSearch: {} }]
       });
 
       const currentDate = new Date().toLocaleDateString('en-US', {

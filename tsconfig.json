@@ -35,6 +35,6 @@
     /* Type definitions */
     "types": ["vite/client"]
   },
-  "include": ["src", "*.ts", "*.tsx"],
+  "include": ["src", "components", "hooks", "services", "types.ts", "App.tsx", "index.tsx", "vite-env-d.ts", "App.test.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

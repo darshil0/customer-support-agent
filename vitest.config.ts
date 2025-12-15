@@ -14,6 +14,6 @@ export default defineConfig({
         'node_modules/',
         'src/setupTests.ts',
       ]
-    }
+    },
   }
 });
