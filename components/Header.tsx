@@ -7,7 +7,7 @@ export const Header: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <i className="fas fa-robot text-white text-lg"></i>
+              <i className="fas fa-robot text-white text-lg" aria-hidden="true"></i>
             </div>
             <div>
               <h1 className="text-xl font-bold text-white tracking-tight">FinAgent <span className="text-emerald-500">Pro</span></h1>
@@ -15,10 +15,10 @@ export const Header: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#" className="text-slate-400 hover:text-white transition-colors">
-                <i className="fab fa-github text-xl"></i>
+            <a href="https://github.com" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white transition-colors" aria-label="View on GitHub">
+                <i className="fab fa-github text-xl" aria-hidden="true"></i>
             </a>
-            <button className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
+            <button className="text-sm font-medium text-slate-300 hover:text-white transition-colors" aria-label="Open Documentation">
               Documentation
             </button>
           </div>

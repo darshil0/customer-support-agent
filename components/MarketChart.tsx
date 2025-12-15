@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-slate-900/95 backdrop-blur-sm border border-slate-700 p-3 rounded-lg shadow-xl">
+      <div className="bg-slate-900/95 backdrop-blur-sm border border-slate-700 p-3 rounded-lg shadow-xl z-50">
         <p className="text-slate-200 font-medium text-xs mb-1 uppercase tracking-wider">{data.name}</p>
         <div className="flex items-center gap-2">
            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: payload[0].fill }}></div>
@@ -36,13 +36,18 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export const MarketChart: React.FC = () => {
+interface MarketChartProps {
+  refreshTrigger: number;
+}
+
+export const MarketChart: React.FC<MarketChartProps> = ({ refreshTrigger }) => {
   const [data, setData] = useState<SectorData[]>([]);
   const [sources, setSources] = useState<GroundingChunk[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
+    setLoading(true);
 
     const getData = async () => {
       try {
@@ -71,18 +76,18 @@ export const MarketChart: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [refreshTrigger]);
 
   return (
-    <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700 min-h-[400px] flex flex-col">
+    <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700 min-h-[400px] flex flex-col" data-testid="market-chart-container">
       <h3 className="text-lg font-semibold text-slate-200 mb-4 flex items-center justify-between">
         <span>S&P 500 Sector Allocation</span>
         {loading ? (
-             <span className="text-xs font-normal text-emerald-400 flex items-center gap-1">
+             <span className="text-xs font-normal text-emerald-400 flex items-center gap-1" data-testid="chart-loading-indicator">
                  <i className="fas fa-sync fa-spin"></i> Live Data
              </span>
         ) : (
-             <span className="text-xs font-normal text-slate-400">
+             <span className="text-xs font-normal text-slate-400" data-testid="chart-data-source">
                 {data === FALLBACK_DATA ? '(Reference Data)' : '(Live Estimate)'}
              </span>
         )}
@@ -130,7 +135,7 @@ export const MarketChart: React.FC = () => {
            Data retrieved via AI search grounding.
         </p>
         {sources.length > 0 && (
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-2 justify-center" data-testid="chart-sources">
                 {sources.map((s, i) => (
                     <a key={i} href={s.web?.uri} target="_blank" rel="noreferrer" className="text-[10px] text-blue-400 hover:underline">
                         {s.web?.title}

@@ -55,7 +55,7 @@ export const generateDailyReport = async (): Promise<MarketReport> => {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    console.error("Gemini API Error (Report):", error);
     throw error;
   }
 };
@@ -92,10 +92,16 @@ export const fetchSectorWeights = async (): Promise<{data: SectorData[], sources
       }));
 
     let text = response.text || "[]";
-    // Sanitize in case model adds markdown blocks
-    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    // Robust JSON extraction: look for the first '[' and the last ']'
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      console.warn("No JSON array found in response text");
+      return { data: [], sources: [] };
+    }
 
-    const data = JSON.parse(text);
+    const jsonString = jsonMatch[0];
+    const data = JSON.parse(jsonString);
     
     let parsedData: SectorData[] = [];
     if (Array.isArray(data) && data.length > 0) {
@@ -107,6 +113,7 @@ export const fetchSectorWeights = async (): Promise<{data: SectorData[], sources
     return { data: parsedData, sources: validSources };
   } catch (error) {
     console.error("Failed to fetch sector weights:", error);
+    // Return empty to allow UI to handle fallback, rather than crashing
     return { data: [], sources: [] };
   }
 };

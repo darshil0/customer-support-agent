@@ -102,27 +102,27 @@ export const ReportView: React.FC<ReportViewProps> = ({ report }) => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in" data-testid="report-content-view">
       <div className="bg-slate-800 rounded-xl p-8 shadow-xl border border-slate-700">
         <div className="flex items-center justify-between mb-6 border-b border-slate-700 pb-4">
           <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-            <i className="fas fa-chart-line text-emerald-500"></i>
+            <i className="fas fa-chart-line text-emerald-500" aria-hidden="true"></i>
             Daily S&P 500 Report
           </h2>
-          <span className="text-sm text-slate-400">
+          <span className="text-sm text-slate-400" data-testid="report-timestamp">
             Generated: {new Date(report.timestamp).toLocaleTimeString()}
           </span>
         </div>
         
-        <div className="prose prose-invert max-w-none">
+        <div className="prose prose-invert max-w-none" data-testid="report-markdown-body">
           {renderContent(report.content)}
         </div>
       </div>
 
       {report.sources.length > 0 && (
-        <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700">
+        <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700" data-testid="grounding-sources">
           <h3 className="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
-            <i className="fas fa-link text-blue-400"></i>
+            <i className="fas fa-link text-blue-400" aria-hidden="true"></i>
             Sources & Grounding
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -133,9 +133,10 @@ export const ReportView: React.FC<ReportViewProps> = ({ report }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center p-3 rounded-lg bg-slate-900/50 hover:bg-slate-700 transition-colors border border-slate-700 hover:border-blue-500 group"
+                aria-label={`Open source: ${source.web?.title || 'Unknown Source'}`}
               >
                 <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center mr-3 group-hover:bg-blue-500/20 transition-colors">
-                  <i className="fas fa-globe text-slate-400 group-hover:text-blue-400 text-sm"></i>
+                  <i className="fas fa-globe text-slate-400 group-hover:text-blue-400 text-sm" aria-hidden="true"></i>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-200 truncate group-hover:text-blue-300">
@@ -145,7 +146,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ report }) => {
                     {source.web?.uri}
                   </p>
                 </div>
-                <i className="fas fa-external-link-alt text-xs text-slate-600 group-hover:text-slate-400 ml-2"></i>
+                <i className="fas fa-external-link-alt text-xs text-slate-600 group-hover:text-slate-400 ml-2" aria-hidden="true"></i>
               </a>
             ))}
           </div>
