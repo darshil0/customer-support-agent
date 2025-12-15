@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { SectorData, GroundingChunk } from '../types';
 import { fetchSectorWeights } from '../services/geminiService';
@@ -45,56 +45,61 @@ export const MarketChart: React.FC<MarketChartProps> = ({ refreshTrigger }) => {
   const [sources, setSources] = useState<GroundingChunk[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
+  const fetchData = useCallback(async () => {
     setLoading(true);
-
-    const getData = async () => {
-      try {
-        const result = await fetchSectorWeights();
-        if (isMounted) {
-          if (result.data && result.data.length > 0) {
-            setData(result.data);
-            setSources(result.sources);
-          } else {
-            setData(FALLBACK_DATA);
-            setSources([]);
-          }
-        }
-      } catch (err) {
-        if (isMounted) {
-            setData(FALLBACK_DATA);
-            setSources([]);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
+    try {
+      const result = await fetchSectorWeights();
+      if (result.data && result.data.length > 0) {
+        setData(result.data);
+        setSources(result.sources);
+      } else {
+        setData(FALLBACK_DATA);
+        setSources([]);
       }
-    };
+    } catch (err) {
+      setData(FALLBACK_DATA);
+      setSources([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    getData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [refreshTrigger]);
+  useEffect(() => {
+    fetchData();
+  }, [refreshTrigger, fetchData]);
 
   return (
     <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700 flex flex-col h-auto" data-testid="market-chart-container">
-      <h3 className="text-lg font-semibold text-slate-200 mb-6 flex items-center justify-between">
-        <span>S&P 500 Sector Allocation</span>
-        {loading ? (
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-slate-200">
+          S&P 500 Sector Allocation
+        </h3>
+        <div className="flex items-center gap-3">
+          {loading ? (
              <span className="text-xs font-normal text-emerald-400 flex items-center gap-1" data-testid="chart-loading-indicator">
-                 <i className="fas fa-sync fa-spin"></i> Live Data
+                 <i className="fas fa-sync fa-spin"></i> 
+                 <span className="hidden sm:inline">Updating</span>
              </span>
-        ) : (
+          ) : (
              <span className="text-xs font-normal text-slate-400" data-testid="chart-data-source">
                 {data === FALLBACK_DATA ? '(Reference Data)' : '(Live Estimate)'}
              </span>
-        )}
-      </h3>
+          )}
+          
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-emerald-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Refresh Chart Data"
+            title="Refresh Chart Data"
+          >
+            <i className={`fas fa-redo-alt text-xs ${loading ? 'animate-spin' : ''}`}></i>
+          </button>
+        </div>
+      </div>
       
       <div className="w-full h-[250px] relative">
-        {loading ? (
+        {loading && data.length === 0 ? (
            <div className="absolute inset-0 flex items-center justify-center">
              <div className="flex flex-col items-center gap-3">
                <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
@@ -102,31 +107,33 @@ export const MarketChart: React.FC<MarketChartProps> = ({ refreshTrigger }) => {
              </div>
            </div>
         ) : (
-            <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-                <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={4}
-                dataKey="value"
-                nameKey="name"
-                stroke="none"
-                >
-                {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-            </PieChart>
-            </ResponsiveContainer>
+            <div className={loading ? "opacity-50 transition-opacity" : "opacity-100 transition-opacity"}>
+                <ResponsiveContainer width="100%" height="100%" minHeight={250}>
+                <PieChart>
+                    <Pie
+                    data={data}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={4}
+                    dataKey="value"
+                    nameKey="name"
+                    stroke="none"
+                    >
+                    {data.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+                </ResponsiveContainer>
+            </div>
         )}
       </div>
 
       {/* Custom Legend to replace the broken Recharts one */}
-      {!loading && (
+      {data.length > 0 && (
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
             {data.map((entry, index) => (
                 <div key={`legend-${index}`} className="flex items-center gap-2 group">
