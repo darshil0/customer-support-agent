@@ -10,36 +10,53 @@ const getFriendlyErrorMessage = (error: unknown): string => {
   const msg = error instanceof Error ? error.message : String(error);
   const lowerMsg = msg.toLowerCase();
 
+  // Authentication Errors
   if (
     lowerMsg.includes('401') ||
     lowerMsg.includes('api key') ||
-    lowerMsg.includes('unauthorized')
+    lowerMsg.includes('unauthorized') ||
+    lowerMsg.includes('invalid arg')
   ) {
-    return 'Invalid API Key. Please check your configuration.';
+    return 'Authentication failed. Please check your API Key configuration.';
   }
+
+  // Rate Limiting
   if (
     lowerMsg.includes('429') ||
     lowerMsg.includes('quota') ||
     lowerMsg.includes('resource exhausted')
   ) {
-    return 'API rate limit exceeded. Please try again later.';
+    return 'API rate limit exceeded. Please wait a moment before retrying.';
   }
+
+  // Server/Capacity Errors
   if (
     lowerMsg.includes('503') ||
     lowerMsg.includes('overloaded') ||
-    lowerMsg.includes('service unavailable')
+    lowerMsg.includes('service unavailable') ||
+    lowerMsg.includes('internal server error')
   ) {
-    return 'Service is currently overloaded. Please try again in a moment.';
+    return 'The AI service is currently experiencing high traffic. Please try again shortly.';
   }
+
+  // Network/Connectivity Errors
   if (
     lowerMsg.includes('fetch failed') ||
     lowerMsg.includes('network') ||
-    lowerMsg.includes('connection')
+    lowerMsg.includes('connection') ||
+    lowerMsg.includes('offline')
   ) {
-    return 'Network connection failed. Please check your internet connection.';
+    return 'Network connection failed. Please check your internet connection and try again.';
   }
+
+  // Safety/Content Policy Errors
   if (lowerMsg.includes('safety') || lowerMsg.includes('blocked')) {
-    return 'The report generation was blocked due to safety filters.';
+    return 'The generated content was filtered due to safety policies. Please try again.';
+  }
+  
+  // Bad Requests
+  if (lowerMsg.includes('400') || lowerMsg.includes('bad request')) {
+     return 'Unable to process the request. Please refresh the page.';
   }
 
   return 'An unexpected error occurred. Please try again.';

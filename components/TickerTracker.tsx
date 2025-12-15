@@ -46,6 +46,7 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
         setStockData(data);
       } catch (err) {
         console.error(err);
+        // We keep previous data or empty, UI handles missing data
       } finally {
         setLoading(false);
       }
@@ -60,7 +61,6 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
     if (normalized && !tickers.includes(normalized)) {
       setTickers((prev) => [...prev, normalized]);
       setInputVal('');
-      // Clear filter when adding so the new item is visible
       setFilterQuery(''); 
     }
   };
@@ -139,7 +139,6 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
                         No matching symbols found.
                     </div>
                 ) : (
-                    // Use filteredTickers
                     filteredTickers.map((ticker) => {
                         const data = stockData.find(d => d.symbol === ticker);
                         return (
@@ -149,15 +148,21 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
                                     {data ? (
                                         <span className="text-xs text-slate-400">${data.price}</span>
                                     ) : (
-                                        <span className="text-xs text-slate-500">Loading...</span>
+                                        loading ? (
+                                            <span className="text-xs text-slate-500">Updating...</span>
+                                        ) : (
+                                            <span className="text-xs text-red-400" title="Data unavailable">Unavailable</span>
+                                        )
                                     )}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    {data && (
+                                    {data ? (
                                         <div className={`text-right text-sm font-medium ${getChangeColor(data.percentChange)}`}>
                                             <div>{data.percentChange}</div>
                                             <div className="text-[10px] opacity-75">{data.change}</div>
                                         </div>
+                                    ) : (
+                                        !loading && <span className="text-xs text-slate-600">-</span>
                                     )}
                                     <button 
                                         onClick={() => handleRemoveTicker(ticker)}

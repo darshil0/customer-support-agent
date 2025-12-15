@@ -26,18 +26,18 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-[400px] flex items-center justify-center p-6 bg-slate-900 text-slate-200">
-          <div className="max-w-md text-center bg-slate-800 p-8 rounded-xl border border-slate-700 shadow-xl">
-            <i className="fas fa-bug text-4xl text-red-500 mb-4" aria-hidden="true"></i>
-            <h2 className="text-xl font-bold text-white mb-2">Something went wrong</h2>
-            <p className="text-slate-400 mb-6">
-              We encountered an unexpected error while rendering this component.
+        <div className="min-h-[200px] flex items-center justify-center p-6 bg-slate-900/50 rounded-xl border border-slate-700">
+          <div className="max-w-md text-center">
+            <i className="fas fa-exclamation-triangle text-3xl text-amber-500 mb-3" aria-hidden="true"></i>
+            <h3 className="text-lg font-semibold text-white mb-2">Content Unavailable</h3>
+            <p className="text-sm text-slate-400 mb-4">
+              We couldn't load this section. This might be due to a temporary connection issue.
             </p>
             <button
               onClick={() => this.setState({ hasError: false })}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors font-medium"
+              className="px-4 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white rounded-lg transition-colors text-xs font-medium uppercase tracking-wider"
             >
-              Try Again
+              Retry
             </button>
           </div>
         </div>
