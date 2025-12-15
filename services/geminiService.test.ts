@@ -56,9 +56,19 @@ describe('geminiService', () => {
       expect(result.sources).toEqual([]);
     });
 
-    it('throws error when API fails', async () => {
-      mockGenerateContent.mockRejectedValueOnce(new Error('API Failure'));
-      await expect(generateDailyReport()).rejects.toThrow('API Failure');
+    it('maps API 401 error to user friendly message', async () => {
+      mockGenerateContent.mockRejectedValueOnce(new Error('401 Unauthorized'));
+      await expect(generateDailyReport()).rejects.toThrow('Invalid API Key');
+    });
+
+    it('maps API 429 error to user friendly message', async () => {
+      mockGenerateContent.mockRejectedValueOnce(new Error('429 Resource Exhausted'));
+      await expect(generateDailyReport()).rejects.toThrow('API rate limit exceeded');
+    });
+
+    it('maps generic error to default message', async () => {
+      mockGenerateContent.mockRejectedValueOnce(new Error('Random Crash'));
+      await expect(generateDailyReport()).rejects.toThrow('An unexpected error occurred');
     });
   });
 

@@ -3,6 +3,48 @@ import { MarketReport, GroundingChunk, SectorData } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+/**
+ * Maps technical API errors to user-friendly messages.
+ */
+const getFriendlyErrorMessage = (error: unknown): string => {
+  const msg = error instanceof Error ? error.message : String(error);
+  const lowerMsg = msg.toLowerCase();
+
+  if (
+    lowerMsg.includes('401') ||
+    lowerMsg.includes('api key') ||
+    lowerMsg.includes('unauthorized')
+  ) {
+    return 'Invalid API Key. Please check your configuration.';
+  }
+  if (
+    lowerMsg.includes('429') ||
+    lowerMsg.includes('quota') ||
+    lowerMsg.includes('resource exhausted')
+  ) {
+    return 'API rate limit exceeded. Please try again later.';
+  }
+  if (
+    lowerMsg.includes('503') ||
+    lowerMsg.includes('overloaded') ||
+    lowerMsg.includes('service unavailable')
+  ) {
+    return 'Service is currently overloaded. Please try again in a moment.';
+  }
+  if (
+    lowerMsg.includes('fetch failed') ||
+    lowerMsg.includes('network') ||
+    lowerMsg.includes('connection')
+  ) {
+    return 'Network connection failed. Please check your internet connection.';
+  }
+  if (lowerMsg.includes('safety') || lowerMsg.includes('blocked')) {
+    return 'The report generation was blocked due to safety filters.';
+  }
+
+  return 'An unexpected error occurred. Please try again.';
+};
+
 export const generateDailyReport = async (): Promise<MarketReport> => {
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -57,7 +99,7 @@ export const generateDailyReport = async (): Promise<MarketReport> => {
     };
   } catch (error) {
     console.error('Gemini API Error (Report):', error);
-    throw error;
+    throw new Error(getFriendlyErrorMessage(error));
   }
 };
 
@@ -116,8 +158,8 @@ export const fetchSectorWeights = async (): Promise<{
     }
     return { data: parsedData, sources: validSources };
   } catch (error) {
+    // Log the detailed error for debugging, but return empty to allow graceful UI degradation
     console.error('Failed to fetch sector weights:', error);
-    // Return empty to allow UI to handle fallback, rather than crashing
     return { data: [], sources: [] };
   }
 };

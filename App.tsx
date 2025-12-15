@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
 import { Spinner } from './components/Spinner';
 import { ReportView } from './components/ReportView';
 import { MarketChart } from './components/MarketChart';
 import { HistoryList } from './components/HistoryList';
+import { AutoRefreshControl } from './components/AutoRefreshControl';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { generateDailyReport } from './services/geminiService';
 import { useHistory } from './hooks/useHistory';
@@ -14,11 +15,19 @@ const App: React.FC = () => {
   const [report, setReport] = useState<MarketReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshChartTrigger, setRefreshChartTrigger] = useState<number>(0);
+  const [refreshInterval, setRefreshInterval] = useState<number>(0);
+  
+  // Ref to track loading state inside interval callback without dependency cycles
+  const loadingRef = useRef(false);
 
   // Use custom hook for persistence logic
   const { history, addToHistory, clearHistory } = useHistory();
 
   const handleGenerateReport = useCallback(async () => {
+    // Prevent overlapping requests
+    if (loadingRef.current) return;
+    
+    loadingRef.current = true;
     setStatus(ReportStatus.LOADING);
     setError(null);
     try {
@@ -31,17 +40,34 @@ const App: React.FC = () => {
       addToHistory(data);
     } catch (err) {
       console.error(err);
-      setError('Failed to generate report. Please try again.');
+      // Extract the friendly message provided by the service
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      setError(errorMessage);
       setStatus(ReportStatus.ERROR);
+    } finally {
+      loadingRef.current = false;
     }
   }, [addToHistory]);
 
   const handleLoadHistory = useCallback((historyItem: MarketReport) => {
     setReport(historyItem);
     setStatus(ReportStatus.SUCCESS);
-    // We intentionally do not refresh the chart to keep it "Live",
-    // or we could store chart data in history too. For now, we keep chart live.
+    // When loading history, we disable auto-refresh to prevent overwriting the viewed history item
+    setRefreshInterval(0);
   }, []);
+
+  // Handle Auto-Refresh Interval
+  useEffect(() => {
+    if (refreshInterval === 0) return;
+
+    const intervalId = setInterval(() => {
+      // Only trigger if not already on the landing page (IDLE) or Error
+      // Actually, if user sets interval, we assume they want it running even if currently viewing report
+      handleGenerateReport();
+    }, refreshInterval);
+
+    return () => clearInterval(intervalId);
+  }, [refreshInterval, handleGenerateReport]);
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
@@ -90,7 +116,7 @@ const App: React.FC = () => {
 
         {/* Content Area */}
         <div className="max-w-6xl mx-auto">
-          {status === ReportStatus.LOADING && (
+          {status === ReportStatus.LOADING && !report && (
             <div
               className="flex flex-col items-center animate-fade-in"
               data-testid="loading-state"
@@ -120,7 +146,7 @@ const App: React.FC = () => {
             </div>
           )}
 
-          {status === ReportStatus.SUCCESS && report && (
+          {(status === ReportStatus.SUCCESS || (status === ReportStatus.LOADING && report)) && report && (
             <ErrorBoundary>
               <div
                 className="grid grid-cols-1 lg:grid-cols-3 gap-8"
@@ -133,6 +159,13 @@ const App: React.FC = () => {
 
                 {/* Sidebar / Stats Column */}
                 <div className="space-y-6">
+                  {/* Auto Refresh Controls */}
+                  <AutoRefreshControl 
+                    interval={refreshInterval} 
+                    onIntervalChange={setRefreshInterval} 
+                    disabled={status === ReportStatus.LOADING}
+                  />
+
                   {/* Market Stats Card */}
                   <ErrorBoundary>
                     <MarketChart refreshTrigger={refreshChartTrigger} />
@@ -142,10 +175,12 @@ const App: React.FC = () => {
                   <button
                     onClick={handleGenerateReport}
                     data-testid="refresh-analysis-btn"
-                    className="w-full py-3 rounded-xl border border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 transition-all text-sm font-medium flex items-center justify-center gap-2"
+                    disabled={status === ReportStatus.LOADING}
+                    className="w-full py-3 rounded-xl border border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 transition-all text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Refresh Market Analysis"
                   >
-                    <i className="fas fa-redo" aria-hidden="true"></i> Refresh Analysis
+                    <i className="fas fa-redo" aria-hidden="true"></i> 
+                    {status === ReportStatus.LOADING ? 'Refreshing...' : 'Refresh Analysis'}
                   </button>
 
                   {/* History List */}
