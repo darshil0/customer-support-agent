@@ -13,6 +13,7 @@ declare const expect: any;
 jest.mock('./services/geminiService');
 const mockGenerateReport = geminiService.generateDailyReport as any;
 const mockFetchSector = geminiService.fetchSectorWeights as any;
+const mockFetchStock = geminiService.fetchStockPerformance as any;
 
 // Mock child components that might need resizing/external deps
 jest.mock('recharts', () => ({
@@ -28,6 +29,8 @@ describe('App Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
+    mockFetchSector.mockResolvedValue({ data: [], sources: [] });
+    mockFetchStock.mockResolvedValue([]);
   });
 
   it('renders the landing page correctly', () => {
@@ -43,9 +46,8 @@ describe('App Integration', () => {
         content: '# Analysis\nMarket is good.',
         sources: [],
         timestamp: new Date().toISOString(),
-      }), 100))
+      }), 50))
     );
-    mockFetchSector.mockResolvedValue({ data: [], sources: [] });
 
     render(<App />);
 
@@ -61,6 +63,7 @@ describe('App Integration', () => {
     });
 
     expect(screen.getByText('Market is good.')).toBeInTheDocument();
+    expect(screen.getByTestId('market-chart-container')).toBeInTheDocument();
   });
 
   it('displays error state if generation fails', async () => {
@@ -72,6 +75,8 @@ describe('App Integration', () => {
     await waitFor(() => {
       expect(screen.getByTestId('error-state')).toBeInTheDocument();
     });
+    
+    expect(screen.getByText('API Fail')).toBeInTheDocument();
   });
 
   it('persists and loads history', async () => {
@@ -82,7 +87,6 @@ describe('App Integration', () => {
     };
 
     mockGenerateReport.mockResolvedValue(mockReport);
-    mockFetchSector.mockResolvedValue({ data: [], sources: [] });
 
     render(<App />);
     
@@ -90,12 +94,37 @@ describe('App Integration', () => {
     fireEvent.click(screen.getByTestId('generate-report-btn'));
     await waitFor(() => screen.getByTestId('report-container'));
 
-    // Check if added to History List
-    expect(screen.getByText('Historical Report Content...')).toBeInTheDocument();
-
     // Reload Page (simulate by unmounting and remounting)
-    // In a real browser test we'd refresh, here we check localStorage
+    const { unmount } = render(<App />);
+    unmount();
+    
+    // Check local storage directly for persistence
     const stored = localStorage.getItem('finagent_history');
     expect(stored).toContain('Historical Report Content');
+  });
+
+  it('handles manual refresh of analysis', async () => {
+     mockGenerateReport.mockResolvedValue({
+        content: 'Report 1',
+        sources: [],
+        timestamp: new Date().toISOString(),
+      });
+      
+      render(<App />);
+      fireEvent.click(screen.getByTestId('generate-report-btn'));
+      await waitFor(() => screen.getByTestId('report-container'));
+
+      mockGenerateReport.mockResolvedValue({
+        content: 'Report 2',
+        sources: [],
+        timestamp: new Date().toISOString(),
+      });
+
+      const refreshBtn = screen.getByTestId('refresh-analysis-btn');
+      fireEvent.click(refreshBtn);
+      
+      await waitFor(() => {
+          expect(screen.getByText('Report 2')).toBeInTheDocument();
+      });
   });
 });

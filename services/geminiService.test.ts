@@ -1,4 +1,4 @@
-import { generateDailyReport, fetchSectorWeights } from './geminiService';
+import { generateDailyReport, fetchSectorWeights, fetchStockPerformance } from './geminiService';
 
 declare const jest: any;
 declare const describe: any;
@@ -103,6 +103,39 @@ describe('geminiService', () => {
       // The service catches the JSON parse error internally and returns empty
       const result = await fetchSectorWeights();
       expect(result.data).toEqual([]);
+    });
+  });
+
+  describe('fetchStockPerformance', () => {
+    it('parses valid JSON response correctly', async () => {
+      mockGenerateContent.mockResolvedValueOnce({
+        text: '[{"symbol": "AAPL", "price": "150.00", "change": "+1.5", "percentChange": "+1.0%"}]',
+        candidates: [],
+      });
+
+      const result = await fetchStockPerformance(['AAPL']);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual({
+        symbol: 'AAPL',
+        price: '150.00',
+        change: '+1.5',
+        percentChange: '+1.0%'
+      });
+    });
+
+    it('returns empty array if response is invalid', async () => {
+      mockGenerateContent.mockResolvedValueOnce({
+        text: 'Not json',
+        candidates: [],
+      });
+      const result = await fetchStockPerformance(['AAPL']);
+      expect(result).toEqual([]);
+    });
+
+    it('returns empty array on error', async () => {
+      mockGenerateContent.mockRejectedValueOnce(new Error('Fail'));
+      const result = await fetchStockPerformance(['AAPL']);
+      expect(result).toEqual([]);
     });
   });
 });
