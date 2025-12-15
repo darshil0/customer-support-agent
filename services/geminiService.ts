@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { MarketReport, GroundingChunk, SectorData } from '../types';
+import { MarketReport, GroundingChunk, SectorData, StockData } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -161,5 +161,55 @@ export const fetchSectorWeights = async (): Promise<{
     // Log the detailed error for debugging, but return empty to allow graceful UI degradation
     console.error('Failed to fetch sector weights:', error);
     return { data: [], sources: [] };
+  }
+};
+
+export const fetchStockPerformance = async (tickers: string[]): Promise<StockData[]> => {
+  if (tickers.length === 0) return [];
+  
+  const prompt = `
+    Get the latest real-time stock price and percentage change for these tickers: ${tickers.join(', ')}.
+    
+    Return ONLY a raw JSON array (no markdown code blocks). Each object must have:
+    - "symbol": The ticker symbol (e.g. AAPL)
+    - "price": Current price (e.g. "230.50")
+    - "change": Price change (e.g. "+1.50" or "-0.20")
+    - "percentChange": Percentage change (e.g. "+0.65%")
+    
+    Ensure data is from the latest available trading session. If a ticker is invalid, omit it from the array.
+  `;
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+
+    const text = response.text || '[]';
+    
+    // Robust JSON extraction
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      return [];
+    }
+    
+    const parsed = JSON.parse(jsonMatch[0]);
+    
+    if (Array.isArray(parsed)) {
+       return parsed.map((item: any) => ({
+         symbol: String(item.symbol || '').toUpperCase(),
+         price: String(item.price || '0.00'),
+         change: String(item.change || '0.00'),
+         percentChange: String(item.percentChange || '0.00%')
+       }));
+    }
+    return [];
+
+  } catch (error) {
+    console.error('Failed to fetch stock data:', error);
+    return [];
   }
 };

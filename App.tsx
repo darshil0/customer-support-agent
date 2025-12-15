@@ -5,6 +5,7 @@ import { ReportView } from './components/ReportView';
 import { MarketChart } from './components/MarketChart';
 import { HistoryList } from './components/HistoryList';
 import { AutoRefreshControl } from './components/AutoRefreshControl';
+import { TickerTracker } from './components/TickerTracker';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { generateDailyReport } from './services/geminiService';
 import { useHistory } from './hooks/useHistory';
@@ -165,6 +166,9 @@ const App: React.FC = () => {
                     onIntervalChange={setRefreshInterval} 
                     disabled={status === ReportStatus.LOADING}
                   />
+
+                  {/* Ticker Watchlist */}
+                  <TickerTracker refreshTrigger={refreshChartTrigger} />
 
                   {/* Market Stats Card */}
                   <ErrorBoundary>

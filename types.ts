@@ -23,3 +23,10 @@ export interface SectorData {
   value: number;
   [key: string]: any;
 }
+
+export interface StockData {
+  symbol: string;
+  price: string;
+  change: string;
+  percentChange: string;
+}
