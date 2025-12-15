@@ -106,18 +106,21 @@ const ComparisonSection = ({
   };
 
   return (
-    <div className="mb-6 bg-slate-900/50 rounded-xl border border-slate-700/50 p-4 animate-fade-in">
-       <div className="flex items-center justify-between mb-4">
+    <div className="mb-6 bg-gradient-to-b from-slate-900 to-slate-800/50 rounded-xl border border-blue-500/20 p-5 shadow-inner animate-fade-in relative overflow-hidden">
+       {/* Decorative background element */}
+       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
+       
+       <div className="flex items-center justify-between mb-4 relative z-10">
           <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
              <i className="fas fa-chart-area text-blue-400"></i>
-             Performance Comparison (5 Days)
+             Performance Comparison <span className="text-xs font-normal text-slate-500">(5-Day Trend)</span>
           </h4>
-          <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300">
+          <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300 bg-slate-800/50 hover:bg-slate-700 px-2 py-1 rounded transition-colors">
              Close
           </button>
        </div>
        
-       <div className="h-[200px] w-full">
+       <div className="h-[200px] w-full relative z-10">
          <ResponsiveContainer width="100%" height="100%">
            <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />

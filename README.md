@@ -9,6 +9,7 @@ FinAgent Pro is a sophisticated financial analysis dashboard that provides daily
 *   **Visual Analytics**: Interactive S&P 500 Sector Allocation pie chart using `recharts` with drill-down details.
 *   **Interactive Watchlist**: 
     *   Real-time stock tracking with **5-day sparkline trends**.
+    *   **Stock Comparison**: Compare the performance of up to 3 stocks side-by-side with a dedicated percentage trend chart.
     *   **Client-side sorting** by Symbol, Price, or Percentage Change.
     *   **Filtering** capabilities to quickly find stocks.
 *   **Modern UI**: Fully responsive, accessible, dark-themed interface built with Tailwind CSS.
@@ -19,7 +20,7 @@ FinAgent Pro is a sophisticated financial analysis dashboard that provides daily
 *   **Frontend**: React 18, TypeScript, Vite (implied)
 *   **Styling**: Tailwind CSS
 *   **AI/ML**: Google GenAI SDK (`@google/genai`), Model: `gemini-2.5-flash`
-*   **Visualization**: Recharts (Pie Chart), SVG (Sparklines)
+*   **Visualization**: Recharts (Pie/Line Charts), SVG (Sparklines)
 *   **Icons**: FontAwesome
 
 ## 🔧 Setup & Configuration

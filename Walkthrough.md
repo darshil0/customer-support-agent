@@ -38,6 +38,12 @@ The **Watchlist** allows you to track specific stocks relevant to your portfolio
 *   **Add**: Type a symbol (e.g., `AAPL`, `NVDA`, `TSLA`) in the input box and press Enter or click the `+` button.
 *   **Remove**: Hover over a stock in the list and click the `X` icon that appears on the right.
 
+### Comparing Stocks
+Analyze relative performance:
+1.  **Select**: Click the **Balance Scale** icon next to up to 3 stocks in your list.
+2.  **View Chart**: A distinct comparison chart will appear above the watchlist.
+3.  **Trend Analysis**: The chart displays the **5-day percentage trend** relative to the start of the period, allowing you to compare growth regardless of stock price.
+
 ### Analyzing Performance
 Each row in the watchlist displays:
 *   **Symbol & Price**: The current trading value.
