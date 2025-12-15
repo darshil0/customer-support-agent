@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { StockData } from '../types';
 import { fetchStockPerformance } from '../services/geminiService';
 
@@ -10,7 +11,9 @@ const STORAGE_KEY = 'finagent_tickers';
 type SortKey = 'symbol' | 'price' | 'change';
 type SortDirection = 'asc' | 'desc';
 
-// Simple SVG Sparkline Component
+const COMPARE_COLORS = ['#10b981', '#3b82f6', '#f43f5e']; // Emerald, Blue, Rose
+
+// Simple SVG Sparkline Component (kept for the list view)
 const SimpleSparkline = ({ data, color }: { data: number[], color: string }) => {
   if (!data || data.length < 2) return null;
   
@@ -22,8 +25,7 @@ const SimpleSparkline = ({ data, color }: { data: number[], color: string }) => 
   
   const points = data.map((val, i) => {
     const x = (i / (data.length - 1)) * width;
-    // Invert Y because SVG coordinates go down
-    const y = height - ((val - min) / range) * (height - 4) - 2; // -4 and -2 for padding
+    const y = height - ((val - min) / range) * (height - 4) - 2; 
     return `${x},${y}`;
   }).join(' ');
 
@@ -38,7 +40,6 @@ const SimpleSparkline = ({ data, color }: { data: number[], color: string }) => 
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Small dot at the end */}
       <circle 
         cx={width} 
         cy={height - ((data[data.length - 1] - min) / range) * (height - 4) - 2} 
@@ -46,6 +47,99 @@ const SimpleSparkline = ({ data, color }: { data: number[], color: string }) => 
         className={`${color} fill-current`} 
       />
     </svg>
+  );
+};
+
+// Comparison Section Component
+const ComparisonSection = ({ 
+  tickers, 
+  allStockData, 
+  onClose 
+}: { 
+  tickers: string[], 
+  allStockData: StockData[], 
+  onClose: () => void 
+}) => {
+  if (tickers.length === 0) return null;
+
+  // Prepare data for the chart
+  // We want to show Percentage Return over the 5 days relative to Day 1
+  const chartData = useMemo(() => {
+    const dataPoints = [];
+    const days = ['T-4', 'T-3', 'T-2', 'Yesterday', 'Today'];
+
+    for (let i = 0; i < 5; i++) {
+      const point: any = { day: days[i] };
+      tickers.forEach(symbol => {
+        const stock = allStockData.find(s => s.symbol === symbol);
+        if (stock && stock.sparkline && stock.sparkline[i] !== undefined) {
+           const startPrice = stock.sparkline[0];
+           const currentPrice = stock.sparkline[i];
+           // Calculate percentage change relative to start of period
+           const pctChange = startPrice !== 0 ? ((currentPrice - startPrice) / startPrice) * 100 : 0;
+           point[symbol] = pctChange;
+        }
+      });
+      dataPoints.push(point);
+    }
+    return dataPoints;
+  }, [tickers, allStockData]);
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-slate-900/95 backdrop-blur-sm border border-slate-700 p-3 rounded-lg shadow-xl z-50 text-xs">
+          <p className="text-slate-400 mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-2 mb-1 last:mb-0">
+               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></div>
+               <span className="font-semibold text-slate-200">{entry.name}:</span>
+               <span className={`${entry.value >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                 {Number(entry.value).toFixed(2)}%
+               </span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="mb-6 bg-slate-900/50 rounded-xl border border-slate-700/50 p-4 animate-fade-in">
+       <div className="flex items-center justify-between mb-4">
+          <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+             <i className="fas fa-chart-area text-blue-400"></i>
+             Performance Comparison (5 Days)
+          </h4>
+          <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300">
+             Close
+          </button>
+       </div>
+       
+       <div className="h-[200px] w-full">
+         <ResponsiveContainer width="100%" height="100%">
+           <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
+             <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.3} />
+             <XAxis dataKey="day" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+             <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `${val.toFixed(1)}%`} />
+             <Tooltip content={<CustomTooltip />} />
+             <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
+             {tickers.map((symbol, index) => (
+               <Line 
+                 key={symbol} 
+                 type="monotone" 
+                 dataKey={symbol} 
+                 stroke={COMPARE_COLORS[index % COMPARE_COLORS.length]} 
+                 strokeWidth={2}
+                 dot={{ r: 3, fill: COMPARE_COLORS[index % COMPARE_COLORS.length], strokeWidth: 0 }}
+                 activeDot={{ r: 5 }}
+               />
+             ))}
+           </LineChart>
+         </ResponsiveContainer>
+       </div>
+    </div>
   );
 };
 
@@ -59,6 +153,9 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
   // Sorting State
   const [sortKey, setSortKey] = useState<SortKey>('symbol');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  // Comparison State
+  const [compareList, setCompareList] = useState<string[]>([]);
 
   // Load tickers from local storage on mount
   useEffect(() => {
@@ -91,7 +188,6 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
         setStockData(data);
       } catch (err) {
         console.error(err);
-        // We keep previous data or empty, UI handles missing data
       } finally {
         setLoading(false);
       }
@@ -112,6 +208,17 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
 
   const handleRemoveTicker = (symbol: string) => {
     setTickers((prev) => prev.filter((t) => t !== symbol));
+    setCompareList((prev) => prev.filter(t => t !== symbol)); // Remove from compare if deleted
+  };
+
+  const handleToggleCompare = (symbol: string) => {
+    setCompareList(prev => {
+       if (prev.includes(symbol)) {
+         return prev.filter(s => s !== symbol);
+       }
+       if (prev.length >= 3) return prev; // Limit 3
+       return [...prev, symbol];
+    });
   };
 
   const handleSort = (key: SortKey) => {
@@ -119,7 +226,6 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortKey(key);
-      // Smart defaults: Symbol -> ASC, Numbers -> DESC
       setSortDirection(key === 'symbol' ? 'asc' : 'desc');
     }
   };
@@ -142,7 +248,7 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
       const dataA = stockData.find(d => d.symbol === aSymbol);
       const dataB = stockData.find(d => d.symbol === bSymbol);
 
-      // Handle missing data: always push to bottom regardless of sort direction
+      // Handle missing data
       if (!dataA && !dataB) return 0;
       if (!dataA) return 1;
       if (!dataB) return -1;
@@ -156,7 +262,6 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
       let valA = 0;
       let valB = 0;
 
-      // Extract numeric values for sorting
       if (sortKey === 'price') {
         valA = parseFloat(dataA.price.replace(/[^0-9.-]/g, '')) || 0;
         valB = parseFloat(dataB.price.replace(/[^0-9.-]/g, '')) || 0;
@@ -197,6 +302,13 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
           <i className="fas fa-plus"></i>
         </button>
       </form>
+
+      {/* Comparison Section */}
+      <ComparisonSection 
+        tickers={compareList} 
+        allStockData={stockData} 
+        onClose={() => setCompareList([])} 
+      />
 
       {tickers.length === 0 ? (
         <p className="text-slate-500 text-sm italic text-center py-4">
@@ -254,7 +366,6 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
 
             <div className="space-y-2">
             {stockData.length === 0 && loading ? (
-                // Skeleton loading for initial data
                 Array.from({length: filteredAndSortedTickers.length || 1}).map((_, i) => (
                     <div key={i} className="h-12 bg-slate-900/50 rounded-lg animate-pulse"></div>
                 ))
@@ -267,20 +378,32 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
                     filteredAndSortedTickers.map((ticker) => {
                         const data = stockData.find(d => d.symbol === ticker);
                         const changeColor = data ? getChangeColor(data.percentChange) : 'text-slate-400';
+                        const isComparing = compareList.includes(ticker);
+                        const canCompare = compareList.length < 3 || isComparing;
                         
                         return (
-                            <div key={ticker} className="flex items-center justify-between p-3 bg-slate-900/40 rounded-lg border border-slate-800 hover:border-slate-600 transition-colors group">
-                                <div className="flex flex-col w-20">
-                                    <span className="font-bold text-slate-200">{ticker}</span>
-                                    {data ? (
-                                        <span className="text-xs text-slate-400">${data.price}</span>
-                                    ) : (
-                                        loading ? (
-                                            <span className="text-xs text-slate-500">Updating...</span>
-                                        ) : (
-                                            <span className="text-xs text-red-400" title="Data unavailable">Unavailable</span>
-                                        )
-                                    )}
+                            <div key={ticker} className={`flex items-center justify-between p-3 rounded-lg border transition-all group relative ${isComparing ? 'bg-slate-800 border-blue-500/50 shadow-md shadow-blue-500/10' : 'bg-slate-900/40 border-slate-800 hover:border-slate-600'}`}>
+                                <div className="flex items-center gap-3">
+                                   <button 
+                                      onClick={() => handleToggleCompare(ticker)}
+                                      disabled={!canCompare && !isComparing}
+                                      className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${isComparing ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500 hover:text-blue-400'} ${!canCompare && !isComparing ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                      title={isComparing ? "Remove from comparison" : (canCompare ? "Add to comparison" : "Max 3 selected")}
+                                   >
+                                     <i className="fas fa-balance-scale text-xs"></i>
+                                   </button>
+                                   <div className="flex flex-col w-16">
+                                       <span className="font-bold text-slate-200">{ticker}</span>
+                                       {data ? (
+                                           <span className="text-xs text-slate-400">${data.price}</span>
+                                       ) : (
+                                           loading ? (
+                                               <span className="text-xs text-slate-500">Updating...</span>
+                                           ) : (
+                                               <span className="text-xs text-red-400" title="Data unavailable">N/A</span>
+                                           )
+                                       )}
+                                   </div>
                                 </div>
 
                                 <div className="flex-1 flex justify-center px-2">
@@ -311,6 +434,11 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
                     })
                 )
             )}
+            </div>
+            
+            {/* Helper Text */}
+            <div className="mt-3 text-[10px] text-slate-500 text-center">
+              Select up to 3 stocks to compare 5-day performance trends.
             </div>
         </>
       )}
