@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Sector } from 'recharts';
 import { SectorData, GroundingChunk } from '../types';
 import { fetchSectorWeights } from '../services/geminiService';
 
@@ -36,6 +36,41 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+const renderActiveShape = (props: any) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+  return (
+    <g>
+      <text x={cx} y={cy} dy={-10} textAnchor="middle" fill="#94a3b8" fontSize={10}>
+        Selected
+      </text>
+      <text x={cx} y={cy} dy={15} textAnchor="middle" fill="#fff" fontSize={16} fontWeight="bold">
+        {props.payload.value.toFixed(1)}%
+      </text>
+      <Sector
+        cx={cx}
+        cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius + 8}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        stroke="#fff"
+        strokeWidth={2}
+      />
+      <Sector
+        cx={cx}
+        cy={cy}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        innerRadius={innerRadius - 6}
+        outerRadius={innerRadius}
+        fill={fill}
+        fillOpacity={0.3}
+      />
+    </g>
+  );
+};
+
 interface MarketChartProps {
   refreshTrigger: number;
 }
@@ -44,9 +79,17 @@ export const MarketChart: React.FC<MarketChartProps> = ({ refreshTrigger }) => {
   const [data, setData] = useState<SectorData[]>([]);
   const [sources, setSources] = useState<GroundingChunk[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Interaction State
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
+    // Reset selection on refresh
+    setSelectedIndex(null);
+    setSelectedSector(null);
     try {
       const result = await fetchSectorWeights();
       if (result.data && result.data.length > 0) {
@@ -67,6 +110,30 @@ export const MarketChart: React.FC<MarketChartProps> = ({ refreshTrigger }) => {
   useEffect(() => {
     fetchData();
   }, [refreshTrigger, fetchData]);
+
+  const onPieEnter = (_: any, index: number) => {
+    setHoveredIndex(index);
+  };
+
+  const onPieLeave = () => {
+    setHoveredIndex(null);
+  };
+
+  const onPieClick = (entry: any, index: number) => {
+    if (selectedIndex === index) {
+        // Deselect if clicked again
+        setSelectedIndex(null);
+        setSelectedSector(null);
+    } else {
+        setSelectedIndex(index);
+        // Recharts passes the data object directly or in payload
+        setSelectedSector(entry.payload || entry);
+    }
+  };
+
+  // Determine which index is "active" for the shape rendering
+  // Priority: Hovered > Selected
+  const activeIndex = hoveredIndex !== null ? hoveredIndex : (selectedIndex !== null ? selectedIndex : -1);
 
   return (
     <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700 flex flex-col h-auto" data-testid="market-chart-container">
@@ -111,18 +178,24 @@ export const MarketChart: React.FC<MarketChartProps> = ({ refreshTrigger }) => {
                 <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                 <PieChart>
                     <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={4}
-                    dataKey="value"
-                    nameKey="name"
-                    stroke="none"
+                        data={data}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={4}
+                        dataKey="value"
+                        nameKey="name"
+                        stroke="none"
+                        {...({ activeIndex } as any)}
+                        activeShape={renderActiveShape}
+                        onMouseEnter={onPieEnter}
+                        onMouseLeave={onPieLeave}
+                        onClick={onPieClick}
+                        className="cursor-pointer focus:outline-none"
                     >
                     {data.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke={selectedIndex === index ? '#fff' : 'none'} strokeWidth={selectedIndex === index ? 2 : 0} />
                     ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -132,17 +205,36 @@ export const MarketChart: React.FC<MarketChartProps> = ({ refreshTrigger }) => {
         )}
       </div>
 
-      {/* Custom Legend to replace the broken Recharts one */}
+      {/* Selected Sector Details Tooltip (Below Chart) */}
+      <div className={`mt-4 transition-all duration-300 overflow-hidden ${selectedSector ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'}`}>
+        {selectedSector && (
+            <div className="bg-slate-700/50 rounded-lg p-3 border border-slate-600 flex items-center justify-between">
+                <div>
+                    <p className="text-xs text-slate-400 uppercase tracking-wider">Selected Sector</p>
+                    <p className="text-sm font-bold text-white">{selectedSector.name}</p>
+                </div>
+                <div className="text-right">
+                     <p className="text-xl font-bold text-emerald-400">{Number(selectedSector.value).toFixed(2)}%</p>
+                </div>
+            </div>
+        )}
+      </div>
+
+      {/* Custom Legend */}
       {data.length > 0 && (
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
             {data.map((entry, index) => (
-                <div key={`legend-${index}`} className="flex items-center gap-2 group">
+                <div 
+                    key={`legend-${index}`} 
+                    className={`flex items-center gap-2 group cursor-pointer p-1 rounded transition-colors ${selectedIndex === index ? 'bg-slate-700/50 ring-1 ring-slate-600' : 'hover:bg-slate-800/50'}`}
+                    onClick={() => onPieClick(entry, index)}
+                >
                     <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
                     <div className="flex items-center justify-between w-full min-w-0">
-                        <span className="text-xs text-slate-400 truncate group-hover:text-slate-200 transition-colors" title={entry.name}>
+                        <span className={`text-xs truncate transition-colors ${selectedIndex === index ? 'text-white font-medium' : 'text-slate-400 group-hover:text-slate-200'}`} title={entry.name}>
                             {entry.name}
                         </span>
-                        <span className="text-xs font-medium text-slate-300 ml-2">
+                        <span className={`text-xs font-medium ml-2 ${selectedIndex === index ? 'text-emerald-400' : 'text-slate-300'}`}>
                              {Number(entry.value).toFixed(1)}%
                         </span>
                     </div>
