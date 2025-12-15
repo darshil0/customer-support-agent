@@ -106,7 +106,7 @@ const ComparisonSection = ({
   };
 
   return (
-    <div className="mb-6 bg-gradient-to-b from-slate-900 to-slate-800/50 rounded-xl border border-blue-500/20 p-5 shadow-inner animate-fade-in relative overflow-hidden">
+    <div className="mb-6 bg-gradient-to-b from-slate-900 to-slate-800/50 rounded-xl border border-blue-500/30 p-5 shadow-lg animate-fade-in relative overflow-hidden">
        {/* Decorative background element */}
        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
        
