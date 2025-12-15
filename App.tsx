@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { Spinner } from './components/Spinner';
 import { ReportView } from './components/ReportView';
 import { MarketChart } from './components/MarketChart';
+import { HistoryList } from './components/HistoryList';
 import { generateDailyReport } from './services/geminiService';
 import { MarketReport, ReportStatus } from './types';
 
@@ -10,8 +11,23 @@ const App: React.FC = () => {
   const [status, setStatus] = useState<ReportStatus>(ReportStatus.IDLE);
   const [report, setReport] = useState<MarketReport | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // Counter to trigger chart refreshes when report is regenerated
   const [refreshChartTrigger, setRefreshChartTrigger] = useState<number>(0);
+  const [history, setHistory] = useState<MarketReport[]>([]);
+
+  // Load history from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('finagent_history');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setHistory(parsed);
+        }
+      } catch (e) {
+        console.error("Failed to parse history", e);
+      }
+    }
+  }, []);
 
   const handleGenerateReport = useCallback(async () => {
     setStatus(ReportStatus.LOADING);
@@ -23,11 +39,31 @@ const App: React.FC = () => {
       const data = await generateDailyReport();
       setReport(data);
       setStatus(ReportStatus.SUCCESS);
+
+      // Save to history
+      setHistory(prev => {
+        // Keep unique timestamps and limit to last 10
+        const updated = [data, ...prev].slice(0, 10);
+        localStorage.setItem('finagent_history', JSON.stringify(updated));
+        return updated;
+      });
     } catch (err) {
       setError("Failed to generate report. Please try again.");
       setStatus(ReportStatus.ERROR);
     }
   }, []);
+
+  const handleLoadHistory = (historyItem: MarketReport) => {
+    setReport(historyItem);
+    setStatus(ReportStatus.SUCCESS);
+    // Note: We don't refresh the chart here as the chart data is real-time/latest only.
+    // However, we could scroll to top or provide feedback.
+  };
+
+  const handleClearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('finagent_history');
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
@@ -47,17 +83,25 @@ const App: React.FC = () => {
           </p>
           
           {status === ReportStatus.IDLE && (
-            <button
-              onClick={handleGenerateReport}
-              data-testid="generate-report-btn"
-              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white transition-all duration-200 bg-emerald-600 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 hover:bg-emerald-700 hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30"
-              aria-label="Generate Daily Market Report"
-            >
-              <span className="absolute left-0 w-full h-full -ml-2 -mt-2 transition-all duration-200 origin-bottom-right rotate-45 translate-x-3 translate-y-3 bg-white opacity-20 group-hover:rotate-90 ease"></span>
-              <span className="relative flex items-center gap-2">
-                <i className="fas fa-bolt" aria-hidden="true"></i> Generate Daily Report
-              </span>
-            </button>
+            <div className="flex flex-col items-center gap-6">
+              <button
+                onClick={handleGenerateReport}
+                data-testid="generate-report-btn"
+                className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white transition-all duration-200 bg-emerald-600 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 hover:bg-emerald-700 hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30"
+                aria-label="Generate Daily Market Report"
+              >
+                <span className="absolute left-0 w-full h-full -ml-2 -mt-2 transition-all duration-200 origin-bottom-right rotate-45 translate-x-3 translate-y-3 bg-white opacity-20 group-hover:rotate-90 ease"></span>
+                <span className="relative flex items-center gap-2">
+                  <i className="fas fa-bolt" aria-hidden="true"></i> Generate Daily Report
+                </span>
+              </button>
+
+              {history.length > 0 && (
+                <div className="w-full max-w-md">
+                   <HistoryList history={history} onSelect={handleLoadHistory} onClear={handleClearHistory} />
+                </div>
+              )}
+            </div>
           )}
         </div>
 
@@ -94,9 +138,22 @@ const App: React.FC = () => {
 
               {/* Sidebar / Stats Column */}
               <div className="space-y-6">
-                 {/* Market Stats Card - Now receives the trigger to refresh when the main button is clicked */}
+                 {/* Market Stats Card */}
                  <MarketChart refreshTrigger={refreshChartTrigger} />
                  
+                 {/* Refresh Button */}
+                 <button
+                    onClick={handleGenerateReport}
+                    data-testid="refresh-analysis-btn"
+                    className="w-full py-3 rounded-xl border border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 transition-all text-sm font-medium flex items-center justify-center gap-2"
+                    aria-label="Refresh Market Analysis"
+                 >
+                    <i className="fas fa-redo" aria-hidden="true"></i> Refresh Analysis
+                 </button>
+
+                 {/* History List */}
+                 <HistoryList history={history} onSelect={handleLoadHistory} onClear={handleClearHistory} />
+
                  {/* Info Card */}
                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700 shadow-lg">
                     <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
@@ -107,15 +164,6 @@ const App: React.FC = () => {
                         The Standard and Poor's 500 is a stock market index tracking the stock performance of 500 of the largest companies listed on stock exchanges in the United States. It is one of the most commonly followed equity indices.
                     </p>
                  </div>
-
-                 <button
-                    onClick={handleGenerateReport}
-                    data-testid="refresh-analysis-btn"
-                    className="w-full py-3 rounded-xl border border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 transition-all text-sm font-medium flex items-center justify-center gap-2"
-                    aria-label="Refresh Market Analysis"
-                 >
-                    <i className="fas fa-redo" aria-hidden="true"></i> Refresh Analysis
-                 </button>
               </div>
             </div>
           )}
