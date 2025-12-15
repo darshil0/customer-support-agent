@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { MarketReport, GroundingChunk } from "../types";
+import { MarketReport, GroundingChunk, SectorData } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -52,5 +52,44 @@ export const generateDailyReport = async (): Promise<MarketReport> => {
   } catch (error) {
     console.error("Gemini API Error:", error);
     throw error;
+  }
+};
+
+export const fetchSectorWeights = async (): Promise<SectorData[]> => {
+  const prompt = `
+    Find the latest available S&P 500 sector weightings (percentage allocation).
+    
+    Return the result strictly as a JSON array containing objects with:
+    - "name": The sector name (e.g., Information Technology)
+    - "value": The percentage weight as a number (e.g., 29.5)
+    
+    Do not include any Markdown formatting, backticks, or 'json' labels. Return ONLY the raw JSON string.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+
+    let text = response.text || "[]";
+    // Sanitize in case model adds markdown blocks
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    const data = JSON.parse(text);
+    
+    if (Array.isArray(data) && data.length > 0) {
+        return data.map((item: any) => ({
+            name: item.name || 'Unknown',
+            value: Number(item.value) || 0
+        }));
+    }
+    return [];
+  } catch (error) {
+    console.error("Failed to fetch sector weights:", error);
+    return []; // Return empty array to trigger fallback in UI
   }
 };
