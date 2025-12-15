@@ -1,20 +1,74 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# FinAgent Pro
 
-# Run and deploy your AI Studio app
+FinAgent Pro is a sophisticated financial analysis dashboard that provides daily insights into the S&P 500 stock market performance. Powered by **Google Gemini 2.5 Flash**, it delivers real-time, AI-generated reports grounded in up-to-date web sources, alongside visual breakdowns of sector performance.
 
-This contains everything you need to run your app locally.
+## 🚀 Features
 
-View your app in AI Studio: https://ai.studio/apps/drive/1j3KpZ1WKHAqU-Q5P2A-Ws0otkK0YsrP1
+*   **AI-Generated Daily Reports**: Detailed breakdown of market snapshots, key drivers, top movers, and future outlooks.
+*   **Real-Time Grounding**: Uses the Google Search tool to fetch and cite the latest financial news and data sources.
+*   **Visual Analytics**: Interactive S&P 500 Sector Allocation pie chart using `recharts`.
+*   **Modern UI**: Fully responsive, accessible, dark-themed interface built with Tailwind CSS.
+*   **Robust Error Handling**: Graceful fallbacks for API limits or network issues.
 
-## Run Locally
+## 🛠️ Tech Stack
 
-**Prerequisites:**  Node.js
+*   **Frontend**: React 18, TypeScript, Vite (implied)
+*   **Styling**: Tailwind CSS
+*   **AI/ML**: Google GenAI SDK (`@google/genai`), Model: `gemini-2.5-flash`
+*   **Visualization**: Recharts
+*   **Icons**: FontAwesome
 
+## 🔧 Setup & Configuration
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Prerequisites
+*   Node.js installed.
+*   A Google Gemini API Key.
+
+### Environment Variables
+The application requires a valid API key accessible via `process.env.API_KEY`.
+
+```bash
+# Example .env
+API_KEY=your_gemini_api_key_here
+```
+
+### Installation
+
+1.  Clone the repository.
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+3.  Start the development server:
+    ```bash
+    npm start
+    ```
+
+## 🧪 Testing
+
+The application is instrumented with `data-testid` attributes to support robust End-to-End (E2E) and Regression testing.
+
+### Key Test Selectors
+
+| Component | Test ID | Description |
+| :--- | :--- | :--- |
+| **Hero Section** | `generate-report-btn` | The main CTA to start the analysis. |
+| **Loading** | `loading-state` | Visible while the AI is generating content. |
+| **Error** | `error-state` | Visible if the API call fails. |
+| **Report Area** | `report-container` | Main container for the generated report. |
+| **Report Content** | `report-markdown-body` | The rendered Markdown text. |
+| **Chart** | `market-chart-container` | The container for the Sector Pie Chart. |
+| **Refresh** | `refresh-analysis-btn` | Button to regenerate data. |
+| **Sources** | `grounding-sources` | Container for cited web links. |
+
+## 📂 Project Structure
+
+*   `src/index.tsx`: Entry point.
+*   `src/App.tsx`: Main application controller and layout.
+*   `src/components/`: Reusable UI components (`MarketChart`, `ReportView`, `Header`, etc.).
+*   `src/services/geminiService.ts`: Integration with Google GenAI SDK.
+*   `src/types.ts`: TypeScript interfaces for robust type checking.
+
+## 📝 License
+
+This project is open source and available under the MIT License.
