@@ -29,4 +29,5 @@ export interface StockData {
   price: string;
   change: string;
   percentChange: string;
+  sparkline: number[];
 }

@@ -192,6 +192,7 @@ export const fetchStockPerformance = async (tickers: string[]): Promise<StockDat
     - "price": Current price (e.g. "230.50")
     - "change": Price change (e.g. "+1.50" or "-0.20")
     - "percentChange": Percentage change (e.g. "+0.65%")
+    - "sparkline": An array of 5 numbers representing the approximate closing prices of the last 5 days (including today).
     
     Ensure data is from the latest available trading session. If a ticker is invalid, omit it from the array.
   `;
@@ -220,7 +221,8 @@ export const fetchStockPerformance = async (tickers: string[]): Promise<StockDat
          symbol: String(item.symbol || '').toUpperCase(),
          price: String(item.price || '0.00'),
          change: String(item.change || '0.00'),
-         percentChange: String(item.percentChange || '0.00%')
+         percentChange: String(item.percentChange || '0.00%'),
+         sparkline: Array.isArray(item.sparkline) ? item.sparkline.map(Number) : []
        }));
     }
     return [];

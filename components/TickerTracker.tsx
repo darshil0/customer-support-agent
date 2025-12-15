@@ -7,6 +7,47 @@ interface TickerTrackerProps {
 }
 
 const STORAGE_KEY = 'finagent_tickers';
+type SortKey = 'symbol' | 'price' | 'change';
+type SortDirection = 'asc' | 'desc';
+
+// Simple SVG Sparkline Component
+const SimpleSparkline = ({ data, color }: { data: number[], color: string }) => {
+  if (!data || data.length < 2) return null;
+  
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const width = 60;
+  const height = 24;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    // Invert Y because SVG coordinates go down
+    const y = height - ((val - min) / range) * (height - 4) - 2; // -4 and -2 for padding
+    return `${x},${y}`;
+  }).join(' ');
+
+  return (
+    <svg width={width} height={height} className="overflow-visible opacity-80" aria-hidden="true">
+      <polyline
+        points={points}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        className={color}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Small dot at the end */}
+      <circle 
+        cx={width} 
+        cy={height - ((data[data.length - 1] - min) / range) * (height - 4) - 2} 
+        r="1.5" 
+        className={`${color} fill-current`} 
+      />
+    </svg>
+  );
+};
 
 export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) => {
   const [tickers, setTickers] = useState<string[]>([]);
@@ -14,6 +55,10 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
   const [loading, setLoading] = useState(false);
   const [inputVal, setInputVal] = useState('');
   const [filterQuery, setFilterQuery] = useState('');
+  
+  // Sorting State
+  const [sortKey, setSortKey] = useState<SortKey>('symbol');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   // Load tickers from local storage on mount
   useEffect(() => {
@@ -69,16 +114,55 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
     setTickers((prev) => prev.filter((t) => t !== symbol));
   };
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      // Smart defaults: Symbol -> ASC, Numbers -> DESC
+      setSortDirection(key === 'symbol' ? 'asc' : 'desc');
+    }
+  };
+
   const getChangeColor = (val: string) => {
     if (val.includes('-')) return 'text-red-400';
     if (val.includes('+')) return 'text-emerald-400';
     return 'text-slate-400';
   };
 
-  const filteredTickers = useMemo(() => {
-    if (!filterQuery) return tickers;
-    return tickers.filter(t => t.includes(filterQuery.toUpperCase()));
-  }, [tickers, filterQuery]);
+  const filteredAndSortedTickers = useMemo(() => {
+    // 1. Filter
+    let result = tickers;
+    if (filterQuery) {
+      result = result.filter(t => t.includes(filterQuery.toUpperCase()));
+    }
+
+    // 2. Sort
+    return [...result].sort((aSymbol, bSymbol) => {
+      const dataA = stockData.find(d => d.symbol === aSymbol);
+      const dataB = stockData.find(d => d.symbol === bSymbol);
+
+      let valA: string | number = '';
+      let valB: string | number = '';
+
+      if (sortKey === 'symbol') {
+        valA = aSymbol;
+        valB = bSymbol;
+      } else if (sortKey === 'price') {
+        // Treat missing data as -999999 to push to bottom in desc sort, or top in asc
+        valA = dataA ? parseFloat(dataA.price.replace(/[^0-9.-]/g, '')) || 0 : -999999;
+        valB = dataB ? parseFloat(dataB.price.replace(/[^0-9.-]/g, '')) || 0 : -999999;
+      } else if (sortKey === 'change') {
+        valA = dataA ? parseFloat(dataA.percentChange.replace(/[^0-9.-]/g, '')) || 0 : -999999;
+        valB = dataB ? parseFloat(dataB.percentChange.replace(/[^0-9.-]/g, '')) || 0 : -999999;
+      }
+
+      if (valA === valB) return 0;
+      
+      const comparison = valA > valB ? 1 : -1;
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [tickers, filterQuery, stockData, sortKey, sortDirection]);
 
   return (
     <div className="bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-700">
@@ -113,37 +197,73 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
         </p>
       ) : (
         <>
-            <div className="relative mb-3 group">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <i className="fas fa-search text-slate-500 group-focus-within:text-emerald-500 transition-colors text-xs"></i>
+            <div className="flex gap-2 mb-3">
+                <div className="relative group flex-1">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i className="fas fa-search text-slate-500 group-focus-within:text-emerald-500 transition-colors text-xs"></i>
+                    </div>
+                    <input 
+                        type="text" 
+                        value={filterQuery}
+                        onChange={(e) => setFilterQuery(e.target.value)}
+                        placeholder="Filter..." 
+                        className="w-full bg-slate-900/30 border border-slate-700/50 text-slate-300 text-xs rounded-lg focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 pl-9 p-2 placeholder:text-slate-600 transition-all outline-none"
+                        aria-label="Filter watchlist"
+                    />
                 </div>
-                <input 
-                    type="text" 
-                    value={filterQuery}
-                    onChange={(e) => setFilterQuery(e.target.value)}
-                    placeholder="Filter watchlist..." 
-                    className="w-full bg-slate-900/30 border border-slate-700/50 text-slate-300 text-xs rounded-lg focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 pl-9 p-2 placeholder:text-slate-600 transition-all outline-none"
-                    aria-label="Filter watchlist"
-                />
+                
+                <div className="flex items-center bg-slate-900/50 rounded-lg border border-slate-700/50 p-1">
+                     <button
+                        onClick={() => handleSort('symbol')}
+                        className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${sortKey === 'symbol' ? 'bg-slate-700 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        title="Sort by Symbol"
+                     >
+                        <i className="fas fa-font text-xs"></i>
+                     </button>
+                     <button
+                        onClick={() => handleSort('price')}
+                        className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${sortKey === 'price' ? 'bg-slate-700 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        title="Sort by Price"
+                     >
+                        <i className="fas fa-dollar-sign text-xs"></i>
+                     </button>
+                     <button
+                        onClick={() => handleSort('change')}
+                        className={`w-7 h-7 flex items-center justify-center rounded transition-colors ${sortKey === 'change' ? 'bg-slate-700 text-emerald-400' : 'text-slate-500 hover:text-slate-300'}`}
+                        title="Sort by Performance"
+                     >
+                        <i className="fas fa-chart-line text-xs"></i>
+                     </button>
+                     <div className="w-px h-4 bg-slate-700 mx-1"></div>
+                     <button
+                        onClick={() => setSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
+                        className="w-7 h-7 flex items-center justify-center rounded text-slate-400 hover:text-white transition-colors"
+                        title={sortDirection === 'asc' ? 'Ascending' : 'Descending'}
+                     >
+                        <i className={`fas fa-sort-amount-${sortDirection === 'asc' ? 'down' : 'up'} text-xs`}></i>
+                     </button>
+                </div>
             </div>
 
             <div className="space-y-2">
             {stockData.length === 0 && loading ? (
                 // Skeleton loading for initial data
-                Array.from({length: filteredTickers.length || 1}).map((_, i) => (
+                Array.from({length: filteredAndSortedTickers.length || 1}).map((_, i) => (
                     <div key={i} className="h-12 bg-slate-900/50 rounded-lg animate-pulse"></div>
                 ))
             ) : (
-                filteredTickers.length === 0 ? (
+                filteredAndSortedTickers.length === 0 ? (
                     <div className="text-center py-3 text-slate-500 text-xs italic">
                         No matching symbols found.
                     </div>
                 ) : (
-                    filteredTickers.map((ticker) => {
+                    filteredAndSortedTickers.map((ticker) => {
                         const data = stockData.find(d => d.symbol === ticker);
+                        const changeColor = data ? getChangeColor(data.percentChange) : 'text-slate-400';
+                        
                         return (
                             <div key={ticker} className="flex items-center justify-between p-3 bg-slate-900/40 rounded-lg border border-slate-800 hover:border-slate-600 transition-colors group">
-                                <div className="flex flex-col">
+                                <div className="flex flex-col w-20">
                                     <span className="font-bold text-slate-200">{ticker}</span>
                                     {data ? (
                                         <span className="text-xs text-slate-400">${data.price}</span>
@@ -155,9 +275,16 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
                                         )
                                     )}
                                 </div>
+
+                                <div className="flex-1 flex justify-center px-2">
+                                    {data && data.sparkline && data.sparkline.length > 0 && (
+                                        <SimpleSparkline data={data.sparkline} color={changeColor} />
+                                    )}
+                                </div>
+
                                 <div className="flex items-center gap-3">
                                     {data ? (
-                                        <div className={`text-right text-sm font-medium ${getChangeColor(data.percentChange)}`}>
+                                        <div className={`text-right text-sm font-medium ${changeColor}`}>
                                             <div>{data.percentChange}</div>
                                             <div className="text-[10px] opacity-75">{data.change}</div>
                                         </div>
