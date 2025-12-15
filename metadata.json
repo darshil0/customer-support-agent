@@ -1,0 +1,5 @@
+{
+  "name": "FinAgent Pro",
+  "description": "Daily report of the S&P 500 Stocks Performance powered by Gemini AI.",
+  "requestFramePermissions": []
+}
