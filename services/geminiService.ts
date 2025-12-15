@@ -1,5 +1,5 @@
-import { GoogleGenAI } from "@google/genai";
-import { MarketReport, GroundingChunk, SectorData } from "../types";
+import { GoogleGenAI } from '@google/genai';
+import { MarketReport, GroundingChunk, SectorData } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -26,19 +26,20 @@ export const generateDailyReport = async (): Promise<MarketReport> => {
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
-        systemInstruction: "You are FinAgent Pro, a senior financial analyst providing accurate, data-backed daily stock market reports.",
+        systemInstruction:
+          'You are FinAgent Pro, a senior financial analyst providing accurate, data-backed daily stock market reports.',
       },
     });
 
-    const text = response.text || "No report generated.";
-    
+    const text = response.text || 'No report generated.';
+
     // Extract grounding chunks (sources)
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    
+
     // Filter to keep only valid web sources and map to local type
     const validSources: GroundingChunk[] = chunks
       .filter((chunk: any) => chunk.web?.uri && chunk.web?.title)
@@ -46,7 +47,7 @@ export const generateDailyReport = async (): Promise<MarketReport> => {
         web: {
           uri: chunk.web.uri,
           title: chunk.web.title,
-        }
+        },
       }));
 
     return {
@@ -55,12 +56,15 @@ export const generateDailyReport = async (): Promise<MarketReport> => {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error("Gemini API Error (Report):", error);
+    console.error('Gemini API Error (Report):', error);
     throw error;
   }
 };
 
-export const fetchSectorWeights = async (): Promise<{data: SectorData[], sources: GroundingChunk[]}> => {
+export const fetchSectorWeights = async (): Promise<{
+  data: SectorData[];
+  sources: GroundingChunk[];
+}> => {
   const prompt = `
     Find the latest available S&P 500 sector weightings (percentage allocation).
     
@@ -73,7 +77,7 @@ export const fetchSectorWeights = async (): Promise<{data: SectorData[], sources
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: 'gemini-2.5-flash',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
@@ -88,31 +92,31 @@ export const fetchSectorWeights = async (): Promise<{data: SectorData[], sources
         web: {
           uri: chunk.web.uri,
           title: chunk.web.title,
-        }
+        },
       }));
 
-    let text = response.text || "[]";
-    
+    let text = response.text || '[]';
+
     // Robust JSON extraction: look for the first '[' and the last ']'
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      console.warn("No JSON array found in response text");
+      console.warn('No JSON array found in response text');
       return { data: [], sources: [] };
     }
 
     const jsonString = jsonMatch[0];
     const data = JSON.parse(jsonString);
-    
+
     let parsedData: SectorData[] = [];
     if (Array.isArray(data) && data.length > 0) {
-        parsedData = data.map((item: any) => ({
-            name: item.name || 'Unknown',
-            value: Number(item.value) || 0
-        }));
+      parsedData = data.map((item: any) => ({
+        name: item.name || 'Unknown',
+        value: Number(item.value) || 0,
+      }));
     }
     return { data: parsedData, sources: validSources };
   } catch (error) {
-    console.error("Failed to fetch sector weights:", error);
+    console.error('Failed to fetch sector weights:', error);
     // Return empty to allow UI to handle fallback, rather than crashing
     return { data: [], sources: [] };
   }

@@ -1,10 +1,12 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
 import { Spinner } from './components/Spinner';
 import { ReportView } from './components/ReportView';
 import { MarketChart } from './components/MarketChart';
 import { HistoryList } from './components/HistoryList';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { generateDailyReport } from './services/geminiService';
+import { useHistory } from './hooks/useHistory';
 import { MarketReport, ReportStatus } from './types';
 
 const App: React.FC = () => {
@@ -12,58 +14,34 @@ const App: React.FC = () => {
   const [report, setReport] = useState<MarketReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshChartTrigger, setRefreshChartTrigger] = useState<number>(0);
-  const [history, setHistory] = useState<MarketReport[]>([]);
 
-  // Load history from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('finagent_history');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setHistory(parsed);
-        }
-      } catch (e) {
-        console.error("Failed to parse history", e);
-      }
-    }
-  }, []);
+  // Use custom hook for persistence logic
+  const { history, addToHistory, clearHistory } = useHistory();
 
   const handleGenerateReport = useCallback(async () => {
     setStatus(ReportStatus.LOADING);
     setError(null);
     try {
       // Trigger chart refresh in parallel
-      setRefreshChartTrigger(prev => prev + 1);
-      
+      setRefreshChartTrigger((prev) => prev + 1);
+
       const data = await generateDailyReport();
       setReport(data);
       setStatus(ReportStatus.SUCCESS);
-
-      // Save to history
-      setHistory(prev => {
-        // Keep unique timestamps and limit to last 10
-        const updated = [data, ...prev].slice(0, 10);
-        localStorage.setItem('finagent_history', JSON.stringify(updated));
-        return updated;
-      });
+      addToHistory(data);
     } catch (err) {
-      setError("Failed to generate report. Please try again.");
+      console.error(err);
+      setError('Failed to generate report. Please try again.');
       setStatus(ReportStatus.ERROR);
     }
-  }, []);
+  }, [addToHistory]);
 
-  const handleLoadHistory = (historyItem: MarketReport) => {
+  const handleLoadHistory = useCallback((historyItem: MarketReport) => {
     setReport(historyItem);
     setStatus(ReportStatus.SUCCESS);
-    // Note: We don't refresh the chart here as the chart data is real-time/latest only.
-    // However, we could scroll to top or provide feedback.
-  };
-
-  const handleClearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem('finagent_history');
-  };
+    // We intentionally do not refresh the chart to keep it "Live",
+    // or we could store chart data in history too. For now, we keep chart live.
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
@@ -79,9 +57,10 @@ const App: React.FC = () => {
             </span>
           </h2>
           <p className="text-lg text-slate-400 mb-8">
-            Get instant, AI-generated analysis of today's market movements, powered by Gemini and real-time grounding.
+            Get instant, AI-generated analysis of today's market movements, powered by Gemini and
+            real-time grounding.
           </p>
-          
+
           {status === ReportStatus.IDLE && (
             <div className="flex flex-col items-center gap-6">
               <button
@@ -98,7 +77,11 @@ const App: React.FC = () => {
 
               {history.length > 0 && (
                 <div className="w-full max-w-md">
-                   <HistoryList history={history} onSelect={handleLoadHistory} onClear={handleClearHistory} />
+                  <HistoryList
+                    history={history}
+                    onSelect={handleLoadHistory}
+                    onClear={clearHistory}
+                  />
                 </div>
               )}
             </div>
@@ -107,65 +90,86 @@ const App: React.FC = () => {
 
         {/* Content Area */}
         <div className="max-w-6xl mx-auto">
-          
           {status === ReportStatus.LOADING && (
-            <div className="flex flex-col items-center animate-fade-in" data-testid="loading-state">
-                <Spinner />
-                <p className="text-slate-500 text-sm mt-4">Consulting trusted financial sources...</p>
+            <div
+              className="flex flex-col items-center animate-fade-in"
+              data-testid="loading-state"
+            >
+              <Spinner />
+              <p className="text-slate-500 text-sm mt-4">Consulting trusted financial sources...</p>
             </div>
           )}
 
           {status === ReportStatus.ERROR && (
-             <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center max-w-lg mx-auto" data-testid="error-state">
-                <i className="fas fa-exclamation-circle text-red-500 text-3xl mb-3" aria-hidden="true"></i>
-                <p className="text-red-400 font-medium">{error}</p>
-                <button 
-                  onClick={handleGenerateReport}
-                  className="mt-4 text-sm bg-red-500/20 hover:bg-red-500/30 text-red-300 py-2 px-4 rounded-lg transition-colors"
-                  aria-label="Retry generating report"
-                >
-                  Retry
-                </button>
-             </div>
+            <div
+              className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center max-w-lg mx-auto"
+              data-testid="error-state"
+            >
+              <i
+                className="fas fa-exclamation-circle text-red-500 text-3xl mb-3"
+                aria-hidden="true"
+              ></i>
+              <p className="text-red-400 font-medium">{error}</p>
+              <button
+                onClick={handleGenerateReport}
+                className="mt-4 text-sm bg-red-500/20 hover:bg-red-500/30 text-red-300 py-2 px-4 rounded-lg transition-colors"
+                aria-label="Retry generating report"
+              >
+                Retry
+              </button>
+            </div>
           )}
 
           {status === ReportStatus.SUCCESS && report && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" data-testid="report-container">
-              {/* Main Report Column */}
-              <div className="lg:col-span-2">
-                <ReportView report={report} />
-              </div>
+            <ErrorBoundary>
+              <div
+                className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                data-testid="report-container"
+              >
+                {/* Main Report Column */}
+                <div className="lg:col-span-2">
+                  <ReportView report={report} />
+                </div>
 
-              {/* Sidebar / Stats Column */}
-              <div className="space-y-6">
-                 {/* Market Stats Card */}
-                 <MarketChart refreshTrigger={refreshChartTrigger} />
-                 
-                 {/* Refresh Button */}
-                 <button
+                {/* Sidebar / Stats Column */}
+                <div className="space-y-6">
+                  {/* Market Stats Card */}
+                  <ErrorBoundary>
+                    <MarketChart refreshTrigger={refreshChartTrigger} />
+                  </ErrorBoundary>
+
+                  {/* Refresh Button */}
+                  <button
                     onClick={handleGenerateReport}
                     data-testid="refresh-analysis-btn"
                     className="w-full py-3 rounded-xl border border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 transition-all text-sm font-medium flex items-center justify-center gap-2"
                     aria-label="Refresh Market Analysis"
-                 >
+                  >
                     <i className="fas fa-redo" aria-hidden="true"></i> Refresh Analysis
-                 </button>
+                  </button>
 
-                 {/* History List */}
-                 <HistoryList history={history} onSelect={handleLoadHistory} onClear={handleClearHistory} />
+                  {/* History List */}
+                  <HistoryList
+                    history={history}
+                    onSelect={handleLoadHistory}
+                    onClear={clearHistory}
+                  />
 
-                 {/* Info Card */}
-                 <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700 shadow-lg">
+                  {/* Info Card */}
+                  <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 border border-slate-700 shadow-lg">
                     <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
-                        <i className="fas fa-info-circle text-sky-400" aria-hidden="true"></i>
-                        About S&P 500
+                      <i className="fas fa-info-circle text-sky-400" aria-hidden="true"></i>
+                      About S&P 500
                     </h3>
                     <p className="text-sm text-slate-400 leading-relaxed">
-                        The Standard and Poor's 500 is a stock market index tracking the stock performance of 500 of the largest companies listed on stock exchanges in the United States. It is one of the most commonly followed equity indices.
+                      The Standard and Poor's 500 is a stock market index tracking the stock
+                      performance of 500 of the largest companies listed on stock exchanges in the
+                      United States.
                     </p>
-                 </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            </ErrorBoundary>
           )}
         </div>
       </main>
@@ -173,7 +177,9 @@ const App: React.FC = () => {
       <footer className="bg-slate-900 py-6 border-t border-slate-800 mt-12">
         <div className="text-center text-slate-500 text-sm">
           <p>© {new Date().getFullYear()} FinAgent Pro. Powered by Gemini.</p>
-          <p className="text-xs mt-2 opacity-60">Not financial advice. For informational purposes only.</p>
+          <p className="text-xs mt-2 opacity-60">
+            Not financial advice. For informational purposes only.
+          </p>
         </div>
       </footer>
     </div>
