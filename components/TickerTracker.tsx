@@ -142,25 +142,32 @@ export const TickerTracker: React.FC<TickerTrackerProps> = ({ refreshTrigger }) 
       const dataA = stockData.find(d => d.symbol === aSymbol);
       const dataB = stockData.find(d => d.symbol === bSymbol);
 
-      let valA: string | number = '';
-      let valB: string | number = '';
+      // Handle missing data: always push to bottom regardless of sort direction
+      if (!dataA && !dataB) return 0;
+      if (!dataA) return 1;
+      if (!dataB) return -1;
 
       if (sortKey === 'symbol') {
-        valA = aSymbol;
-        valB = bSymbol;
-      } else if (sortKey === 'price') {
-        // Treat missing data as -999999 to push to bottom in desc sort, or top in asc
-        valA = dataA ? parseFloat(dataA.price.replace(/[^0-9.-]/g, '')) || 0 : -999999;
-        valB = dataB ? parseFloat(dataB.price.replace(/[^0-9.-]/g, '')) || 0 : -999999;
+        return sortDirection === 'asc' 
+          ? aSymbol.localeCompare(bSymbol) 
+          : bSymbol.localeCompare(aSymbol);
+      }
+
+      let valA = 0;
+      let valB = 0;
+
+      // Extract numeric values for sorting
+      if (sortKey === 'price') {
+        valA = parseFloat(dataA.price.replace(/[^0-9.-]/g, '')) || 0;
+        valB = parseFloat(dataB.price.replace(/[^0-9.-]/g, '')) || 0;
       } else if (sortKey === 'change') {
-        valA = dataA ? parseFloat(dataA.percentChange.replace(/[^0-9.-]/g, '')) || 0 : -999999;
-        valB = dataB ? parseFloat(dataB.percentChange.replace(/[^0-9.-]/g, '')) || 0 : -999999;
+        valA = parseFloat(dataA.percentChange.replace(/[^0-9.-]/g, '')) || 0;
+        valB = parseFloat(dataB.percentChange.replace(/[^0-9.-]/g, '')) || 0;
       }
 
       if (valA === valB) return 0;
       
-      const comparison = valA > valB ? 1 : -1;
-      return sortDirection === 'asc' ? comparison : -comparison;
+      return sortDirection === 'asc' ? valA - valB : valB - valA;
     });
   }, [tickers, filterQuery, stockData, sortKey, sortDirection]);
 
