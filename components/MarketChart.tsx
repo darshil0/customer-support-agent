@@ -18,6 +18,24 @@ const FALLBACK_DATA: SectorData[] = [
 
 const COLORS = ['#10b981', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#64748b', '#94a3b8', '#cbd5e1'];
 
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-slate-900/95 backdrop-blur-sm border border-slate-700 p-3 rounded-lg shadow-xl">
+        <p className="text-slate-200 font-medium text-xs mb-1 uppercase tracking-wider">{data.name}</p>
+        <div className="flex items-center gap-2">
+           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: payload[0].fill }}></div>
+           <p className="text-white font-bold text-lg">
+             {Number(data.value).toFixed(1)}%
+           </p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export const MarketChart: React.FC = () => {
   const [data, setData] = useState<SectorData[]>([]);
   const [sources, setSources] = useState<GroundingChunk[]>([]);
@@ -90,16 +108,13 @@ export const MarketChart: React.FC = () => {
                 fill="#8884d8"
                 paddingAngle={5}
                 dataKey="value"
+                nameKey="name"
                 >
                 {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
                 </Pie>
-                <Tooltip 
-                    contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f1f5f9' }}
-                    itemStyle={{ color: '#f1f5f9' }}
-                    formatter={(value: number) => [`${value}%`, 'Weight']}
-                />
+                <Tooltip content={<CustomTooltip />} />
                 <Legend 
                     layout="vertical" 
                     verticalAlign="middle" 

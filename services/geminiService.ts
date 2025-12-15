@@ -39,10 +39,15 @@ export const generateDailyReport = async (): Promise<MarketReport> => {
     // Extract grounding chunks (sources)
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
     
-    // Filter to keep only valid web sources
-    const validSources: GroundingChunk[] = chunks.filter(
-      (chunk: any) => chunk.web?.uri && chunk.web?.title
-    );
+    // Filter to keep only valid web sources and map to local type
+    const validSources: GroundingChunk[] = chunks
+      .filter((chunk: any) => chunk.web?.uri && chunk.web?.title)
+      .map((chunk: any) => ({
+        web: {
+          uri: chunk.web.uri,
+          title: chunk.web.title,
+        }
+      }));
 
     return {
       content: text,
@@ -77,9 +82,14 @@ export const fetchSectorWeights = async (): Promise<{data: SectorData[], sources
 
     // Extract grounding chunks (sources)
     const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const validSources: GroundingChunk[] = chunks.filter(
-      (chunk: any) => chunk.web?.uri && chunk.web?.title
-    );
+    const validSources: GroundingChunk[] = chunks
+      .filter((chunk: any) => chunk.web?.uri && chunk.web?.title)
+      .map((chunk: any) => ({
+        web: {
+          uri: chunk.web.uri,
+          title: chunk.web.title,
+        }
+      }));
 
     let text = response.text || "[]";
     // Sanitize in case model adds markdown blocks
