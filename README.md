@@ -6,7 +6,11 @@ FinAgent Pro is a sophisticated financial analysis dashboard that provides daily
 
 *   **AI-Generated Daily Reports**: Detailed breakdown of market snapshots, key drivers, top movers, and future outlooks.
 *   **Real-Time Grounding**: Uses the Google Search tool to fetch and cite the latest financial news and data sources.
-*   **Visual Analytics**: Interactive S&P 500 Sector Allocation pie chart using `recharts`.
+*   **Visual Analytics**: Interactive S&P 500 Sector Allocation pie chart using `recharts` with drill-down details.
+*   **Interactive Watchlist**: 
+    *   Real-time stock tracking with **5-day sparkline trends**.
+    *   **Client-side sorting** by Symbol, Price, or Percentage Change.
+    *   **Filtering** capabilities to quickly find stocks.
 *   **Modern UI**: Fully responsive, accessible, dark-themed interface built with Tailwind CSS.
 *   **Robust Error Handling**: Graceful fallbacks for API limits or network issues.
 
@@ -15,7 +19,7 @@ FinAgent Pro is a sophisticated financial analysis dashboard that provides daily
 *   **Frontend**: React 18, TypeScript, Vite (implied)
 *   **Styling**: Tailwind CSS
 *   **AI/ML**: Google GenAI SDK (`@google/genai`), Model: `gemini-2.5-flash`
-*   **Visualization**: Recharts
+*   **Visualization**: Recharts (Pie Chart), SVG (Sparklines)
 *   **Icons**: FontAwesome
 
 ## 🔧 Setup & Configuration
@@ -65,7 +69,7 @@ The application is instrumented with `data-testid` attributes to support robust 
 
 *   `src/index.tsx`: Entry point.
 *   `src/App.tsx`: Main application controller and layout.
-*   `src/components/`: Reusable UI components (`MarketChart`, `ReportView`, `Header`, etc.).
+*   `src/components/`: Reusable UI components (`MarketChart`, `ReportView`, `Header`, `TickerTracker` etc.).
 *   `src/services/geminiService.ts`: Integration with Google GenAI SDK.
 *   `src/types.ts`: TypeScript interfaces for robust type checking.
 
