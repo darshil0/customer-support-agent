@@ -16,7 +16,7 @@ describe('App Integration', () => {
 
   it('renders the landing page correctly', () => {
     render(<App />);
-    expect(screen.getByText(/Market Analysis Report/i)).toBeInTheDocument();
+    expect(screen.getByText(/AI-Powered S&P 500 Analysis/i)).toBeInTheDocument();
     expect(screen.getByTestId('generate-report-btn')).toBeInTheDocument();
   });
 

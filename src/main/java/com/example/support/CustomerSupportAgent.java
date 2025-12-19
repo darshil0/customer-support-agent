@@ -5,10 +5,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
 /**
  * Core business logic for customer support operations.
  * Provides 7 tools for multi-agent system.
  */
+@Component
 public class CustomerSupportAgent {
     
     // Mock customer database

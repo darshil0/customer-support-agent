@@ -1,75 +1,72 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { TickerTracker } from './TickerTracker';
-import * as geminiService from '../services/geminiService';
-
-declare const jest: any;
-declare const describe: any;
-declare const beforeEach: any;
-declare const it: any;
-declare const expect: any;
-
-jest.mock('../services/geminiService');
+import { describe, it, expect } from 'vitest';
 
 describe('TickerTracker', () => {
-  const mockFetchStock = geminiService.fetchStockPerformance as any;
+  const mockStocks = [
+    {
+      symbol: 'AAPL',
+      price: 150.0,
+      change: 2.5,
+      sparkline: [148, 149, 150, 151, 150]
+    },
+    {
+      symbol: 'MSFT',
+      price: 300.0,
+      change: -1.2,
+      sparkline: [305, 304, 303, 302, 300]
+    }
+  ];
 
-  beforeEach(() => {
-    localStorage.clear();
-    jest.clearAllMocks();
+  it('renders fixed stock list correctly', () => {
+    render(<TickerTracker stocks={mockStocks} />);
+
+    expect(screen.getByTestId('ticker-tracker')).toBeInTheDocument();
+    expect(screen.getByText('AAPL')).toBeInTheDocument();
+    expect(screen.getByText('MSFT')).toBeInTheDocument();
+    expect(screen.getByText('$150.00')).toBeInTheDocument();
+    expect(screen.getByText('$300.00')).toBeInTheDocument();
   });
 
-  it('renders input and empty state initially', () => {
-    render(<TickerTracker refreshTrigger={0} />);
-    expect(screen.getByPlaceholderText(/Symbol/i)).toBeInTheDocument();
-    expect(screen.getByText(/Add stocks to track/i)).toBeInTheDocument();
+  it('filters stocks by symbol', () => {
+    render(<TickerTracker stocks={mockStocks} />);
+
+    const filterInput = screen.getByPlaceholderText(/Search stocks.../i);
+    fireEvent.change(filterInput, { target: { value: 'aap' } });
+
+    expect(screen.getByText('AAPL')).toBeInTheDocument();
+    expect(screen.queryByText('MSFT')).not.toBeInTheDocument();
   });
 
-  it('allows adding a ticker and updates local storage', async () => {
-    mockFetchStock.mockResolvedValue([]);
-    render(<TickerTracker refreshTrigger={0} />);
-    
-    const input = screen.getByPlaceholderText(/Symbol/i);
-    const submitBtn = screen.getByRole('button', { name: '' }); // The plus icon button
+  it('sorts stocks by price', () => {
+    render(<TickerTracker stocks={mockStocks} />);
 
-    fireEvent.change(input, { target: { value: 'googl' } });
-    fireEvent.click(submitBtn);
+    const priceBtn = screen.getByRole('button', { name: /Sort by price/i });
 
-    // Should appear in list
-    expect(screen.getByText('GOOGL')).toBeInTheDocument();
+    // Default is symbol asc
+    let rows = screen.getAllByRole('button', { name: /AAPL|MSFT/i });
+    expect(rows[0]).toHaveTextContent('AAPL');
 
-    // Should persist
-    expect(JSON.parse(localStorage.getItem('finagent_tickers') || '[]')).toContain('GOOGL');
+    // Click price sort
+    fireEvent.click(priceBtn);
+
+    rows = screen.getAllByRole('button', { name: /AAPL|MSFT/i });
+    expect(rows[0]).toHaveTextContent('AAPL'); // 150 < 300, so AAPL first
+
+    // Click again for desc
+    fireEvent.click(priceBtn);
+    rows = screen.getAllByRole('button', { name: /AAPL|MSFT/i });
+    expect(rows[0]).toHaveTextContent('MSFT'); // 300 > 150, so MSFT first
   });
 
-  it('fetches and displays stock data for added tickers', async () => {
-    localStorage.setItem('finagent_tickers', JSON.stringify(['MSFT']));
-    mockFetchStock.mockResolvedValue([
-      { symbol: 'MSFT', price: '300.00', change: '+2.00', percentChange: '+0.6%' }
-    ]);
+  it('toggles stock selection for comparison', () => {
+    render(<TickerTracker stocks={mockStocks} />);
 
-    render(<TickerTracker refreshTrigger={0} />);
+    const aaplRow = screen.getByLabelText(/AAPL:/i);
+    fireEvent.click(aaplRow);
 
-    await waitFor(() => {
-      expect(screen.getByText('MSFT')).toBeInTheDocument();
-      expect(screen.getByText('$300.00')).toBeInTheDocument();
-      expect(screen.getByText('+0.6%')).toBeInTheDocument();
-    });
-  });
-
-  it('allows removing a ticker', async () => {
-    localStorage.setItem('finagent_tickers', JSON.stringify(['NVDA']));
-    mockFetchStock.mockResolvedValue([]);
-
-    render(<TickerTracker refreshTrigger={0} />);
-    
-    // Wait for it to render
-    await waitFor(() => expect(screen.getByText('NVDA')).toBeInTheDocument());
-
-    const removeBtn = screen.getByLabelText('Remove NVDA');
-    fireEvent.click(removeBtn);
-
-    expect(screen.queryByText('NVDA')).not.toBeInTheDocument();
-    expect(JSON.parse(localStorage.getItem('finagent_tickers') || '[]')).not.toContain('NVDA');
+    expect(screen.getByText(/1 selected/i)).toBeInTheDocument();
+    expect(screen.getByTestId('stock-comparison')).toBeInTheDocument();
   });
 });

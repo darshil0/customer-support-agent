@@ -1,141 +1,53 @@
-import { generateDailyReport, fetchSectorWeights, fetchStockPerformance } from './geminiService';
+import { generateMarketReport } from './geminiService';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-declare const jest: any;
-declare const describe: any;
-declare const beforeEach: any;
-declare const it: any;
-declare const expect: any;
-
-// Mock the Google GenAI SDK
-const mockGenerateContent = jest.fn();
-jest.mock('@google/genai', () => {
+// Mock the Google Generative AI SDK
+const mockGenerateContent = vi.fn();
+vi.mock('@google/generative-ai', () => {
   return {
-    GoogleGenAI: jest.fn().mockImplementation(() => ({
-      models: {
+    GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
+      getGenerativeModel: vi.fn().mockImplementation(() => ({
         generateContent: mockGenerateContent,
-      },
+      })),
     })),
   };
 });
 
+// Mock environment variables
+vi.mock('import.meta.env', () => ({
+  VITE_API_KEY: 'test-api-key'
+}));
+
 describe('geminiService', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  describe('generateDailyReport', () => {
+  describe('generateMarketReport', () => {
     it('returns structured report data on success', async () => {
       // Setup Mock
       mockGenerateContent.mockResolvedValueOnce({
-        text: '# Market Report\nThings are up.',
-        candidates: [
-          {
-            groundingMetadata: {
-              groundingChunks: [{ web: { uri: 'http://test.com', title: 'Test News' } }],
+        response: {
+          text: () => '## Market Report\nThings are up.',
+          candidates: [
+            {
+              groundingMetadata: {
+                groundingChunks: [{ web: { uri: 'http://test.com', title: 'Test News' } }],
+              },
             },
-          },
-        ],
+          ],
+        }
       });
 
-      const result = await generateDailyReport();
+      const result = await generateMarketReport();
 
-      expect(result.content).toBe('# Market Report\nThings are up.');
-      expect(result.sources).toHaveLength(1);
-      expect(result.sources[0].web?.uri).toBe('http://test.com');
-      expect(result.timestamp).toBeDefined();
+      expect(result.text).toBe('## Market Report\nThings are up.');
+      expect(result.groundingSources).toHaveLength(1);
     });
 
-    it('handles missing source data gracefully', async () => {
-      mockGenerateContent.mockResolvedValueOnce({
-        text: 'Report text',
-        candidates: [], // No grounding metadata
-      });
-
-      const result = await generateDailyReport();
-      expect(result.content).toBe('Report text');
-      expect(result.sources).toEqual([]);
-    });
-
-    it('maps API 401 error to user friendly message', async () => {
-      mockGenerateContent.mockRejectedValueOnce(new Error('401 Unauthorized'));
-      await expect(generateDailyReport()).rejects.toThrow('Invalid API Key');
-    });
-
-    it('maps API 429 error to user friendly message', async () => {
-      mockGenerateContent.mockRejectedValueOnce(new Error('429 Resource Exhausted'));
-      await expect(generateDailyReport()).rejects.toThrow('API rate limit exceeded');
-    });
-
-    it('maps generic error to default message', async () => {
-      mockGenerateContent.mockRejectedValueOnce(new Error('Random Crash'));
-      await expect(generateDailyReport()).rejects.toThrow('An unexpected error occurred');
-    });
-  });
-
-  describe('fetchSectorWeights', () => {
-    it('parses valid JSON response correctly', async () => {
-      mockGenerateContent.mockResolvedValueOnce({
-        text: 'Here is the data: [{"name": "Tech", "value": 30}]',
-        candidates: [],
-      });
-
-      const result = await fetchSectorWeights();
-      expect(result.data).toHaveLength(1);
-      expect(result.data[0]).toEqual({ name: 'Tech', value: 30 });
-    });
-
-    it('returns empty array if no JSON found in text', async () => {
-      mockGenerateContent.mockResolvedValueOnce({
-        text: 'I cannot provide that information.',
-        candidates: [],
-      });
-
-      const result = await fetchSectorWeights();
-      expect(result.data).toEqual([]);
-    });
-
-    it('returns empty array on JSON parse error', async () => {
-      mockGenerateContent.mockResolvedValueOnce({
-        text: '[{"name": "Broken JSON"',
-        candidates: [],
-      });
-
-      // The service catches the JSON parse error internally and returns empty
-      const result = await fetchSectorWeights();
-      expect(result.data).toEqual([]);
-    });
-  });
-
-  describe('fetchStockPerformance', () => {
-    it('parses valid JSON response correctly', async () => {
-      mockGenerateContent.mockResolvedValueOnce({
-        text: '[{"symbol": "AAPL", "price": "150.00", "change": "+1.5", "percentChange": "+1.0%"}]',
-        candidates: [],
-      });
-
-      const result = await fetchStockPerformance(['AAPL']);
-      expect(result).toHaveLength(1);
-      expect(result[0]).toEqual({
-        symbol: 'AAPL',
-        price: '150.00',
-        change: '+1.5',
-        percentChange: '+1.0%'
-      });
-    });
-
-    it('returns empty array if response is invalid', async () => {
-      mockGenerateContent.mockResolvedValueOnce({
-        text: 'Not json',
-        candidates: [],
-      });
-      const result = await fetchStockPerformance(['AAPL']);
-      expect(result).toEqual([]);
-    });
-
-    it('returns empty array on error', async () => {
-      mockGenerateContent.mockRejectedValueOnce(new Error('Fail'));
-      const result = await fetchStockPerformance(['AAPL']);
-      expect(result).toEqual([]);
+    it('handles API errors', async () => {
+      mockGenerateContent.mockRejectedValueOnce(new Error('API Error'));
+      await expect(generateMarketReport()).rejects.toThrow('Failed to generate report after 3 attempts');
     });
   });
 });
