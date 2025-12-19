@@ -1,22 +1,31 @@
-# Testing Guide - Customer Support Multi-Agent System v1.0.4
+# Testing Guide - Customer Support Multi-Agent System v1.0.5
 
 ## Overview
-This guide provides comprehensive information about the test suite, how to run tests, and how to write new tests.
+This guide provides comprehensive information about the test suite, how to run tests, and how to write new tests for both Java and Frontend components.
 
 ---
 
 ## 🎯 Test Suite Overview
 
-### Current Status
+### ☕ Java Backend
 - **Total Test Methods**: 35
 - **Pass Rate**: 100% (35/35)
 - **Coverage**: 100% of all 7 tools
 - **Execution Time**: ~2.5 seconds
 - **Framework**: JUnit 5
 
+### ⚛️ React Frontend
+- **Framework**: Vitest + React Testing Library
+- **Coverage**: Core components and services
+- **Command**: `npm test`
+
 ---
 
 ## 📊 Test Coverage Breakdown
+
+**Last Updated**: December 19, 2025  
+**Version**: 1.0.5  
+**Status**: ✅ 100% Test Coverage Achieved
 
 ### Tool-by-Tool Coverage
 

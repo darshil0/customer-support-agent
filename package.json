@@ -1,7 +1,7 @@
 {
   "name": "finagent-pro",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "module",
   "description": "AI-Powered S&P 500 Market Analysis Dashboard",
   "scripts": {

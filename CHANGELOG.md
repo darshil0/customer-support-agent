@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2025-12-19
+
+### Fixed
+- Restored corrupted `App.java` (previously a duplicate of test file)
+- Fixed invalid Java in `AgentConfiguration.java` (removed prepended/appended XML content)
+- Updated frontend tests (`App.test.tsx`, `MarketChart.test.tsx`, `TickerTracker.test.tsx`, `geminiService.test.ts`) to use Vitest and match current component APIs
+- Fixed initial landing page text expectation in `App.test.tsx`
+- Corrected accidental rename of `.eslintrc.cjs` (removed leading space)
+
+### Added
+- Added `quick-start.ps1` PowerShell script for Windows users
+- Consolidated and archived temporary fix logs in `archive/` directory
+- Added `.env` template for API key configuration
+
 ## [1.0.4] - 2025-12-14
 
 ### 🎉 Major Release - All Issues Fixed

@@ -1,18 +1,23 @@
-# 🚀 Customer Support Multi-Agent System v1.0.4
+# 🚀 Customer Support Multi-Agent System v1.0.5
 
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **complete test coverage**.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Tests](https://img.shields.io/badge/tests-35%20methods-blue)](https://github.com/darshil0/customer-support-agent)
-[![Version](https://img.shields.io/badge/version-1.0.4-green)](https://github.com/darshil0/customer-support-agent)
+[![Version](https://img.shields.io/badge/version-1.0.5-green)](https://github.com/darshil0/customer-support-agent)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
 
 ---
 
-## 🎯 What's New in v1.0.4
+## 🎯 What's New in v1.0.5
 
-### ✅ All Issues Fixed
+### ✅ Critical Fixes
+- **Restored Corrupted Files**: Fixed `App.java` and `AgentConfiguration.java` which were corrupted during merge.
+- **Frontend Test Suite**: Modernized all frontend tests to use Vitest and match current component APIs.
+- **Improved Windows Support**: Added a native PowerShell `quick-start.ps1` script for Windows users.
+
+### ✅ All Issues Fixed (from v1.0.4)
 - **Fixed all compilation errors** - Clean build with zero warnings
 - **Fixed all test failures** - 100% test pass rate (35/35 tests passing)
 - **Enhanced validation** - Robust input validation across all tools
