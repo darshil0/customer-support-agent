@@ -150,21 +150,25 @@ Open your browser to: **http://localhost:8000**
 ```
 customer-support-agent/
 │
-├── src/main/java/com/example/support/
-│   ├── App.java                      # Spring Boot application + REST API
-│   ├── Configuration.java            # API key configuration & validation
-│   ├── CustomerSupportAgent.java     # Core business logic (7 tools)
-│   ├── AgentConfiguration.java       # Multi-agent hierarchy setup
+├── src/main/java/com/example/support/    # ☕ Java Backend
+│   ├── App.java                          # Spring Boot application + REST API
+│   ├── Configuration.java                # API key configuration & validation
+│   ├── CustomerSupportAgent.java         # Core business logic (7 tools)
+│   ├── AgentConfiguration.java           # Multi-agent hierarchy setup
 │   ├── TransactionIdGenerator.java   # Unique ID generation utility
 │   └── ValidationUtils.java          # Input validation & sanitization
 │
-├── src/test/java/com/example/support/
-│   └── CustomerSupportAgentTest.java # Complete test suite (35 methods)
+├── components/                           # ⚛️ React Dashboard Components
+├── services/                             # AI & API services (Gemini Service)
+├── hooks/                                # Custom React hooks
+├── public/                               # Static assets
 │
-├── pom.xml                           # Maven build configuration
-├── README.md                         # This file
-├── CHANGELOG.md                      # Version history
-└── .gitignore                        # Git exclusions
+├── pom.xml                               # Maven build configuration
+├── package.json                          # Node.js dependencies & scripts
+├── README.md                             # Complete documentation
+├── CHANGELOG.md                          # Version history history
+├── quick-start.ps1                       # Windows setup script
+└── .env.example                          # Environment template
 ```
 
 ---
@@ -296,7 +300,7 @@ POST /api/refund/process
 mvn clean package
 
 # Run standalone
-java -jar target/customer-support-agent-1.0.4.jar
+java -jar target/customer-support-agent-1.0.5.jar
 ```
 
 ### Option 2: Docker Deployment

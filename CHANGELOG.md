@@ -16,8 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Added `quick-start.ps1` PowerShell script for Windows users
-- Consolidated and archived temporary fix logs in `archive/` directory
 - Added `.env` template for API key configuration
+- Cleaned up redundant and temporary files from the codebase for a professional structure
 
 ## [1.0.4] - 2025-12-14
 
@@ -105,7 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Status | Tests | Coverage | Notes |
 |---------|------|--------|-------|----------|-------|
-| 1.0.4 | 2025-12-14 | ✅ Stable | 35/35 | 100% | All issues fixed |
+| 1.0.5 | 2025-12-19 | ✅ Stable | 35/35 | 100% | Full-stack fixes & cleanup |
+| 1.0.4 | 2025-12-14 | ✅ Stable | 35/35 | 100% | All backend issues fixed |
 | 1.0.3 | 2025-12-12 | ⚠️ Issues | 33/39 | ~85% | Some failures |
 | 1.0.2 | 2025-12-10 | ⚠️ Beta | - | - | Development |
 | 1.0.1 | 2025-12-08 | ⚠️ Alpha | - | - | Initial setup |
