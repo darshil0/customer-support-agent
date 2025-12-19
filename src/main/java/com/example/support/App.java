@@ -28,7 +28,7 @@ public class App {
         return Map.of(
             "status", "UP",
             "message", "Customer Support API is running",
-            "version", "1.0.4"
+            "version", "1.0.5"
         );
     }
 

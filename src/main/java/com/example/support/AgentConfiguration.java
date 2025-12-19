@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * including billing, technical, account, and refund workflows.
  *
  * @author Darshil
- * @version 1.0.4
+ * @version 1.0.5
  */
 @Configuration
 public class AgentConfiguration {
