@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Comprehensive test suite for CustomerSupportAgent.
- * 33 test methods with 100% coverage of all 7 tools.
+ * 35 test methods with 100% coverage of all 7 tools.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CustomerSupportAgentTest {
