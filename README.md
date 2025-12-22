@@ -194,7 +194,7 @@ mvn test
 | `validateRefundEligibility` | 3 | ✅ Eligible/ineligible cases, state management |
 | `processRefund` | 4 | ✅ Valid refunds, validation, balance checks |
 | **Integration Tests** | 2 | ✅ Complete workflows (payment + refund) |
-| **Total Methods** | **35 (38 executions)** | **100% Coverage** |
+| **Total Methods** | **35 methods (38 executions)** | **100% Coverage** |
 
 ### Sample Test Output
 
