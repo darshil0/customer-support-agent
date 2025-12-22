@@ -1,7 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TickerTracker } from './TickerTracker';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import * as geminiService from '../services/geminiService';
+
+vi.mock('../services/geminiService');
 
 describe('TickerTracker', () => {
   const mockStocks = [
@@ -18,6 +21,10 @@ describe('TickerTracker', () => {
       sparkline: [305, 304, 303, 302, 300]
     }
   ];
+
+  beforeEach(() => {
+    vi.spyOn(geminiService, 'getMockStockData').mockReturnValue(mockStocks);
+  });
 
   it('renders fixed stock list correctly', () => {
     render(<TickerTracker stocks={mockStocks} />);
