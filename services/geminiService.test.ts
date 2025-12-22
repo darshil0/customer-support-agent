@@ -14,8 +14,10 @@ vi.mock('@google/generative-ai', () => {
 });
 
 // Mock environment variables
-vi.mock('import.meta.env', () => ({
-  VITE_API_KEY: 'test-api-key'
+vi.mock('import.meta', () => ({
+  env: {
+    VITE_API_KEY: 'test-api-key'
+  }
 }));
 
 describe('geminiService', () => {
