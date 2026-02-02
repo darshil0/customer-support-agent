@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-02
+
+### 🎉 Major Tech Stack Upgrade & Modernization
+
+### Added
+- **Report Persistence**: Implemented `localStorage` persistence for chat history and analysis reports.
+- **Copy Report Feature**: Added a clipboard integration to the `ReportView` component for easy sharing of insights.
+- **Tailwind CSS 4**: Migrated the entire styling system to Tailwind 4 for improved performance and modern CSS capabilities.
+
+### Changed
+- **Modernized Core Frameworks**:
+  - Upgraded **React** from 18 to **19.0.0**.
+  - Upgraded **Vite** to **7.0.0** and **Vitest** to **4.0.0**.
+  - Upgraded **Spring Boot** to **3.4.2**.
+  - Upgraded **Google ADK** to **0.5.0**.
+- **Refactored Components**: Improved `MarketChart` and `StockComparison` by moving sub-components outside the render cycle to prevent performance degradation from unnecessary remounts.
+- **Optimized Hooks**: Enhanced `useHistory` with lazy state initialization.
+
+### Fixed
+- **State Persistence Bug**: Fixed an issue where the application state was not correctly hydrated from storage on initial load.
+- **Vitest Mocking**: Corrected environment variable and class constructor mocking in the frontend test suite to be compatible with Vitest 4 and React 19.
+- **JDK 17 Compatibility**: Reverted `fmt-maven-plugin` to 2.9.1 to ensure the build passes on JDK 17+ without module access errors.
+
+## [1.0.6] - 2025-12-22
+
+### Fixed
+- **Maven Build**: Corrected the `google-adk` and `swagger-annotations` dependencies in `pom.xml`.
+- **Java Test Failures**: Resolved a null pointer exception in the `CustomerSupportAgentTest`.
+- **Frontend Test Failures**: Mocked the `geminiService` to resolve frontend test failures.
+- **Code Formatting**: Formatted the entire codebase using `mvn fmt:format` and `npm run lint:fix`.
+
 ## [1.0.5] - 2025-12-19
 
 ### Fixed
@@ -105,7 +136,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Status | Tests | Coverage | Notes |
 |---------|------|--------|-------|----------|-------|
-| 1.0.5 | 2025-12-19 | ✅ Stable | 35/35 | 100% | Full-stack fixes & cleanup |
+| 1.1.0 | 2026-02-02 | ✅ Stable | 51/51 | 100% | Major tech stack modernization |
+| 1.0.6 | 2025-12-22 | ✅ Stable | 35/35 | 100% | Full-stack fixes & cleanup |
+| 1.0.5 | 2025-12-19 | ✅ Stable | 35/35 | 100% | Fixes & cleanup |
 | 1.0.4 | 2025-12-14 | ✅ Stable | 35/35 | 100% | All backend issues fixed |
 | 1.0.3 | 2025-12-12 | ⚠️ Issues | 33/39 | ~85% | Some failures |
 | 1.0.2 | 2025-12-10 | ⚠️ Beta | - | - | Development |
