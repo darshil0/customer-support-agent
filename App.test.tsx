@@ -5,7 +5,11 @@ import * as geminiService from './services/geminiService';
 import { vi } from 'vitest';
 
 // Mock the entire geminiService module
-vi.mock('./services/geminiService');
+vi.mock('./services/geminiService', () => ({
+  generateMarketReport: vi.fn(),
+  getMockSectorData: vi.fn(() => []),
+  getMockStockData: vi.fn(() => []),
+}));
 
 describe('App Integration', () => {
   beforeEach(() => {

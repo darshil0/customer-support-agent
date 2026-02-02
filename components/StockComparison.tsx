@@ -6,6 +6,22 @@ interface StockComparisonProps {
   stocks: StockData[];
 }
 
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 shadow-lg">
+        <p className="text-white font-semibold mb-2">{payload[0].payload.day}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} style={{ color: entry.color }} className="text-sm">
+            {entry.name}: ${entry.value.toFixed(2)}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export const StockComparison: React.FC<StockComparisonProps> = ({ stocks }) => {
   if (!stocks || stocks.length === 0) {
     return null;
@@ -26,24 +42,11 @@ export const StockComparison: React.FC<StockComparisonProps> = ({ stocks }) => {
 
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-semibold mb-2">{payload[0].payload.day}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm">
-              {entry.name}: ${entry.value.toFixed(2)}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
+    <div
+      data-testid="stock-comparison"
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6"
+    >
       <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
         <svg 
           className="w-6 h-6 text-purple-400" 

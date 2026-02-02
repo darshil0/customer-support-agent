@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -19,6 +19,29 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Load persisted report on mount
+  useEffect(() => {
+    const savedReport = localStorage.getItem('last_report');
+    const savedDate = localStorage.getItem('last_updated');
+
+    if (savedReport && savedDate) {
+      try {
+        setReport(JSON.parse(savedReport));
+        setLastUpdated(new Date(savedDate));
+      } catch (e) {
+        console.error('Failed to load persisted report:', e);
+      }
+    }
+  }, []);
+
+  // Persist report when it changes
+  useEffect(() => {
+    if (report && lastUpdated) {
+      localStorage.setItem('last_report', JSON.stringify(report));
+      localStorage.setItem('last_updated', lastUpdated.toISOString());
+    }
+  }, [report, lastUpdated]);
 
   const sectorData = getMockSectorData();
   const stockData = getMockStockData();

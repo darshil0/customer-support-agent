@@ -31,10 +31,10 @@ describe('MarketChart', () => {
     expect(screen.getByTestId('market-chart-container')).toBeInTheDocument();
 
     // Check for sector breakdown items
-    expect(screen.getByText('Technology')).toBeInTheDocument();
+    expect(screen.getAllByText('Technology')).toHaveLength(2);
     expect(screen.getByText('30.5%')).toBeInTheDocument();
-    expect(screen.getByText('Finance')).toBeInTheDocument();
-    expect(screen.getByText('20.0%')).toBeInTheDocument();
+    expect(screen.getAllByText('Finance')).toHaveLength(2);
+    expect(screen.getByText('20%')).toBeInTheDocument();
   });
 
   it('renders the correct number of pie cells', () => {

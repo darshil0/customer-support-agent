@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 interface ReportViewProps {
@@ -7,10 +7,43 @@ interface ReportViewProps {
 }
 
 export const ReportView: React.FC<ReportViewProps> = ({ report, sources }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(report);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy report:', err);
+    }
+  };
+
   return (
     <div data-testid="report-container" className="space-y-6">
       {/* Report Content */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6">
+      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6 relative group">
+        <button
+          onClick={handleCopy}
+          className="absolute top-4 right-4 p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all opacity-0 group-hover:opacity-100 flex items-center gap-2 text-sm text-gray-300"
+          aria-label="Copy report to clipboard"
+        >
+          {isCopied ? (
+            <>
+              <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Copied!
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              Copy Report
+            </>
+          )}
+        </button>
         <div 
           data-testid="report-markdown-body"
           className="prose prose-invert prose-lg max-w-none"
