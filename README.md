@@ -1,37 +1,33 @@
-# 🚀 Customer Support Multi-Agent System v1.0.6
+# 🚀 Customer Support Multi-Agent System v1.1.0
 
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **complete test coverage**.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Tests](https://img.shields.io/badge/tests-35%20methods-blue)](https://github.com/darshil0/customer-support-agent)
-[![Version](https://img.shields.io/badge/version-1.0.6-green)](https://github.com/darshil0/customer-support-agent)
+[![Version](https://img.shields.io/badge/version-1.1.0-green)](https://github.com/darshil0/customer-support-agent)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
 
 ---
 
-## 🎯 What's New in v1.0.6
+## 🎯 What's New in v1.1.0
 
-### ✅ Critical Fixes
-- **Fixed Maven Build**: Corrected the `google-adk` and `swagger-annotations` dependencies in `pom.xml`.
-- **Fixed Java Test Failures**: Resolved a null pointer exception in the `CustomerSupportAgentTest`.
-- **Fixed Frontend Test Failures**: Mocked the `geminiService` to resolve frontend test failures.
-- **Code Formatting**: Formatted the entire codebase using `mvn fmt:format` and `npm run lint:fix`.
+### 🚀 Major Tech Stack Modernization
+- **Backend**: Upgraded to **Spring Boot 3.4.2** and **Google ADK 0.5.0**.
+- **Frontend**: Upgraded to **React 19**, **Vite 7**, and **Vitest 4**.
+- **Styling**: Migrated to **Tailwind CSS 4** for improved performance and modern features.
+- **Testing**: Updated to **JUnit 5.11.4** and **Mockito 5.21.0**.
 
-### ✅ All Issues Fixed (from v1.0.5)
-- **Fixed all compilation errors** - Clean build with zero warnings
-- **Fixed all test failures** - 100% test pass rate (38/38 tests passing)
-- **Enhanced validation** - Robust input validation across all tools
-- **Improved error handling** - Clear, actionable error messages
-- **Code quality improvements** - Better structure and documentation
+### ✨ New Features & Improvements
+- **Report Persistence**: Chat history and analysis reports are now persisted in `localStorage`.
+- **Copy to Clipboard**: Added a "Copy Report" feature to easily share AI-generated insights.
+- **Optimized Performance**: Refactored core components (`MarketChart`, `StockComparison`) to eliminate "component inside render" anti-patterns, significantly reducing unnecessary re-renders.
+- **Lazy Initialization**: Enhanced `useHistory` hook with lazy state initialization for better performance.
 
-### 🔧 Major Improvements
-- Fixed `ToolContext` parameter handling in all tools
-- Enhanced amount validation and rounding logic
-- Improved customer ID format validation
-- Fixed refund workflow validation state management
-- Added comprehensive integration tests
-- Updated all dependencies to latest stable versions
+### ✅ Bug Fixes
+- **State Restoration**: Fixed a bug where application history was not correctly restored on reload.
+- **Test Stability**: Resolved Vitest mocking issues related to environment variables and class constructors.
+- **JDK 17+ Compatibility**: Switched to `fmt-maven-plugin` 2.9.1 to resolve module access issues on modern JDKs.
 
 ---
 
@@ -301,7 +297,7 @@ POST /api/refund/process
 mvn clean package
 
 # Run standalone
-java -jar target/customer-support-agent-1.0.6.jar
+java -jar target/customer-support-agent-1.1.0.jar
 ```
 
 ### Option 2: Docker Deployment
@@ -605,9 +601,9 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 - [Clean Code Practices](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882)
 
 
-**🚀 Ready to deploy! Version 1.0.6 is production-ready with 35 test methods (38 executions) passing at 100% coverage.**
+**🚀 Ready to deploy! Version 1.1.0 is production-ready with 35 test methods (38 executions) passing at 100% coverage.**
 
-**Last Updated**: December 22, 2025  
+**Last Updated**: February 2, 2026  
 **Maintainer**: Darshil Shah  
 **Status**: ✅ Stable & Production-Ready
 
