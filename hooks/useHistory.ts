@@ -5,15 +5,13 @@ const STORAGE_KEY = 'finagent_history';
 const MAX_HISTORY_ITEMS = 10;
 
 export const useHistory = () => {
-  const [history, setHistory] = useState<MarketReport[]>([]);
-
-  useEffect(() => {
+  const [history, setHistory] = useState<MarketReport[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          setHistory(parsed);
+          return parsed;
         }
       }
     } catch (e) {
@@ -21,7 +19,8 @@ export const useHistory = () => {
       // If corrupted, clear it to prevent persistent errors
       localStorage.removeItem(STORAGE_KEY);
     }
-  }, []);
+    return [];
+  });
 
   const addToHistory = useCallback((report: MarketReport) => {
     setHistory((prev) => {

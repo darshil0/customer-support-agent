@@ -6,6 +6,19 @@ interface MarketChartProps {
   data: SectorData[];
 }
 
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    return (
+      <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 shadow-lg">
+        <p className="text-white font-semibold">{data.name}</p>
+        <p className="text-blue-400">{data.value}%</p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export const MarketChart: React.FC<MarketChartProps> = ({ data }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -15,19 +28,6 @@ export const MarketChart: React.FC<MarketChartProps> = ({ data }) => {
 
   const onPieLeave = () => {
     setActiveIndex(null);
-  };
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0];
-      return (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-semibold">{data.name}</p>
-          <p className="text-blue-400">{data.value}%</p>
-        </div>
-      );
-    }
-    return null;
   };
 
   return (

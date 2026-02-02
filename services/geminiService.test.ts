@@ -5,20 +5,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockGenerateContent = vi.fn();
 vi.mock('@google/generative-ai', () => {
   return {
-    GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
-      getGenerativeModel: vi.fn().mockImplementation(() => ({
+    GoogleGenerativeAI: vi.fn().mockImplementation(function (this: any) {
+      this.getGenerativeModel = vi.fn().mockImplementation(() => ({
         generateContent: mockGenerateContent,
-      })),
-    })),
+      }));
+      return this;
+    }),
   };
 });
 
 // Mock environment variables
-vi.mock('import.meta', () => ({
-  env: {
-    VITE_API_KEY: 'test-api-key'
-  }
-}));
+vi.stubEnv('VITE_API_KEY', 'test-api-key');
 
 describe('geminiService', () => {
   beforeEach(() => {

@@ -81,17 +81,17 @@ Please use real-time data and cite your sources. Format the response in markdown
 
       // Handle specific error types
       if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('API key')) {
-        throw new Error('Invalid API key. Please check your VITE_API_KEY in the .env file');
+        throw new Error('Invalid API key. Please check your VITE_API_KEY in the .env file and ensure it has Gemini API access.');
       }
       
       if (error.message?.includes('RATE_LIMIT') || error.message?.includes('quota')) {
         if (i < retries - 1) {
           const waitTime = (i + 1) * 2000;
-          console.log(`Rate limited. Waiting ${waitTime}ms before retry...`);
+          console.log(`Rate limited (Attempt ${i + 1}/${retries}). Waiting ${waitTime}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, waitTime));
           continue;
         }
-        throw new Error('Rate limit exceeded. Please try again in a few moments.');
+        throw new Error('API Rate limit exceeded. Please try again later or check your quota in Google AI Studio.');
       }
 
       if (error.message?.includes('PERMISSION_DENIED')) {

@@ -1,10 +1,9 @@
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
+import React from 'react';
 
 // Mock environment variables for testing
-vi.stubGlobal('import.meta.env', {
-  VITE_API_KEY: 'test-api-key',
-});
+vi.stubEnv('VITE_API_KEY', 'test-api-key');
 
 // Mock the GoogleGenerativeAI module
 vi.mock('@google/generative-ai', () => {
@@ -24,21 +23,20 @@ vi.mock('@google/generative-ai', () => {
     generateContent: mockGenerateContent,
   }));
 
-  const mockGoogleGenerativeAI = vi.fn(() => ({
-    getGenerativeModel: mockGetGenerativeModel,
-  }));
-
   return {
-    GoogleGenerativeAI: mockGoogleGenerativeAI,
+    GoogleGenerativeAI: vi.fn().mockImplementation(function (this: any) {
+      this.getGenerativeModel = mockGetGenerativeModel;
+      return this;
+    }),
   };
 });
 
 // Mock recharts
-vi.mock('recharts', async () => {
-  const OriginalModule = await vi.importActual('recharts');
+vi.mock('recharts', async (importOriginal) => {
+  const OriginalModule = await importOriginal<typeof import('recharts')>();
   return {
     ...OriginalModule,
-    ResponsiveContainer: ({ children }) => children,
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) => children,
   };
 });
 
