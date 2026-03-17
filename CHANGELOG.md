@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-03-17
+
+### Changed
+- **Backend Modernization**: Upgraded default Gemini model to `gemini-2.0-flash` across all agents in `AgentConfiguration.java`.
+- **Improved Reliability**: Refined error handling in `geminiService.ts` to prevent unexpected `TypeError` during API failures.
+- **Test Stability**: Corrected frontend test mocks to properly simulate consecutive API failures, resolving transient test errors.
+- **Consistency**: Synchronized versioning across `pom.xml`, `package.json`, and backend metadata.
+
 ## [1.1.0] - 2026-02-02
 
 ### 🎉 Major Tech Stack Upgrade & Modernization

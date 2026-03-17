@@ -45,7 +45,7 @@ describe('geminiService', () => {
     });
 
     it('handles API errors', async () => {
-      mockGenerateContent.mockRejectedValueOnce(new Error('API Error'));
+      mockGenerateContent.mockRejectedValue(new Error('API Error'));
       await expect(generateMarketReport()).rejects.toThrow('Failed to generate report after 3 attempts');
     });
   });

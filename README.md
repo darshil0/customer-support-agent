@@ -1,10 +1,10 @@
-# 🚀 Customer Support Multi-Agent System v1.1.0
+# 🚀 Customer Support Multi-Agent System v1.1.1
 
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **complete test coverage**.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Tests](https://img.shields.io/badge/tests-35%20methods-blue)](https://github.com/darshil0/customer-support-agent)
-[![Version](https://img.shields.io/badge/version-1.1.0-green)](https://github.com/darshil0/customer-support-agent)
+[![Version](https://img.shields.io/badge/version-1.1.1-green)](https://github.com/darshil0/customer-support-agent)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
 
@@ -551,7 +551,7 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 
 ## 🗺️ Roadmap
 
-### Version 1.1.0 (Q1 2026)
+### Version 1.1.1 (Q1 2026)
 - [ ] GraphQL API support
 - [ ] Real database integration (PostgreSQL/MongoDB)
 - [ ] Advanced analytics dashboard
