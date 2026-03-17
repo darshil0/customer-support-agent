@@ -62,7 +62,7 @@ Please use real-time data and cite your sources. Format the response in markdown
 
       const result = await model.generateContent(prompt);
       
-      if (!result.response) {
+      if (!result || !result.response) {
         throw new Error('No response received from API');
       }
 

@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
  * including billing, technical, account, and refund workflows.
  *
  * @author Darshil
- * @version 1.0.5
+ * @version 1.1.1
  */
 @Configuration
 public class AgentConfiguration {
@@ -29,7 +29,7 @@ public class AgentConfiguration {
     return LlmAgent.builder()
         .name("customer-support-orchestrator")
         .description("Main router agent for customer inquiries")
-        .model("gemini-1.5-flash")
+        .model("gemini-2.0-flash")
         .instruction(
             "You are a helpful customer support agent for Acme Corp. "
                 + "Analyze the customer's request and delegate it to the appropriate specialist:\n"
@@ -50,7 +50,7 @@ public class AgentConfiguration {
     return LlmAgent.builder()
         .name("billing-agent")
         .description("Handles billing and payment inquiries")
-        .model("gemini-1.5-flash")
+        .model("gemini-2.0-flash")
         .instruction(
             "You are a billing specialist. Handle queries about payments, balances, and invoices. "
                 + "Always confirm the customer's ID before processing transactions. "
@@ -66,7 +66,7 @@ public class AgentConfiguration {
     return LlmAgent.builder()
         .name("technical-support-agent")
         .description("Handles technical issues and troubleshooting")
-        .model("gemini-1.5-flash")
+        .model("gemini-2.0-flash")
         .instruction(
             "You are a technical support specialist. Troubleshoot customer issues. "
                 + "If the issue cannot be resolved immediately, create a detailed support ticket. "
@@ -82,7 +82,7 @@ public class AgentConfiguration {
     return LlmAgent.builder()
         .name("account-agent")
         .description("Manages account settings and profile updates")
-        .model("gemini-1.5-flash")
+        .model("gemini-2.0-flash")
         .instruction(
             "You are an account management specialist. Handle changes to email, tier status, "
                 + "and general profile settings. Update values only when explicitly provided "
@@ -102,7 +102,7 @@ public class AgentConfiguration {
         LlmAgent.builder()
             .name("refund-validator")
             .description("Validates refund eligibility")
-            .model("gemini-1.5-flash")
+            .model("gemini-2.0-flash")
             .instruction(
                 "Validate refund requests by calling 'validateRefundEligibility'. "
                     + "Store the result in ToolContext as 'validation_result'. "
@@ -115,7 +115,7 @@ public class AgentConfiguration {
         LlmAgent.builder()
             .name("refund-processor")
             .description("Processes approved refunds")
-            .model("gemini-1.5-flash")
+            .model("gemini-2.0-flash")
             .instruction(
                 "Process approved refunds by checking ToolContext for the 'refund_eligible' flag. "
                     + "If eligible, call 'processRefund' and inform the customer that processing "
