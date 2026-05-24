@@ -2,72 +2,76 @@ import React from 'react';
 
 interface SparklineProps {
   data: number[];
-  width?: number;
-  height?: number;
   color?: string;
+  height?: number;
+  width?: number;
+  showFill?: boolean;
 }
 
-export const Sparkline: React.FC<SparklineProps> = ({ 
-  data, 
-  width = 120, 
+export const Sparkline: React.FC<SparklineProps> = ({
+  data,
+  color = '#3b82f6',
   height = 40,
-  color = '#3b82f6'
+  width = 100,
+  showFill = true,
 }) => {
   if (!data || data.length === 0) {
-    return null;
+    return (
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <text x={width / 2} y={height / 2} textAnchor="middle" fill="#999">
+          No data
+        </text>
+      </svg>
+    );
   }
 
+  // Normalize data to fit within height
   const min = Math.min(...data);
   const max = Math.max(...data);
   const range = max - min || 1;
 
-  // Calculate points for the polyline
-  const points = data.map((value, index) => {
-    const x = (index / (data.length - 1)) * width;
-    const y = height - ((value - min) / range) * height;
-    return `${x},${y}`;
-  }).join(' ');
+  // Create points for polyline
+  const points = data
+    .map((value, index) => {
+      const x = (index / (data.length - 1)) * width;
+      const y = height - ((value - min) / range) * height;
+      return `${x},${y}`;
+    })
+    .join(' ');
 
-  // Calculate area points for gradient fill
-  const areaPoints = `0,${height} ${points} ${width},${height}`;
+  // Sanitized gradient ID (no # prefix)
+  const gradientId = `sparkline_gradient_${Math.random().toString(36).substring(7)}`;
+  const cleanColor = color.startsWith('#') ? color : `#${color}`;
 
   return (
-    <svg 
-      width={width} 
-      height={height} 
+    <svg
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
       className="sparkline"
-      aria-label="5-day price trend"
-      role="img"
+      preserveAspectRatio="none"
     >
       <defs>
-        <linearGradient id={`gradient-${color}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" style={{ stopColor: color, stopOpacity: 0.3 }} />
-          <stop offset="100%" style={{ stopColor: color, stopOpacity: 0 }} />
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor={cleanColor} stopOpacity="0.5" />
+          <stop offset="100%" stopColor={cleanColor} stopOpacity="0.05" />
         </linearGradient>
       </defs>
-      
-      {/* Area fill */}
-      <polygon
-        points={areaPoints}
-        fill={`url(#gradient-${color})`}
-      />
-      
-      {/* Line */}
+
+      {showFill && (
+        <polygon
+          points={`0,${height} ${points} ${width},${height}`}
+          fill={`url(#${gradientId})`}
+        />
+      )}
+
       <polyline
         points={points}
         fill="none"
-        stroke={color}
+        stroke={cleanColor}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
-      />
-      
-      {/* End point indicator */}
-      <circle
-        cx={(data.length - 1) / (data.length - 1) * width}
-        cy={height - ((data[data.length - 1] - min) / range) * height}
-        r="2"
-        fill={color}
       />
     </svg>
   );
