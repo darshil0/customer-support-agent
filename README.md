@@ -1,12 +1,28 @@
-# 🚀 Customer Support Multi-Agent System v1.1.1
+# 🚀 Customer Support Multi-Agent System v1.1.2
 
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **complete test coverage**.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Tests](https://img.shields.io/badge/tests-35%20methods-blue)](https://github.com/darshil0/customer-support-agent)
-[![Version](https://img.shields.io/badge/version-1.1.1-green)](https://github.com/darshil0/customer-support-agent)
+[![Version](https://img.shields.io/badge/version-1.1.2-green)](https://github.com/darshil0/customer-support-agent)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
+
+---
+
+## 🎯 What's New in v1.1.2
+
+### 🚀 Bug Fixes & Architectural Enhancements
+- **Frontend Error Resilience**: Fixed application crash in `ErrorBoundary` by migrating to Vite-standard `import.meta.env.DEV`.
+- **UI Rendering Fix**: Resolved SVG validation errors in `Sparkline` components by sanitizing gradient IDs.
+- **Enhanced Grounding Sources**: Upgraded `ReportView` to support the latest Gemini 2.0 API response structure (nested `.web` property).
+- **Stable Gemini Model**: Upgraded core reporting service to use the official stable `gemini-2.0-flash` model.
+
+### ☕ Dependency Upgrades
+- **Spring Boot**: Upgraded to **3.4.5**.
+- **Google ADK**: Upgraded to **1.3.0**.
+- **Google Cloud AI**: Upgraded to **3.93.0**.
+- **Mockito**: Upgraded to **5.23.0**.
 
 ---
 
@@ -297,7 +313,7 @@ POST /api/refund/process
 mvn clean package
 
 # Run standalone
-java -jar target/customer-support-agent-1.1.0.jar
+java -jar target/customer-support-agent-1.1.2.jar
 ```
 
 ### Option 2: Docker Deployment
@@ -306,7 +322,7 @@ java -jar target/customer-support-agent-1.1.0.jar
 # Dockerfile
 FROM openjdk:17-jdk-slim
 WORKDIR /app
-COPY target/customer-support-agent-1.0.4.jar app.jar
+COPY target/customer-support-agent-1.1.2.jar app.jar
 EXPOSE 8000
 ENV GOOGLE_API_KEY=""
 ENTRYPOINT ["java", "-jar", "app.jar"]
@@ -314,23 +330,23 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 ```bash
 # Build image
-docker build -t support-agent:1.0.4 .
+docker build -t support-agent:1.1.2 .
 
 # Run container
 docker run -p 8000:8000 \
   -e GOOGLE_API_KEY=$GOOGLE_API_KEY \
-  support-agent:1.0.4
+  support-agent:1.1.2
 ```
 
 ### Option 3: Cloud Deployment (Google Cloud Run)
 
 ```bash
 # Build and push to Container Registry
-gcloud builds submit --tag gcr.io/[PROJECT-ID]/support-agent:1.0.4
+gcloud builds submit --tag gcr.io/[PROJECT-ID]/support-agent:1.1.2
 
 # Deploy to Cloud Run
 gcloud run deploy customer-support \
-  --image gcr.io/[PROJECT-ID]/support-agent:1.0.4 \
+  --image gcr.io/[PROJECT-ID]/support-agent:1.1.2 \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \

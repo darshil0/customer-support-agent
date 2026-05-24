@@ -30,6 +30,7 @@ export const Sparkline: React.FC<SparklineProps> = ({
 
   // Calculate area points for gradient fill
   const areaPoints = `0,${height} ${points} ${width},${height}`;
+  const gradientId = `gradient-${color.replace('#', '')}`;
 
   return (
     <svg 
@@ -40,7 +41,7 @@ export const Sparkline: React.FC<SparklineProps> = ({
       role="img"
     >
       <defs>
-        <linearGradient id={`gradient-${color}`} x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" style={{ stopColor: color, stopOpacity: 0.3 }} />
           <stop offset="100%" style={{ stopColor: color, stopOpacity: 0 }} />
         </linearGradient>
@@ -49,7 +50,7 @@ export const Sparkline: React.FC<SparklineProps> = ({
       {/* Area fill */}
       <polygon
         points={areaPoints}
-        fill={`url(#gradient-${color})`}
+        fill={`url(#${gradientId})`}
       />
       
       {/* Line */}

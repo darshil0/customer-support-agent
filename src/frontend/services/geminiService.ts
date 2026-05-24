@@ -36,7 +36,8 @@ export async function generateMarketReport(retries = 3): Promise<MarketReport> {
   for (let i = 0; i < retries; i++) {
     try {
       const model = genAI.getGenerativeModel({ 
-        model: 'gemini-2.0-flash-exp',
+        model: 'gemini-2.0-flash',
+        // @ts-ignore
         tools: [{ googleSearch: {} }]
       });
 

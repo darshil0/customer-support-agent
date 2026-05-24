@@ -1,8 +1,8 @@
 # Customer Support Multi-Agent System - Quick Start Script (PowerShell)
-# Version 1.0.4
+# Version 1.1.2
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "Customer Support Multi-Agent System v1.0.4" -ForegroundColor Cyan
+Write-Host "Customer Support Multi-Agent System v1.1.2" -ForegroundColor Cyan
 Write-Host "Quick Start Script" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
@@ -112,10 +112,10 @@ switch ($choice) {
         if ($LASTEXITCODE -eq 0) {
             Write-Host ""
             Write-Host "✓ JAR built successfully!" -ForegroundColor Green
-            Write-Host "Location: target/customer-support-agent-1.0.5.jar"
+            Write-Host "Location: target/customer-support-agent-1.1.2.jar"
             Write-Host ""
             Write-Host "To run the JAR:"
-            Write-Host "  java -jar target/customer-support-agent-1.0.5.jar"
+            Write-Host "  java -jar target/customer-support-agent-1.1.2.jar"
         } else {
             Write-Host "✗ JAR build failed" -ForegroundColor Red
             exit 1

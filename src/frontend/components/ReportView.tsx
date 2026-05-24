@@ -132,7 +132,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources }) => {
             {sources.map((source, index) => (
               <a
                 key={index}
-                href={source.uri || source.url || '#'}
+                href={source.web?.uri || source.uri || source.url || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block p-3 bg-gray-900/50 hover:bg-gray-900 rounded-lg transition-colors border border-gray-700 hover:border-blue-500"
@@ -153,10 +153,10 @@ export const ReportView: React.FC<ReportViewProps> = ({ report, sources }) => {
                   </svg>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">
-                      {source.title || `Source ${index + 1}`}
+                      {source.web?.title || source.title || `Source ${index + 1}`}
                     </p>
                     <p className="text-xs text-gray-400 truncate">
-                      {source.uri || source.url || 'No URL available'}
+                      {source.web?.uri || source.uri || source.url || 'No URL available'}
                     </p>
                   </div>
                 </div>
