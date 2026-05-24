@@ -24,7 +24,7 @@ public class App {
     return Map.of(
         "status", "UP",
         "message", "Customer Support API is running",
-        "version", "1.1.1");
+        "version", "1.1.2");
   }
 
   @GetMapping("/customer/{customerId}")
