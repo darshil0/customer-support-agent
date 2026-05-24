@@ -14,11 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Gemini Model Upgrade**: Switched model from deprecated experimental `gemini-2.0-flash-exp` to official stable `gemini-2.0-flash` in `geminiService.ts` for long-term reliability.
-- **Dependency Upgrades**:
-  - Upgraded **Spring Boot** to **3.4.5** in `pom.xml`.
-  - Upgraded **Google ADK** to **1.3.0** in `pom.xml`.
-  - Upgraded **Google Cloud AI Platform** to **3.93.0** in `pom.xml`.
-  - Upgraded **Mockito Core / Mockito JUnit Jupiter** to **5.23.0** in `pom.xml`.
+- **Dependency Upgrades**: Spring Boot to 3.4.5, Google ADK to 1.3.0, Google Cloud AI Platform to 3.93.0, and Mockito Core/JUnit Jupiter to 5.23.0.
 - **Synchronized Versioning**: Bumped project version to `1.1.2` across `pom.xml` and `package.json` for repository alignment.
 
 ## [1.1.1] - 2026-03-17
@@ -31,24 +27,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2026-02-02
 
-### 🎉 Major Tech Stack Upgrade & Modernization
-
 ### Added
 - **Report Persistence**: Implemented `localStorage` persistence for chat history and analysis reports.
-- **Copy Report Feature**: Added a clipboard integration to the `ReportView` component for easy sharing of insights.
-- **Tailwind CSS 4**: Migrated the entire styling system to Tailwind 4 for improved performance and modern CSS capabilities.
+- **Copy Report Feature**: Added clipboard integration to the `ReportView` component for easy sharing of insights.
+- **Tailwind CSS 4**: Migrated entire styling system to Tailwind 4 for improved performance and modern CSS capabilities.
 
 ### Changed
-- **Modernized Core Frameworks**:
-  - Upgraded **React** from 18 to **19.0.0**.
-  - Upgraded **Vite** to **7.0.0** and **Vitest** to **4.0.0**.
-  - Upgraded **Spring Boot** to **3.4.2**.
-  - Upgraded **Google ADK** to **0.5.0**.
+- **Modernized Core Frameworks**: Upgraded React from 18 to 19.0.0, Vite to 7.0.0, Vitest to 4.0.0, Spring Boot to 3.4.2, and Google ADK to 0.5.0.
 - **Refactored Components**: Improved `MarketChart` and `StockComparison` by moving sub-components outside the render cycle to prevent performance degradation from unnecessary remounts.
 - **Optimized Hooks**: Enhanced `useHistory` with lazy state initialization.
 
 ### Fixed
-- **State Persistence Bug**: Fixed an issue where the application state was not correctly hydrated from storage on initial load.
+- **State Persistence Bug**: Fixed issue where application state was not correctly hydrated from storage on initial load.
 - **Vitest Mocking**: Corrected environment variable and class constructor mocking in the frontend test suite to be compatible with Vitest 4 and React 19.
 - **JDK 17 Compatibility**: Reverted `fmt-maven-plugin` to 2.9.1 to ensure the build passes on JDK 17+ without module access errors.
 
@@ -56,103 +46,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Maven Build**: Corrected the `google-adk` and `swagger-annotations` dependencies in `pom.xml`.
-- **Java Test Failures**: Resolved a null pointer exception in the `CustomerSupportAgentTest`.
+- **Java Test Failures**: Resolved null pointer exception in the `CustomerSupportAgentTest`.
 - **Frontend Test Failures**: Mocked the `geminiService` to resolve frontend test failures.
-- **Code Formatting**: Formatted the entire codebase using `mvn fmt:format` and `npm run lint:fix`.
+- **Code Formatting**: Formatted entire codebase using `mvn fmt:format` and `npm run lint:fix`.
 
 ## [1.0.5] - 2025-12-19
 
 ### Fixed
-- Restored corrupted `App.java` (previously a duplicate of test file)
-- Fixed invalid Java in `AgentConfiguration.java` (removed prepended/appended XML content)
-- Updated frontend tests (`App.test.tsx`, `MarketChart.test.tsx`, `TickerTracker.test.tsx`, `geminiService.test.ts`) to use Vitest and match current component APIs
-- Fixed initial landing page text expectation in `App.test.tsx`
-- Corrected accidental rename of `.eslintrc.cjs` (removed leading space)
+- **App File Corruption**: Restored corrupted `App.java` (previously a duplicate of test file).
+- **Java Compilation Errors**: Fixed invalid Java in `AgentConfiguration.java` (removed prepended/appended XML content).
+- **Frontend Test Suite**: Updated tests (`App.test.tsx`, `MarketChart.test.tsx`, `TickerTracker.test.tsx`, `geminiService.test.ts`) to use Vitest and match current component APIs.
+- **Landing Page Text**: Fixed initial landing page text expectation in `App.test.tsx`.
+- **ESLint Configuration**: Corrected accidental rename of `.eslintrc.cjs` (removed leading space).
 
 ### Added
-- Added `quick-start.ps1` PowerShell script for Windows users
-- Added `.env` template for API key configuration
-- Cleaned up redundant and temporary files from the codebase for a professional structure
+- **Windows Setup Script**: Added `quick-start.ps1` PowerShell script for Windows users.
+- **Environment Template**: Added `.env` template for API key configuration.
+
+### Removed
+- **Code Cleanup**: Removed redundant and temporary files from the codebase for a professional structure.
 
 ## [1.0.4] - 2025-12-14
 
-### 🎉 Major Release - All Issues Fixed
-
 ### Fixed
-- Fixed all compilation errors in `CustomerSupportAgent.java`
-- Fixed parameter type mismatch in all 7 tool methods (`ToolContext` → `Map<String, Object>`)
-- Fixed all 35 test cases to achieve 100% pass rate
-- Fixed amount validation and rounding logic in payment operations
-- Fixed customer ID format validation across all tools
-- Fixed refund workflow validation state management
-- Fixed context caching mechanism in `getCustomerAccount`
-- Fixed null context handling in all tools
-- Fixed balance calculation precision issues
-- Fixed ticket ID and transaction ID generation
+- **Compilation Errors**: Fixed all compilation errors in `CustomerSupportAgent.java`.
+- **Parameter Type Mismatch**: Fixed parameter type mismatch in all 7 tool methods (`ToolContext` → `Map<String, Object>`).
+- **Test Suite**: Fixed all 35 test cases to achieve 100% pass rate.
+- **Amount Validation**: Fixed amount validation and rounding logic in payment operations.
+- **Customer ID Validation**: Fixed customer ID format validation across all tools.
+- **Refund Workflow**: Fixed refund workflow validation state management.
+- **Context Caching**: Fixed context caching mechanism in `getCustomerAccount`.
+- **Null Handling**: Fixed null context handling in all tools.
+- **Balance Precision**: Fixed balance calculation precision issues.
+- **ID Generation**: Fixed ticket ID and transaction ID generation.
 
 ### Added
-- Added comprehensive input validation in `ValidationUtils`
-- Added robust error handling with clear error messages
-- Added integration tests for complete workflows
-- Added detailed Javadoc comments for all public methods
-- Added REST API endpoints documentation
-- Added Docker deployment configuration
-- Added Cloud Run deployment instructions
-- Added performance metrics section
-- Added troubleshooting guide
+- **Input Validation**: Added comprehensive input validation in `ValidationUtils`.
+- **Error Handling**: Added robust error handling with clear error messages.
+- **Integration Tests**: Added integration tests for complete workflows.
+- **Documentation**: Added detailed Javadoc comments for all public methods and REST API endpoints documentation.
+- **Deployment**: Added Docker deployment configuration and Cloud Run deployment instructions.
+- **Performance Metrics**: Added performance metrics section and troubleshooting guide.
 
 ### Changed
-- Updated test suite from 33 to 35 methods (added 2 integration tests)
-- Enhanced `Configuration` class with better validation
-- Improved `TransactionIdGenerator` with reset capability
-- Updated README with complete documentation
-- Updated dependencies to latest stable versions
-- Improved code structure and organization
-
-### Improved
-- Better separation of concerns in all classes
-- Enhanced mock data initialization
-- Improved test coverage reporting
-- Better error messages throughout the application
-- Enhanced code comments and documentation
+- **Test Coverage**: Updated test suite from 33 to 35 methods (added 2 integration tests).
+- **Configuration Class**: Enhanced `Configuration` class with better validation.
+- **ID Generator**: Improved `TransactionIdGenerator` with reset capability.
+- **Documentation**: Updated README with complete documentation and dependencies to latest stable versions.
+- **Code Structure**: Improved code structure and organization with better separation of concerns.
+- **Mock Data**: Enhanced mock data initialization and improved test coverage reporting.
+- **Code Comments**: Better error messages throughout the application and enhanced code comments.
 
 ## [1.0.3] - 2025-12-12
 
 ### Added
-- Initial multi-agent architecture implementation
-- 7 core tools for customer support operations
-- Spring Boot REST API integration
-- 33 test methods with parameterized testing
-- Mock customer data for testing
-- Transaction ID generation utility
-- Input validation utilities
+- **Multi-Agent Architecture**: Initial implementation of multi-agent architecture.
+- **Core Tools**: 7 core tools for customer support operations.
+- **REST API**: Spring Boot REST API integration.
+- **Test Suite**: 33 test methods with parameterized testing.
+- **Mock Data**: Mock customer data for testing.
+- **Utilities**: Transaction ID generation utility and input validation utilities.
 
-### Known Issues (Fixed in 1.0.4)
-- ToolContext parameter type mismatch
-- Some test cases failing
-- Missing validation in some edge cases
-- Incomplete error handling
+### Known Issues
+- ToolContext parameter type mismatch (fixed in 1.0.4).
+- Some test cases failing (fixed in 1.0.4).
+- Missing validation in some edge cases (fixed in 1.0.4).
+- Incomplete error handling (fixed in 1.0.4).
 
 ## [1.0.2] - 2025-12-10
 
 ### Added
-- Basic agent configuration
-- Initial tool implementations
-- Basic test structure
+- **Agent Configuration**: Basic agent configuration.
+- **Tool Implementations**: Initial tool implementations.
+- **Test Structure**: Basic test structure.
 
 ## [1.0.1] - 2025-12-08
 
 ### Added
-- Project structure setup
-- Maven configuration
-- Spring Boot skeleton
+- **Project Setup**: Project structure setup.
+- **Build Configuration**: Maven configuration.
+- **Framework**: Spring Boot skeleton.
 
 ## [1.0.0] - 2025-12-05
 
 ### Added
-- Initial project creation
-- Basic documentation
-- License file
+- **Project Creation**: Initial project creation.
+- **Documentation**: Basic documentation.
+- **Licensing**: License file.
 
 ---
 
@@ -177,29 +157,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading from 1.0.3 to 1.0.4
 
-1. **Update dependencies in pom.xml**
+1. **Update dependencies**:
    ```bash
    mvn clean install -U
    ```
 
-2. **Update tool method signatures**
-   - Change `ToolContext` parameters to `Map<String, Object>`
-   - Update all tool calls in your code
+2. **Update tool method signatures**: Change `ToolContext` parameters to `Map<String, Object>` and update all tool calls in your code.
 
-3. **Run tests to verify**
+3. **Run tests to verify**:
    ```bash
    mvn test
    ```
 
-4. **Update configuration if needed**
-   - Check `application.properties` for new settings
-   - Verify environment variables
+4. **Update configuration if needed**: Check `application.properties` for new settings and verify environment variables.
 
 ### Breaking Changes
-- None - backward compatible with 1.0.3 API endpoints
+- None—backward compatible with 1.0.3 API endpoints.
 
 ### Deprecations
-- None in this release
+- None in this release.
 
 ---
 
@@ -218,22 +194,22 @@ public Map<String, Object> getCustomerAccount(String customerId, Map<String, Obj
 ```
 
 **Migration Steps:**
-1. Replace all `ToolContext` imports with `Map<String, Object>`
-2. Update method signatures in your custom tools
-3. Update test cases to use `HashMap<>` instead of `ToolContext`
-4. Run `mvn clean install` to verify
+1. Replace all `ToolContext` imports with `Map<String, Object>`.
+2. Update method signatures in your custom tools.
+3. Update test cases to use `HashMap<>` instead of `ToolContext`.
+4. Run `mvn clean install` to verify.
 
 ---
 
 ## Future Plans
 
-### Planned for 1.1.0
+### Planned for 1.2.0
 - Database integration (PostgreSQL)
 - GraphQL API
 - WebSocket support
 - Advanced analytics
 
-### Planned for 1.2.0
+### Planned for 1.3.0
 - Machine learning integration
 - Slack/Teams notifications
 - Mobile app support
@@ -247,7 +223,7 @@ public Map<String, Object> getCustomerAccount(String customerId, Map<String, Obj
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to this project.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on contributing to this project.
 
 ---
 
