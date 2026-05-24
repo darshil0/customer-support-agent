@@ -6,7 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.1.2] - 2026-05-24
-
 ### Fixed
 - **Frontend Crash**: Replaced global `process.env.NODE_ENV` with Vite-standard `import.meta.env.DEV` in `ErrorBoundary.tsx` to prevent application crash on errors.
 - **Sparkline SVG Rendering**: Sanitized gradient IDs in `Sparkline.tsx` by removing the `#` symbol, correcting invalid SVG/XML structure and fixing broken area fills.
@@ -14,8 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Gemini Model Upgrade**: Switched model from deprecated experimental `gemini-2.0-flash-exp` to official stable `gemini-2.0-flash` in `geminiService.ts` for long-term reliability.
-- **Dependency Upgrades**: Spring Boot to 3.4.5, Google ADK to 1.3.0, Google Cloud AI Platform to 3.93.0, and Mockito Core/JUnit Jupiter to 5.23.0.
+- **Dependency Upgrades**:
+  - Upgraded **Spring Boot** to **3.4.5** in `pom.xml`.
+  - Upgraded **Google ADK** to **1.3.0** in `pom.xml`.
+  - Upgraded **Google Cloud AI Platform** to **3.93.0** in `pom.xml`.
+  - Upgraded **Mockito Core / Mockito JUnit Jupiter** to **5.23.0** in `pom.xml`.
 - **Synchronized Versioning**: Bumped project version to `1.1.2` across `pom.xml` and `package.json` for repository alignment.
+
 
 ## [1.1.1] - 2026-03-17
 
