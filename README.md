@@ -22,7 +22,7 @@ The repository consists of two primary services:
 ## 🎯 Version History
 
 ### 🚀 Major Tech Stack Modernization
-- **Backend**: Upgraded to **Spring Boot 3.4.2** and **Google ADK 0.5.0**.
+- **Backend**: Upgraded to **Spring Boot 3.4.2** and **Google ADK 1.3.0**.
 - **Frontend**: Upgraded to **React 19**, **Vite 7**, and **Vitest 4**.
 - **Styling**: Migrated to **Tailwind CSS 4** for improved performance and modern features.
 - **Testing**: Updated to **JUnit 5.11.4** and **Mockito 5.21.0**.
