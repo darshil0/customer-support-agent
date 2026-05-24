@@ -1,4 +1,4 @@
-# 🚀 Customer Support Multi-Agent System v1.1.2
+# 🚀 Customer Support Multi-Agent System v1.1.3
 
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **complete test coverage**.
 
@@ -10,21 +10,6 @@
 
 ---
 
-## 🎯 What's New in v1.1.2
-
-### 🚀 Production Reliability & Bug Fixes
-- **Vite/React Compatibility**: Replaced non-standard `process.env.NODE_ENV` with standard `import.meta.env.DEV` to fix browser crashes when error boundaries are activated.
-- **Sparkline SVG Rendering**: Sanitized gradient ID strings by removing invalid `#` symbols, resolving SVG/XML rendering bugs and bringing back gradient fills.
-- **Search Grounding Sources**: Added complete support for Google Gemini 2.0 standard nested grounding chunks (`web.title` and `web.uri`), ensuring references render properly.
-- **Gemini Stable Model Upgrade**: Bumped model from experimental `gemini-2.0-flash-exp` to official stable `gemini-2.0-flash` for direct search queries in `geminiService.ts`.
-
-### ☕ Backend & Dependency Upgrades
-- **Spring Boot**: Upgraded from `3.4.2` to **3.4.5** (latest stable 3.4 release).
-- **Google ADK**: Upgraded from `0.5.0` to **1.3.0** (latest stable Agent Development Kit).
-- **Google Cloud AI Platform**: Upgraded from `3.83.0` to **3.93.0** (latest release).
-- **Mockito**: Upgraded from `5.21.0` to **5.23.0** (latest stable).
-
----
 
 ## 🏗️ System Architecture
 
