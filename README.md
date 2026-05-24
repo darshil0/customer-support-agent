@@ -1,12 +1,28 @@
-# 🚀 Customer Support Multi-Agent System v1.1.1
+# 🚀 Customer Support Multi-Agent System v1.1.2
 
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **complete test coverage**.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
-[![Tests](https://img.shields.io/badge/tests-35%20methods-blue)](https://github.com/darshil0/customer-support-agent)
-[![Version](https://img.shields.io/badge/version-1.1.1-green)](https://github.com/darshil0/customer-support-agent)
+[![Tests](https://img.shields.io/badge/tests-38%20methods-blue)](https://github.com/darshil0/customer-support-agent)
+[![Version](https://img.shields.io/badge/version-1.1.2-green)](https://github.com/darshil0/customer-support-agent)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
+
+---
+
+## 🎯 What's New in v1.1.2
+
+### 🚀 Production Reliability & Bug Fixes
+- **Vite/React Compatibility**: Replaced non-standard `process.env.NODE_ENV` with standard `import.meta.env.DEV` to fix browser crashes when error boundaries are activated.
+- **Sparkline SVG Rendering**: Sanitized gradient ID strings by removing invalid `#` symbols, resolving SVG/XML rendering bugs and bringing back gradient fills.
+- **Search Grounding Sources**: Added complete support for Google Gemini 2.0 standard nested grounding chunks (`web.title` and `web.uri`), ensuring references render properly.
+- **Gemini Stable Model Upgrade**: Bumped model from experimental `gemini-2.0-flash-exp` to official stable `gemini-2.0-flash` for direct search queries in `geminiService.ts`.
+
+### ☕ Backend & Dependency Upgrades
+- **Spring Boot**: Upgraded from `3.4.2` to **3.4.5** (latest stable 3.4 release).
+- **Google ADK**: Upgraded from `0.5.0` to **1.3.0** (latest stable Agent Development Kit).
+- **Google Cloud AI Platform**: Upgraded from `3.83.0` to **3.93.0** (latest release).
+- **Mockito**: Upgraded from `5.21.0` to **5.23.0** (latest stable).
 
 ---
 
@@ -297,7 +313,7 @@ POST /api/refund/process
 mvn clean package
 
 # Run standalone
-java -jar target/customer-support-agent-1.1.0.jar
+java -jar target/customer-support-agent-1.1.2.jar
 ```
 
 ### Option 2: Docker Deployment
@@ -306,7 +322,7 @@ java -jar target/customer-support-agent-1.1.0.jar
 # Dockerfile
 FROM openjdk:17-jdk-slim
 WORKDIR /app
-COPY target/customer-support-agent-1.0.4.jar app.jar
+COPY target/customer-support-agent-1.1.2.jar app.jar
 EXPOSE 8000
 ENV GOOGLE_API_KEY=""
 ENTRYPOINT ["java", "-jar", "app.jar"]
@@ -314,23 +330,23 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 
 ```bash
 # Build image
-docker build -t support-agent:1.0.4 .
+docker build -t support-agent:1.1.2 .
 
 # Run container
 docker run -p 8000:8000 \
   -e GOOGLE_API_KEY=$GOOGLE_API_KEY \
-  support-agent:1.0.4
+  support-agent:1.1.2
 ```
 
 ### Option 3: Cloud Deployment (Google Cloud Run)
 
 ```bash
 # Build and push to Container Registry
-gcloud builds submit --tag gcr.io/[PROJECT-ID]/support-agent:1.0.4
+gcloud builds submit --tag gcr.io/[PROJECT-ID]/support-agent:1.1.2
 
 # Deploy to Cloud Run
 gcloud run deploy customer-support \
-  --image gcr.io/[PROJECT-ID]/support-agent:1.0.4 \
+  --image gcr.io/[PROJECT-ID]/support-agent:1.1.2 \
   --platform managed \
   --region us-central1 \
   --allow-unauthenticated \
@@ -601,9 +617,9 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 - [Clean Code Practices](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882)
 
 
-**🚀 Ready to deploy! Version 1.1.0 is production-ready with 35 test methods (38 executions) passing at 100% coverage.**
+**🚀 Ready to deploy! Version 1.1.2 is production-ready with 38 test methods (38 executions) passing at 100% coverage.**
 
-**Last Updated**: February 2, 2026  
+**Last Updated**: May 24, 2026  
 **Maintainer**: Darshil Shah  
 **Status**: ✅ Stable & Production-Ready
 

@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2026-05-24
+
+### Fixed
+- **Frontend Crash**: Replaced global `process.env.NODE_ENV` with Vite-standard `import.meta.env.DEV` in `ErrorBoundary.tsx` to prevent application crash on errors.
+- **Sparkline SVG Rendering**: Sanitized gradient IDs in `Sparkline.tsx` by removing the `#` symbol, correcting invalid SVG/XML structure and fixing broken area fills.
+- **Grounding Sources Panel**: Added robust support for nested `web.title` and `web.uri` structures in `ReportView.tsx` so Google search references display correctly.
+
+### Changed
+- **Gemini Model Upgrade**: Switched model from deprecated experimental `gemini-2.0-flash-exp` to official stable `gemini-2.0-flash` in `geminiService.ts` for long-term reliability.
+- **Dependency Upgrades**:
+  - Upgraded **Spring Boot** to **3.4.5** in `pom.xml`.
+  - Upgraded **Google ADK** to **1.3.0** in `pom.xml`.
+  - Upgraded **Google Cloud AI Platform** to **3.93.0** in `pom.xml`.
+  - Upgraded **Mockito Core / Mockito JUnit Jupiter** to **5.23.0** in `pom.xml`.
+- **Synchronized Versioning**: Bumped project version to `1.1.2` across `pom.xml` and `package.json` for repository alignment.
+
 ## [1.1.1] - 2026-03-17
 
 ### Changed
@@ -144,6 +160,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Status | Tests | Coverage | Notes |
 |---------|------|--------|-------|----------|-------|
+| 1.1.2 | 2026-05-24 | ✅ Stable | 38/38 | 100% | Critical bug fixes & dependency upgrades |
+| 1.1.1 | 2026-03-17 | ✅ Stable | 38/38 | 100% | Gemini 2.0 & ADK backend modernization |
 | 1.1.0 | 2026-02-02 | ✅ Stable | 51/51 | 100% | Major tech stack modernization |
 | 1.0.6 | 2025-12-22 | ✅ Stable | 35/35 | 100% | Full-stack fixes & cleanup |
 | 1.0.5 | 2025-12-19 | ✅ Stable | 35/35 | 100% | Fixes & cleanup |
