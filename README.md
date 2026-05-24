@@ -10,43 +10,6 @@
 
 ---
 
-## 🎯 What's New in v1.1.2
-
-### 🚀 Production Reliability & Bug Fixes
-- **Vite/React Compatibility**: Replaced non-standard `process.env.NODE_ENV` with standard `import.meta.env.DEV` to fix browser crashes when error boundaries are activated.
-- **Sparkline SVG Rendering**: Sanitized gradient ID strings by removing invalid `#` symbols, resolving SVG/XML rendering bugs and bringing back gradient fills.
-- **Search Grounding Sources**: Added complete support for Google Gemini 2.0 standard nested grounding chunks (`web.title` and `web.uri`), ensuring references render properly.
-- **Gemini Stable Model Upgrade**: Bumped model from experimental `gemini-2.0-flash-exp` to official stable `gemini-2.0-flash` for direct search queries in `geminiService.ts`.
-
-### ☕ Backend & Dependency Upgrades
-- **Spring Boot**: Upgraded from `3.4.2` to **3.4.5** (latest stable 3.4 release).
-- **Google ADK**: Upgraded from `0.5.0` to **1.3.0** (latest stable Agent Development Kit).
-- **Google Cloud AI Platform**: Upgraded from `3.83.0` to **3.93.0** (latest release).
-- **Mockito**: Upgraded from `5.21.0` to **5.23.0** (latest stable).
-
----
-
-## 🎯 What's New in v1.1.0
-
-### 🚀 Major Tech Stack Modernization
-- **Backend**: Upgraded to **Spring Boot 3.4.2** and **Google ADK 0.5.0**.
-- **Frontend**: Upgraded to **React 19**, **Vite 7**, and **Vitest 4**.
-- **Styling**: Migrated to **Tailwind CSS 4** for improved performance and modern features.
-- **Testing**: Updated to **JUnit 5.11.4** and **Mockito 5.21.0**.
-
-### ✨ New Features & Improvements
-- **Report Persistence**: Chat history and analysis reports are now persisted in `localStorage`.
-- **Copy to Clipboard**: Added a "Copy Report" feature to easily share AI-generated insights.
-- **Optimized Performance**: Refactored core components (`MarketChart`, `StockComparison`) to eliminate "component inside render" anti-patterns, significantly reducing unnecessary re-renders.
-- **Lazy Initialization**: Enhanced `useHistory` hook with lazy state initialization for better performance.
-
-### ✅ Bug Fixes
-- **State Restoration**: Fixed a bug where application history was not correctly restored on reload.
-- **Test Stability**: Resolved Vitest mocking issues related to environment variables and class constructors.
-- **JDK 17+ Compatibility**: Switched to `fmt-maven-plugin` 2.9.1 to resolve module access issues on modern JDKs.
-
----
-
 ## ✨ Features
 
 ### 🎯 Multi-Agent Architecture
