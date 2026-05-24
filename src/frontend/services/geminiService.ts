@@ -1,154 +1,286 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import axios, { AxiosInstance } from 'axios';
 
-const apiKey = import.meta.env.VITE_API_KEY || '';
-
-const genAI = new GoogleGenerativeAI(apiKey);
-
-export interface MarketReport {
-  text: string;
-  groundingSources: any[];
-}
-
-export interface SectorData {
-  name: string;
-  value: number;
-  fill: string;
-}
-
-export interface StockData {
-  symbol: string;
-  price: number;
-  change: number;
-  sparkline: number[];
-}
-
-export async function generateMarketReport(retries = 3): Promise<MarketReport> {
-  if (!apiKey) {
-    console.warn('VITE_API_KEY is not defined. Returning mock data.');
-    return {
-      text: '## Mock Market Report\n\nThis is a mock report because the API key is not configured.',
-      groundingSources: [],
+interface GeminiRequestOptions {
+  temperature?: number;
+  topP?: number;
+  topK?: number;
+  maxOutputTokens?: number;
+  groundingConfig?: {
+    googleSearchRetrieval?: {
+      disable?: boolean;
     };
+  };
+}
+
+interface GeminiMessage {
+  role: 'user' | 'model';
+  parts: Array<{ text: string }>;
+}
+
+interface GenerateContentRequest {
+  contents: GeminiMessage[];
+  generationConfig?: {
+    temperature?: number;
+    topP?: number;
+    topK?: number;
+    maxOutputTokens?: number;
+  };
+  groundingConfig?: {
+    googleSearchRetrieval?: {
+      disable?: boolean;
+    };
+  };
+}
+
+interface GroundingChunk {
+  web?: {
+    title?: string;
+    uri?: string;
+  };
+}
+
+interface GenerateContentResponse {
+  candidates: Array<{
+    content: {
+      parts: Array<{ text: string }>;
+    };
+    groundingMetadata?: {
+      searchQueries?: string[];
+      groundingChunks?: GroundingChunk[];
+      webSearchQueries?: string[];
+    };
+  }>;
+  usageMetadata: {
+    promptTokenCount: number;
+    candidatesTokenCount: number;
+    totalTokenCount: number;
+  };
+}
+
+class GeminiService {
+  private client: AxiosInstance;
+  private apiKey: string;
+  private model = 'gemini-2.0-flash'; // Stable model instead of experimental
+  private baseURL = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
+    this.client = axios.create({
+      baseURL: this.baseURL,
+      timeout: 30000,
+    });
   }
 
-  let lastError: Error | null = null;
+  /**
+   * Generate content with optional search grounding
+   * Precondition: apiKey is valid, prompt is non-empty string
+   * @param prompt User prompt
+   * @param options Optional configuration (temperature, grounding, etc.)
+   * @returns Generated text with optional grounding sources
+   */
+  async generateContent(
+    prompt: string,
+    options: GeminiRequestOptions = {}
+  ): Promise<{
+    text: string;
+    groundingSources: GroundingChunk[];
+    usage: {
+      promptTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
+  }> {
+    // Validation
+    if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+      throw new Error('Prompt must be a non-empty string');
+    }
 
-  for (let i = 0; i < retries; i++) {
     try {
-      const model = genAI.getGenerativeModel({ 
-        model: 'gemini-2.0-flash',
-        // @ts-ignore
-        tools: [{ googleSearch: {} }]
-      });
+      const requestBody: GenerateContentRequest = {
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: options.temperature ?? 0.7,
+          topP: options.topP ?? 0.95,
+          topK: options.topK ?? 40,
+          maxOutputTokens: options.maxOutputTokens ?? 2048,
+        },
+      };
 
-      const currentDate = new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-
-      const prompt = `Generate a comprehensive S&P 500 market analysis report for ${currentDate}.
-
-Include the following sections:
-
-1. **Market Snapshot**: Current S&P 500 level, daily change, and overall market sentiment
-2. **Key Drivers**: Major factors influencing today's market movement
-3. **Top Movers**: Notable gainers and losers across different sectors
-4. **Sector Performance**: Analysis of which sectors are leading or lagging
-5. **Economic Indicators**: Relevant economic data released today
-6. **Market Outlook**: Brief perspective on what to watch for in the coming days
-
-Please use real-time data and cite your sources. Format the response in markdown.`;
-
-      const result = await model.generateContent(prompt);
-      
-      if (!result || !result.response) {
-        throw new Error('No response received from API');
+      // Add grounding if requested
+      if (options.groundingConfig) {
+        requestBody.groundingConfig = options.groundingConfig;
       }
 
-      const text = result.response.text();
-      const groundingSources = result.response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+      const response = await this.client.post<GenerateContentResponse>(
+        `${this.model}:generateContent?key=${this.apiKey}`,
+        requestBody
+      );
+
+      // Validate response structure
+      if (
+        !response.data.candidates ||
+        response.data.candidates.length === 0
+      ) {
+        throw new Error('No candidates in response');
+      }
+
+      const candidate = response.data.candidates[0];
+      const text =
+        candidate.content.parts[0]?.text || '';
+
+      // Extract grounding sources (Gemini 2.0 format)
+      const groundingSources =
+        candidate.groundingMetadata?.groundingChunks || [];
 
       return {
         text,
-        groundingSources
+        groundingSources,
+        usage: {
+          promptTokens: response.data.usageMetadata.promptTokenCount,
+          outputTokens: response.data.usageMetadata.candidatesTokenCount,
+          totalTokens: response.data.usageMetadata.totalTokenCount,
+        },
       };
-
-    } catch (error: any) {
-      lastError = error;
-      
-      console.error(`Attempt ${i + 1} failed:`, error);
-
-      // Handle specific error types
-      if (error.message?.includes('API_KEY_INVALID') || error.message?.includes('API key')) {
-        throw new Error('Invalid API key. Please check your VITE_API_KEY in the .env file and ensure it has Gemini API access.');
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.error?.message || error.message;
+        throw new Error(`Gemini API Error: ${message}`);
       }
-      
-      if (error.message?.includes('RATE_LIMIT') || error.message?.includes('quota')) {
-        if (i < retries - 1) {
-          const waitTime = (i + 1) * 2000;
-          console.log(`Rate limited (Attempt ${i + 1}/${retries}). Waiting ${waitTime}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-          continue;
-        }
-        throw new Error('API Rate limit exceeded. Please try again later or check your quota in Google AI Studio.');
-      }
-
-      if (error.message?.includes('PERMISSION_DENIED')) {
-        throw new Error('API access denied. Please verify your API key permissions.');
-      }
-
-      // Retry for transient errors
-      if (i < retries - 1) {
-        const waitTime = 1000 * (i + 1);
-        console.log(`Retrying in ${waitTime}ms...`);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
-        continue;
-      }
+      throw error;
     }
   }
 
-  throw new Error(`Failed to generate report after ${retries} attempts: ${lastError?.message || 'Unknown error'}`);
-}
+  /**
+   * Generate content with search grounding enabled
+   * Precondition: apiKey is valid, query is non-empty string
+   * @param query Search query
+   * @param options Optional configuration
+   * @returns Generated response with web search grounding
+   */
+  async generateWithSearchGrounding(
+    query: string,
+    options: Omit<GeminiRequestOptions, 'groundingConfig'> = {}
+  ): Promise<{
+    text: string;
+    groundingSources: Array<{ title?: string; uri?: string }>;
+    usage: {
+      promptTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
+  }> {
+    const result = await this.generateContent(query, {
+      ...options,
+      groundingConfig: {
+        googleSearchRetrieval: {
+          disable: false,
+        },
+      },
+    });
 
-export function getMockSectorData(): SectorData[] {
-  return [
-    { name: 'Technology', value: 28.5, fill: '#3b82f6' },
-    { name: 'Healthcare', value: 13.2, fill: '#10b981' },
-    { name: 'Financials', value: 11.8, fill: '#f59e0b' },
-    { name: 'Consumer Discretionary', value: 10.9, fill: '#8b5cf6' },
-    { name: 'Communication Services', value: 8.7, fill: '#ec4899' },
-    { name: 'Industrials', value: 8.3, fill: '#06b6d4' },
-    { name: 'Consumer Staples', value: 6.4, fill: '#84cc16' },
-    { name: 'Energy', value: 4.2, fill: '#f97316' },
-    { name: 'Utilities', value: 2.8, fill: '#6366f1' },
-    { name: 'Real Estate', value: 2.5, fill: '#14b8a6' },
-    { name: 'Materials', value: 2.7, fill: '#a855f7' }
-  ];
-}
-
-export function getMockStockData(): StockData[] {
-  const symbols = [
-    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRK.B',
-    'UNH', 'JNJ', 'V', 'WMT', 'XOM', 'JPM', 'PG', 'MA', 'HD', 'CVX',
-    'MRK', 'ABBV', 'KO', 'PEP', 'COST', 'AVGO', 'LLY', 'TMO', 'CSCO',
-    'ACN', 'MCD', 'ABT', 'DHR', 'NEE', 'CRM', 'VZ', 'ADBE', 'TXN',
-    'NKE', 'DIS', 'CMCSA', 'WFC', 'PM', 'INTC', 'BMY', 'UPS', 'QCOM'
-  ];
-
-  return symbols.map(symbol => {
-    const basePrice = Math.random() * 500 + 50;
-    const change = (Math.random() - 0.5) * 10;
-    const sparkline = Array.from({ length: 5 }, () => 
-      basePrice + (Math.random() - 0.5) * 20
-    );
+    // Transform grounding chunks to consistent format
+    const sources = result.groundingSources.map((chunk) => ({
+      title: chunk.web?.title,
+      uri: chunk.web?.uri,
+    }));
 
     return {
-      symbol,
-      price: basePrice,
-      change,
-      sparkline
+      text: result.text,
+      groundingSources: sources,
+      usage: result.usage,
     };
-  });
+  }
+
+  /**
+   * Chat with multi-turn context
+   * Precondition: messages array is non-empty, each message has role and content
+   * @param messages Conversation history
+   * @param options Optional configuration
+   * @returns Model response
+   */
+  async chat(
+    messages: Array<{
+      role: 'user' | 'model';
+      content: string;
+    }>,
+    options: GeminiRequestOptions = {}
+  ): Promise<{
+    text: string;
+    groundingSources: GroundingChunk[];
+    usage: {
+      promptTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
+  }> {
+    // Validation
+    if (!Array.isArray(messages) || messages.length === 0) {
+      throw new Error('Messages must be a non-empty array');
+    }
+
+    try {
+      const contents: GeminiMessage[] = messages.map((msg) => ({
+        role: msg.role,
+        parts: [{ text: msg.content }],
+      }));
+
+      const requestBody: GenerateContentRequest = {
+        contents,
+        generationConfig: {
+          temperature: options.temperature ?? 0.7,
+          topP: options.topP ?? 0.95,
+          topK: options.topK ?? 40,
+          maxOutputTokens: options.maxOutputTokens ?? 2048,
+        },
+      };
+
+      if (options.groundingConfig) {
+        requestBody.groundingConfig = options.groundingConfig;
+      }
+
+      const response = await this.client.post<GenerateContentResponse>(
+        `${this.model}:generateContent?key=${this.apiKey}`,
+        requestBody
+      );
+
+      if (
+        !response.data.candidates ||
+        response.data.candidates.length === 0
+      ) {
+        throw new Error('No candidates in response');
+      }
+
+      const candidate = response.data.candidates[0];
+      const text = candidate.content.parts[0]?.text || '';
+      const groundingSources =
+        candidate.groundingMetadata?.groundingChunks || [];
+
+      return {
+        text,
+        groundingSources,
+        usage: {
+          promptTokens: response.data.usageMetadata.promptTokenCount,
+          outputTokens: response.data.usageMetadata.candidatesTokenCount,
+          totalTokens: response.data.usageMetadata.totalTokenCount,
+        },
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.error?.message || error.message;
+        throw new Error(`Gemini API Error: ${message}`);
+      }
+      throw error;
+    }
+  }
+
+  getModel(): string {
+    return this.model;
+  }
 }
+
+export default GeminiService;

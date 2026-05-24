@@ -3,7 +3,7 @@
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **complete test coverage**.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
-[![Tests](https://img.shields.io/badge/tests-35%20methods-blue)](https://github.com/darshil0/customer-support-agent)
+[![Tests](https://img.shields.io/badge/tests-38%20methods-blue)](https://github.com/darshil0/customer-support-agent)
 [![Version](https://img.shields.io/badge/version-1.1.2-green)](https://github.com/darshil0/customer-support-agent)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
@@ -12,21 +12,29 @@
 
 ## 🎯 What's New in v1.1.2
 
-### 🚀 Bug Fixes & Architectural Enhancements
-- **Frontend Error Resilience**: Fixed application crash in `ErrorBoundary` by migrating to Vite-standard `import.meta.env.DEV`.
-- **UI Rendering Fix**: Resolved SVG validation errors in `Sparkline` components by sanitizing gradient IDs.
-- **Enhanced Grounding Sources**: Upgraded `ReportView` to support the latest Gemini 2.0 API response structure (nested `.web` property).
-- **Stable Gemini Model**: Upgraded core reporting service to use the official stable `gemini-2.0-flash` model.
+### 🚀 Production Reliability & Bug Fixes
+- **Vite/React Compatibility**: Replaced non-standard `process.env.NODE_ENV` with standard `import.meta.env.DEV` to fix browser crashes when error boundaries are activated.
+- **Sparkline SVG Rendering**: Sanitized gradient ID strings by removing invalid `#` symbols, resolving SVG/XML rendering bugs and bringing back gradient fills.
+- **Search Grounding Sources**: Added complete support for Google Gemini 2.0 standard nested grounding chunks (`web.title` and `web.uri`), ensuring references render properly.
+- **Gemini Stable Model Upgrade**: Bumped model from experimental `gemini-2.0-flash-exp` to official stable `gemini-2.0-flash` for direct search queries in `geminiService.ts`.
 
-### ☕ Dependency Upgrades
-- **Spring Boot**: Upgraded to **3.4.5**.
-- **Google ADK**: Upgraded to **1.3.0**.
-- **Google Cloud AI**: Upgraded to **3.93.0**.
-- **Mockito**: Upgraded to **5.23.0**.
+### ☕ Backend & Dependency Upgrades
+- **Spring Boot**: Upgraded from `3.4.2` to **3.4.5** (latest stable 3.4 release).
+- **Google ADK**: Upgraded from `0.5.0` to **1.3.0** (latest stable Agent Development Kit).
+- **Google Cloud AI Platform**: Upgraded from `3.83.0` to **3.93.0** (latest release).
+- **Mockito**: Upgraded from `5.21.0` to **5.23.0** (latest stable).
 
 ---
 
-## 🎯 What's New in v1.1.0
+## 🏗️ System Architecture
+
+The repository consists of two primary services:
+1.  **Vite React Frontend**: A modern dashboard for market analysis, running on **port 3000**.
+2.  **Spring Boot Backend**: A customer support multi-agent system, running on **port 8000**.
+
+---
+
+## 🎯 Version History
 
 ### 🚀 Major Tech Stack Modernization
 - **Backend**: Upgraded to **Spring Boot 3.4.2** and **Google ADK 0.5.0**.
@@ -567,7 +575,9 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 
 ## 🗺️ Roadmap
 
-### Version 1.1.1 (Q1 2026)
+### Version 1.1.2 (May 2026)
+- [x] Production reliability & bug fixes
+- [x] Stable Gemini 2.0 integration
 - [ ] GraphQL API support
 - [ ] Real database integration (PostgreSQL/MongoDB)
 - [ ] Advanced analytics dashboard
@@ -617,9 +627,9 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 - [Clean Code Practices](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882)
 
 
-**🚀 Ready to deploy! Version 1.1.0 is production-ready with 35 test methods (38 executions) passing at 100% coverage.**
+**🚀 Ready to deploy! Version 1.1.2 is production-ready with 38 test methods (38 executions) passing at 100% coverage.**
 
-**Last Updated**: February 2, 2026  
+**Last Updated**: May 24, 2026  
 **Maintainer**: Darshil Shah  
 **Status**: ✅ Stable & Production-Ready
 
