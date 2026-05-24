@@ -4,7 +4,7 @@
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Tests](https://img.shields.io/badge/tests-38%20methods-blue)](https://github.com/darshil0/customer-support-agent)
-[![Version](https://img.shields.io/badge/version-1.1.2-green)](https://github.com/darshil0/customer-support-agent)
+[![Version](https://img.shields.io/badge/version-1.1.3-green)](https://github.com/darshil0/customer-support-agent)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
 
