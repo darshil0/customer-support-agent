@@ -1,170 +1,136 @@
-import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import React from 'react';
+import { Copy, ExternalLink } from 'lucide-react';
 
-interface ReportViewProps {
-  report: string;
-  sources: any[];
+interface GroundingSource {
+  web?: {
+    title?: string;
+    uri?: string;
+  };
+  title?: string;
+  uri?: string;
 }
 
-export const ReportView: React.FC<ReportViewProps> = ({ report, sources }) => {
-  const [isCopied, setIsCopied] = useState(false);
+interface ReportViewProps {
+  title: string;
+  content: string;
+  groundingSources?: GroundingSource[];
+  timestamp?: string;
+}
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(report);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy report:', err);
-    }
+export const ReportView: React.FC<ReportViewProps> = ({
+  title,
+  content,
+  groundingSources = [],
+  timestamp,
+}) => {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopyReport = () => {
+    const reportText = `${title}\n\n${content}\n\n${
+      groundingSources.length > 0
+        ? 'Sources:\n' +
+          groundingSources
+            .map((source) => {
+              const sourceTitle = source.web?.title || source.title || 'Unknown';
+              const sourceUri = source.web?.uri || source.uri || '#';
+              return `- ${sourceTitle}: ${sourceUri}`;
+            })
+            .join('\n')
+        : ''
+    }`;
+
+    navigator.clipboard.writeText(reportText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  // Safely extract source title and URI with nested property support
+  const extractSourceInfo = (
+    source: GroundingSource
+  ): { title: string; uri: string } => {
+    const title =
+      source.web?.title ||
+      source.title ||
+      'Reference';
+    const uri =
+      source.web?.uri ||
+      source.uri ||
+      '#';
+    return { title, uri };
   };
 
   return (
-    <div data-testid="report-container" className="space-y-6">
-      {/* Report Content */}
-      <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6 relative group">
-        <button
-          onClick={handleCopy}
-          className="absolute top-4 right-4 p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all opacity-0 group-hover:opacity-100 flex items-center gap-2 text-sm text-gray-300"
-          aria-label="Copy report to clipboard"
-        >
-          {isCopied ? (
-            <>
-              <svg className="w-4 h-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Copied!
-            </>
-          ) : (
-            <>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-              </svg>
-              Copy Report
-            </>
-          )}
-        </button>
-        <div 
-          data-testid="report-markdown-body"
-          className="prose prose-invert prose-lg max-w-none"
-        >
-          <ReactMarkdown
-            components={{
-              h1: ({ children }) => (
-                <h1 className="text-3xl font-bold mb-4 text-white border-b border-gray-700 pb-2">
-                  {children}
-                </h1>
-              ),
-              h2: ({ children }) => (
-                <h2 className="text-2xl font-bold mt-8 mb-4 text-white">
-                  {children}
-                </h2>
-              ),
-              h3: ({ children }) => (
-                <h3 className="text-xl font-semibold mt-6 mb-3 text-white">
-                  {children}
-                </h3>
-              ),
-              p: ({ children }) => (
-                <p className="text-gray-300 mb-4 leading-relaxed">
-                  {children}
-                </p>
-              ),
-              ul: ({ children }) => (
-                <ul className="list-disc list-inside space-y-2 mb-4 text-gray-300">
-                  {children}
-                </ul>
-              ),
-              ol: ({ children }) => (
-                <ol className="list-decimal list-inside space-y-2 mb-4 text-gray-300">
-                  {children}
-                </ol>
-              ),
-              li: ({ children }) => (
-                <li className="ml-4">{children}</li>
-              ),
-              strong: ({ children }) => (
-                <strong className="font-semibold text-white">{children}</strong>
-              ),
-              em: ({ children }) => (
-                <em className="italic text-blue-300">{children}</em>
-              ),
-              code: ({ children }) => (
-                <code className="bg-gray-900 px-2 py-1 rounded text-blue-300 text-sm">
-                  {children}
-                </code>
-              ),
-              blockquote: ({ children }) => (
-                <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-400 my-4">
-                  {children}
-                </blockquote>
-              ),
-            }}
-          >
-            {report}
-          </ReactMarkdown>
-        </div>
+    <div className="w-full max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{title}</h1>
+        {timestamp && (
+          <p className="text-sm text-gray-500">
+            Generated: {new Date(timestamp).toLocaleString()}
+          </p>
+        )}
+      </div>
+
+      {/* Copy Button */}
+      <button
+        onClick={handleCopyReport}
+        className="mb-6 flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+      >
+        <Copy size={16} />
+        {copied ? 'Copied!' : 'Copy Report'}
+      </button>
+
+      {/* Content */}
+      <div className="prose prose-sm max-w-none mb-8">
+        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+          {content}
+        </p>
       </div>
 
       {/* Grounding Sources */}
-      {sources && sources.length > 0 && (
-        <div 
-          data-testid="grounding-sources"
-          className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6"
-        >
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <svg 
-              className="w-5 h-5 text-blue-400" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" 
-              />
-            </svg>
-            Sources & References
-          </h3>
+      {groundingSources && groundingSources.length > 0 && (
+        <div className="border-t pt-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Sources
+          </h2>
           <div className="space-y-3">
-            {sources.map((source, index) => (
-              <a
-                key={index}
-                href={source.uri || source.url || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block p-3 bg-gray-900/50 hover:bg-gray-900 rounded-lg transition-colors border border-gray-700 hover:border-blue-500"
-              >
-                <div className="flex items-start gap-3">
-                  <svg 
-                    className="w-5 h-5 text-blue-400 flex-shrink-0 mt-1" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
-                    />
-                  </svg>
+            {groundingSources.map((source, index) => {
+              const { title: sourceTitle, uri: sourceUri } =
+                extractSourceInfo(source);
+              return (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <ExternalLink
+                    size={16}
+                    className="text-blue-600 flex-shrink-0 mt-0.5"
+                  />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">
-                      {source.title || `Source ${index + 1}`}
-                    </p>
-                    <p className="text-xs text-gray-400 truncate">
-                      {source.uri || source.url || 'No URL available'}
+                    <a
+                      href={sourceUri}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 font-medium block truncate"
+                    >
+                      {sourceTitle}
+                    </a>
+                    <p className="text-xs text-gray-500 truncate">
+                      {sourceUri}
                     </p>
                   </div>
                 </div>
-              </a>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <div className="mt-8 pt-6 border-t text-center text-sm text-gray-500">
+        <p>Report generated by FinPulse AI</p>
+      </div>
     </div>
   );
 };
