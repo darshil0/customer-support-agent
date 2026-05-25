@@ -1,10 +1,10 @@
-# 🚀 Customer Support Multi-Agent System v1.1.3
+# 🚀 Customer Support Multi-Agent System v1.1.4
 
 **Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **complete test coverage**.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Tests](https://img.shields.io/badge/tests-38%20methods-blue)](https://github.com/darshil0/customer-support-agent)
-[![Version](https://img.shields.io/badge/version-1.1.3-green)](https://github.com/darshil0/customer-support-agent)
+[![Version](https://img.shields.io/badge/version-1.1.4-green)](https://github.com/darshil0/customer-support-agent)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Java](https://img.shields.io/badge/Java-17+-orange)](https://www.oracle.com/java/)
 
@@ -22,21 +22,23 @@ The repository consists of two primary services:
 ## 🎯 Version History
 
 ### 🚀 Major Tech Stack Modernization
-- **Backend**: Upgraded to **Spring Boot 3.4.2** and **Google ADK 1.3.0**.
+- **Backend**: Upgraded to **Spring Boot 3.4.5** and **Google ADK 0.3.0**.
 - **Frontend**: Upgraded to **React 19**, **Vite 7**, and **Vitest 4**.
 - **Styling**: Migrated to **Tailwind CSS 4** for improved performance and modern features.
-- **Testing**: Updated to **JUnit 5.11.4** and **Mockito 5.21.0**.
+- **Testing**: Updated to **JUnit 5.11.4** and **Mockito 5.23.0**.
 
 ### ✨ New Features & Improvements
+- **Markdown Support**: Added `react-markdown` for rich text rendering of AI reports.
 - **Report Persistence**: Chat history and analysis reports are now persisted in `localStorage`.
 - **Copy to Clipboard**: Added a "Copy Report" feature to easily share AI-generated insights.
 - **Optimized Performance**: Refactored core components (`MarketChart`, `StockComparison`) to eliminate "component inside render" anti-patterns, significantly reducing unnecessary re-renders.
 - **Lazy Initialization**: Enhanced `useHistory` hook with lazy state initialization for better performance.
 
 ### ✅ Bug Fixes
+- **Build Reliability**: Migrated to `spotless-maven-plugin` for consistent Java formatting.
 - **State Restoration**: Fixed a bug where application history was not correctly restored on reload.
 - **Test Stability**: Resolved Vitest mocking issues related to environment variables and class constructors.
-- **JDK 17+ Compatibility**: Switched to `fmt-maven-plugin` 2.9.1 to resolve module access issues on modern JDKs.
+- **JDK 17+ Compatibility**: Switched to modern formatting plugins to resolve module access issues on modern JDKs.
 
 ---
 
@@ -612,9 +614,9 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 - [Clean Code Practices](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882)
 
 
-**🚀 Ready to deploy! Version 1.1.2 is production-ready with 38 test methods (38 executions) passing at 100% coverage.**
+**🚀 Ready to deploy! Version 1.1.4 is production-ready with 38 test methods (38 executions) passing at 100% coverage.**
 
-**Last Updated**: May 24, 2026  
+**Last Updated**: May 25, 2026
 **Maintainer**: Darshil Shah  
 **Status**: ✅ Stable & Production-Ready
 
