@@ -261,21 +261,21 @@ const result = await generateMarketReport();
 
 ## Future Plans
 
-### Planned for 1.2.0
+### Planned for 1.2.0 (Q2 2026)
 - Database integration (PostgreSQL)
-- GraphQL API
-- WebSocket support
-- Advanced analytics
-- Enhanced error boundary with detailed stack traces
+- GraphQL API support
+- WebSocket for real-time updates
+- Advanced analytics dashboard
+- Enhanced error boundary
 - Custom logger service
 
-### Planned for 1.3.0
+### Planned for 1.3.0 (Q3 2026)
 - Machine learning integration
 - Slack/Teams notifications
-- Mobile app support
+- Mobile app support (React Native)
 - Real-time market alerts
 
-### Planned for 2.0.0
+### Planned for 2.0.0 (Q4 2026)
 - Microservices architecture
 - Kubernetes support
 - Multi-tenant capabilities
