@@ -15,6 +15,8 @@ export const Sparkline: React.FC<SparklineProps> = ({
   width = 100,
   showFill = true,
 }) => {
+  const gradientId = React.useId().replace(/:/g, '');
+
   if (!data || data.length === 0) {
     return (
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
@@ -39,8 +41,7 @@ export const Sparkline: React.FC<SparklineProps> = ({
     })
     .join(' ');
 
-  // Sanitized gradient ID (no # prefix)
-  const gradientId = `sparkline_gradient_${Math.random().toString(36).substring(7)}`;
+  // Sanitized color
   const cleanColor = color.startsWith('#') ? color : `#${color}`;
 
   return (

@@ -15,25 +15,26 @@ import {
 } from './services/geminiService';
 
 function App() {
-  const [report, setReport] = useState<MarketReport | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-
-  // Load persisted report on mount
-  useEffect(() => {
-    const savedReport = localStorage.getItem('last_report');
-    const savedDate = localStorage.getItem('last_updated');
-
-    if (savedReport && savedDate) {
+  const [report, setReport] = useState<MarketReport | null>(() => {
+    const saved = localStorage.getItem('last_report');
+    if (saved) {
       try {
-        setReport(JSON.parse(savedReport));
-        setLastUpdated(new Date(savedDate));
+        return JSON.parse(saved);
       } catch (e) {
-        console.error('Failed to load persisted report:', e);
+        console.error('Failed to parse persisted report:', e);
+        return null;
       }
     }
-  }, []);
+    return null;
+  });
+
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(() => {
+    const saved = localStorage.getItem('last_updated');
+    return saved ? new Date(saved) : null;
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Persist report when it changes
   useEffect(() => {

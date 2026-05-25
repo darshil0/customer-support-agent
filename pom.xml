@@ -48,13 +48,7 @@
 
         <!-- Google Agent Development Kit (ADK) -->
         <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-ai</artifactId>
-            <version>${google-cloud-ai.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google</groupId>
+            <groupId>com.google.adk</groupId>
             <artifactId>google-adk</artifactId>
             <version>${google-adk.version}</version>
         </dependency>
