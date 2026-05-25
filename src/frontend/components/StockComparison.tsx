@@ -23,22 +23,26 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export const StockComparison: React.FC<StockComparisonProps> = ({ stocks }) => {
+  // Transform data for recharts - memoize to prevent recalculation on every render
+  const chartData = React.useMemo(() => {
+    if (!stocks || stocks.length === 0) return [];
+
+    return Array.from({ length: 5 }, (_, index) => {
+      const dataPoint: any = { day: `Day ${index + 1}` };
+
+      stocks.forEach((stock) => {
+        if (stock.sparkline && stock.sparkline[index] !== undefined) {
+          dataPoint[stock.symbol] = stock.sparkline[index];
+        }
+      });
+
+      return dataPoint;
+    });
+  }, [stocks]);
+
   if (!stocks || stocks.length === 0) {
     return null;
   }
-
-  // Transform data for recharts
-  const chartData = Array.from({ length: 5 }, (_, index) => {
-    const dataPoint: any = { day: `Day ${index + 1}` };
-    
-    stocks.forEach(stock => {
-      if (stock.sparkline && stock.sparkline[index] !== undefined) {
-        dataPoint[stock.symbol] = stock.sparkline[index];
-      }
-    });
-    
-    return dataPoint;
-  });
 
   const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
