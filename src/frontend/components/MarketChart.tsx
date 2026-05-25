@@ -22,13 +22,13 @@ const CustomTooltip = ({ active, payload }: any) => {
 export const MarketChart: React.FC<MarketChartProps> = ({ data }) => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
-  const onPieEnter = (_: any, index: number) => {
+  const onPieEnter = React.useCallback((_: any, index: number) => {
     setActiveIndex(index);
-  };
+  }, []);
 
-  const onPieLeave = () => {
+  const onPieLeave = React.useCallback(() => {
     setActiveIndex(null);
-  };
+  }, []);
 
   return (
     <div 
