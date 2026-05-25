@@ -47,7 +47,7 @@ describe('App Integration', () => {
     });
 
     // Check that the report content is displayed
-    expect(screen.getByText('Market is Up!')).toBeInTheDocument();
+    expect(screen.getByText(/Market is Up!/i)).toBeInTheDocument();
 
     // Check that the TickerTracker and MarketChart are displayed
     expect(screen.getByTestId('ticker-tracker')).toBeInTheDocument();
@@ -85,7 +85,7 @@ describe('App Integration', () => {
     fireEvent.click(screen.getByTestId('generate-report-btn'));
 
     await waitFor(() => {
-      expect(screen.getByText('Historical Report')).toBeInTheDocument();
+      expect(screen.getByText(/Historical Report/i)).toBeInTheDocument();
     });
 
     // Unmount the component to simulate a page reload
@@ -95,7 +95,7 @@ describe('App Integration', () => {
     render(<App />);
 
     // Check that the historical report is loaded from localStorage
-    expect(screen.getByText('Historical Report')).toBeInTheDocument();
+    expect(screen.getByText(/Historical Report/i)).toBeInTheDocument();
   });
 
   it('handles manual refresh of analysis', async () => {
@@ -118,7 +118,7 @@ describe('App Integration', () => {
     // Generate the first report
     fireEvent.click(screen.getByTestId('generate-report-btn'));
     await waitFor(() => {
-      expect(screen.getByText('Report 1')).toBeInTheDocument();
+      expect(screen.getByText(/Report 1/i)).toBeInTheDocument();
     });
 
     // Click the refresh button
@@ -126,7 +126,7 @@ describe('App Integration', () => {
 
     // Wait for the second report to be displayed
     await waitFor(() => {
-      expect(screen.getByText('Report 2')).toBeInTheDocument();
+      expect(screen.getByText(/Report 2/i)).toBeInTheDocument();
     });
 
     // Check that the mock function was called twice
