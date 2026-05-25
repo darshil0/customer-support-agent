@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Copy, ExternalLink } from 'lucide-react';
 
 interface GroundingSource {
@@ -72,8 +73,8 @@ export const ReportView: React.FC<ReportViewProps> = ({
 
       {/* Report Content */}
       <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-lg p-6 prose prose-invert max-w-none">
-        <div className="text-gray-300 whitespace-pre-wrap leading-relaxed">
-          {report}
+        <div className="text-gray-300 leading-relaxed">
+          <ReactMarkdown>{report}</ReactMarkdown>
         </div>
       </div>
 
