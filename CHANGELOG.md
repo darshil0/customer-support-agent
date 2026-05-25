@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2026-05-25
+### Added
+- **Markdown Support**: Integrated `react-markdown` in `ReportView` component for rich text rendering of AI-generated reports.
+- **Lucide Icons**: Added `lucide-react` for consistent iconography across the dashboard.
+
+### Fixed
+- **Maven Build Resolution**: Fixed `fmt-maven-plugin` resolution error by migrating to `spotless-maven-plugin` with `google-java-format`.
+- **ADK Dependency**: Corrected `google-adk` dependency coordinates and version to ensure stable backend builds.
+- **Test Robustness**: Updated `App.test.tsx` with regex matching to improve test stability when rendering markdown content.
+
+### Changed
+- **Version Alignment**: Synchronized project version to `1.1.4` across `pom.xml`, `package.json`, and documentation.
+- **Dependency Upgrades**: Upgraded all frontend packages to their latest compatible versions via `npm update`.
+
 ## [1.1.3] - 2026-05-24
 ### Fixed
 - **ReportView Component Props Mismatch**: Corrected interface signature from `{title, content, groundingSources, timestamp}` to `{report, sources}` to match actual props passed from `App.tsx`. Prevents undefined prop errors and ensures markdown report renders correctly.
