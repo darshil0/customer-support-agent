@@ -22,7 +22,7 @@ The repository consists of two primary services:
 ## 🎯 Version History
 
 ### 🚀 Major Tech Stack Modernization
-- **Backend**: Upgraded to **Spring Boot 3.4.5** and **Google ADK 0.3.0**.
+- **Backend**: Upgraded to **Spring Boot 3.4.5** and **Google ADK 1.3.0**.
 - **Frontend**: Upgraded to **React 19**, **Vite 7**, and **Vitest 4**.
 - **Styling**: Migrated to **Tailwind CSS 4** for improved performance and modern features.
 - **Testing**: Updated to **JUnit 5.11.4** and **Mockito 5.23.0**.
@@ -616,7 +616,7 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 
 **🚀 Ready to deploy! Version 1.1.4 is production-ready with 38 test methods (38 executions) passing at 100% coverage.**
 
-**Last Updated**: May 25, 2026
+**Last Updated**: May 25, 2026  
 **Maintainer**: Darshil Shah  
 **Status**: ✅ Stable & Production-Ready
 

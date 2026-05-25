@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Maven Build Resolution**: Fixed `fmt-maven-plugin` resolution error by migrating to `spotless-maven-plugin` with `google-java-format`.
-- **ADK Dependency**: Corrected `google-adk` dependency coordinates and updated to version `0.3.0` to ensure stable backend builds.
+- **ADK Dependency**: Corrected `google-adk` dependency coordinates and version to ensure stable backend builds.
 - **Test Robustness**: Updated `App.test.tsx` with regex matching to improve test stability when rendering markdown content.
 
 ### Changed
