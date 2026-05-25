@@ -9,10 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Markdown Support**: Integrated `react-markdown` in `ReportView` component for rich text rendering of AI-generated reports.
 - **Lucide Icons**: Added `lucide-react` for consistent iconography across the dashboard.
+- **Optimized Performance**: Refactored `MarketChart` and `StockComparison` with `useCallback` and `useMemo` to prevent unnecessary re-renders.
+- **Lazy Initialization**: Enhanced `App` component with lazy state initialization for persisted reports.
 
 ### Fixed
 - **Maven Build Resolution**: Fixed `fmt-maven-plugin` resolution error by migrating to `spotless-maven-plugin` with `google-java-format`.
-- **ADK Dependency**: Corrected `google-adk` dependency coordinates and version to ensure stable backend builds.
+- **ADK Dependency**: Corrected `google-adk` dependency coordinates and updated to version `1.3.0` to ensure stable backend builds.
 - **Test Robustness**: Updated `App.test.tsx` with regex matching to improve test stability when rendering markdown content.
 
 ### Changed
