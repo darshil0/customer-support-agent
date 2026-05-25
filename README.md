@@ -562,7 +562,7 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 
 ## 🗺️ Roadmap
 
-### Version 1.1.2 (May 2026)
+### Version 1.1.4 (May 2026)
 - [x] Production reliability & bug fixes
 - [x] Stable Gemini 2.0 integration
 - [ ] GraphQL API support
