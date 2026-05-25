@@ -565,28 +565,31 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 ### Version 1.1.4 (May 2026)
 - [x] Production reliability & bug fixes
 - [x] Stable Gemini 2.0 integration
-- [ ] GraphQL API support
-- [ ] Real database integration (PostgreSQL/MongoDB)
-- [ ] Advanced analytics dashboard
-- [ ] Multi-language support (i18n)
-- [ ] WebSocket for real-time updates
-- [ ] Enhanced security (OAuth2, JWT)
+- [x] Markdown support for AI reports
+- [x] Lucide icon integration
+- [x] Frontend performance optimizations
+- [x] Lazy state initialization
+- [x] ADK 1.3.0 & Spring Boot 3.4.5 upgrade
 
 ### Version 1.2.0 (Q2 2026)
-- [ ] Machine learning recommendations
-- [ ] Slack/Teams integration
-- [ ] Mobile app support (React Native)
-- [ ] Advanced reporting with charts
-- [ ] Email notification system
-- [ ] Audit logging
+- [ ] Database integration (PostgreSQL)
+- [ ] GraphQL API support
+- [ ] WebSocket for real-time updates
+- [ ] Advanced analytics dashboard
+- [ ] Enhanced error boundary
+- [ ] Custom logger service
 
-### Version 2.0.0 (Q3 2026)
+### Version 1.3.0 (Q3 2026)
+- [ ] Machine learning integration
+- [ ] Slack/Teams notifications
+- [ ] Mobile app support (React Native)
+- [ ] Real-time market alerts
+
+### Version 2.0.0 (Q4 2026)
 - [ ] Microservices architecture
-- [ ] Kubernetes deployment
-- [ ] AI-powered chatbot interface
-- [ ] Multi-tenant support
-- [ ] Advanced analytics with ML
-- [ ] Plugin system for extensibility
+- [ ] Kubernetes support
+- [ ] Multi-tenant capabilities
+- [ ] Advanced authentication (OAuth2, JWT)
 
 ---
 
