@@ -5,9 +5,10 @@ export interface GroundingChunk {
   };
 }
 
+// Aligned with geminiService.ts MarketReport shape and useHistory usage
 export interface MarketReport {
-  content: string;
-  sources: GroundingChunk[];
+  text: string;
+  groundingSources: GroundingChunk[];
   timestamp: string;
 }
 
@@ -24,10 +25,10 @@ export interface SectorData {
   [key: string]: any;
 }
 
+// Aligned with geminiService.ts StockData — price and change are numbers, not strings
 export interface StockData {
   symbol: string;
-  price: string;
-  change: string;
-  percentChange: string;
+  price: number;
+  change: number;
   sparkline: number[];
 }
