@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Customer Support Multi-Agent System - Quick Start Script
-# Version 1.1.2
+# Version 1.1.4
 
 set -e  # Exit on error
 
 echo "============================================================"
-echo "Customer Support Multi-Agent System v1.1.2"
+echo "Customer Support Multi-Agent System v1.1.4"
 echo "Quick Start Script"
 echo "============================================================"
 echo ""
@@ -125,10 +125,10 @@ case $choice in
         if [ $? -eq 0 ]; then
             echo ""
             echo -e "${GREEN}✓ JAR built successfully!${NC}"
-            echo "Location: target/customer-support-agent-1.1.2.jar"
+            echo "Location: target/customer-support-agent-1.1.4.jar"
             echo ""
             echo "To run the JAR:"
-            echo "  java -jar target/customer-support-agent-1.1.2.jar"
+            echo "  java -jar target/customer-support-agent-1.1.4.jar"
         else
             echo -e "${RED}✗ JAR build failed${NC}"
             exit 1
