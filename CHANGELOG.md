@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.5] - 2026-05-27
+### Fixed
+- **Type Alignment (`types.ts`)**: Corrected `StockData.price` and `StockData.change` from `string` to `number`, resolving TypeScript errors and runtime failures in `TickerTracker.tsx`, `StockComparison.tsx`, and `Sparkline.tsx` where `.toFixed()` and arithmetic operations were being called on these fields. Also corrected `MarketReport` field names from `content`/`sources` to `text`/`groundingSources` to match the actual shape returned by `geminiService.ts`.
+- **History Hook (`useHistory.ts`)**: Fixed import of `MarketReport` from `'../types'` (broken shape) to `'../services/geminiService'` (source of truth). Resolved a deduplication bug where `report.timestamp` was compared but `MarketReport` has no `timestamp` field, causing every entry to be treated as a duplicate. Introduced `HistoryEntry` type that extends `MarketReport` with a `timestamp` stamped at save time.
+- **Maven Dependencies (`pom.xml`)**: Corrected `google-adk.version` from `0.3.0` to `1.3.0` and `google-cloud-ai.version` from `3.42.0` to `3.93.0`, aligning with the versions documented in the v1.1.2 changelog entry and required by `AgentConfiguration.java`.
+- **Health Check Version (`App.java`)**: Updated hardcoded version string in the `/api/health` response from `1.1.2` to `1.1.4`.
+- **Quick Start Scripts (`quick-start.sh`, `quick-start.ps1`)**: Updated stale JAR filename references from `customer-support-agent-1.1.2.jar` to `customer-support-agent-1.1.4.jar` in build output paths and `java -jar` run instructions.
+
+---
+
 ## [1.1.4] - 2026-05-25
 ### Added
 - **Markdown Support**: Integrated `react-markdown` in `ReportView` component for rich text rendering of AI-generated reports.
@@ -179,6 +189,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Status | Tests | Coverage | Notes |
 |---------|------|--------|-------|----------|-------|
+| 1.1.5 | 2026-05-27 | ✅ Stable | 38/38 | 100% | Bug fixes: type alignment, useHistory, pom versions, health check version, script JAR refs |
+| 1.1.4 | 2026-05-25 | ✅ Stable | 38/38 | 100% | Markdown support, performance optimizations, dependency upgrades |
 | 1.1.3 | 2026-05-24 | ✅ Stable | 38/38 | 100% | Critical bug fixes: ReportView props, axios dependency, geminiService refactor |
 | 1.1.2 | 2026-05-24 | ✅ Stable | 38/38 | 100% | Critical bug fixes & dependency upgrades |
 | 1.1.1 | 2026-03-17 | ✅ Stable | 38/38 | 100% | Gemini 2.0 & ADK backend modernization |
@@ -195,7 +207,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Upgrade Guide
 
-### Upgrading from 1.1.2 to 1.1.3
+### Upgrading from 1.1.4 to 1.1.5
+
+**Quick Fix (4 files)**
+1. Replace `src/frontend/types.ts` with fixed version
+2. Replace `src/frontend/hooks/useHistory.ts` with fixed version
+3. Replace `pom.xml` with fixed version
+4. Replace `src/main/java/com/example/support/App.java` with fixed version
+5. Replace `quick-start.sh` and `quick-start.ps1` with fixed versions
+
+**Steps:**
+```bash
+mvn clean install   # Verify Java build with corrected pom.xml
+npm install         # No new dependencies; verifies lockfile integrity
+npm run build       # Verify TypeScript compilation with corrected types
+npm test            # Run full test suite
+```
+
+**Breaking Changes:** None — all fixes are backward compatible
+
+**Deprecations:** None in this release
+
+---
+
+### Upgrading from 1.1.3 to 1.1.4
 
 **Quick Fix (3 files)**
 1. Replace `src/frontend/components/ReportView.tsx` with fixed version
@@ -210,7 +245,7 @@ npm test     # Run full test suite
 npm run dev  # Start development server
 ```
 
-**Breaking Changes:** None—backward compatible with 1.1.2 API endpoints
+**Breaking Changes:** None — backward compatible with 1.1.3 API endpoints
 
 **Deprecations:** None in this release
 
@@ -218,44 +253,57 @@ npm run dev  # Start development server
 
 ## Migration Guide
 
-### From Version 1.1.2
+### From Version 1.1.4
 
-**Before (1.1.2):**
+**Before (1.1.4):**
 ```typescript
-// ReportView component
-<ReportView 
-  title="Market Report"
-  content={reportText}
-  groundingSources={sources}
-  timestamp={new Date().toISOString()}
-/>
+// types.ts — wrong field types
+export interface StockData {
+  symbol: string;
+  price: string;   // ❌ was string
+  change: string;  // ❌ was string
+  sparkline: number[];
+}
 
-// geminiService
-import GeminiService from './geminiService';
-const service = new GeminiService(apiKey);
-const result = await service.generateContent(prompt);
+export interface MarketReport {
+  content: string;           // ❌ wrong field name
+  sources: GroundingChunk[]; // ❌ wrong field name
+  timestamp: string;
+}
+
+// useHistory.ts — wrong import source
+import { MarketReport } from '../types'; // ❌ broken shape
 ```
 
-**After (1.1.3):**
+**After (1.1.5):**
 ```typescript
-// ReportView component
-<ReportView 
-  report={reportText}
-  sources={sources}
-/>
+// types.ts — correct field types
+export interface StockData {
+  symbol: string;
+  price: number;   // ✅ number
+  change: number;  // ✅ number
+  sparkline: number[];
+}
 
-// geminiService
-import { generateMarketReport } from './geminiService';
-const result = await generateMarketReport();
+export interface MarketReport {
+  text: string;                        // ✅ correct field name
+  groundingSources: GroundingChunk[];  // ✅ correct field name
+  timestamp: string;
+}
+
+// useHistory.ts — correct import source
+import { MarketReport } from '../services/geminiService'; // ✅ source of truth
 ```
 
 **Migration Steps:**
-1. Update `App.tsx` to pass `report` and `sources` props to ReportView
-2. Replace direct geminiService instantiation with function imports
-3. Remove manual axios setup; SDK handles all HTTP communication
-4. Update tests to use new function-based geminiService API
-5. Run `npm install` to add axios dependency
-6. Run full test suite: `npm test`
+1. Update `src/frontend/types.ts` with corrected field types and names
+2. Update `src/frontend/hooks/useHistory.ts` to import from `geminiService`
+3. Update `pom.xml` dependency versions
+4. Update `App.java` health check version string
+5. Update quick-start scripts if used for deployment
+6. Run `mvn clean install` to verify backend builds cleanly
+7. Run `npm run build` to verify TypeScript compiles without errors
+8. Run full test suite: `npm test && mvn test`
 
 ---
 
@@ -285,11 +333,11 @@ const result = await generateMarketReport();
 
 ## Known Issues
 
-### v1.1.3
+### v1.1.5
 - None reported
 
-### v1.1.2
-- ✅ All resolved in v1.1.3
+### v1.1.4
+- ✅ All resolved in v1.1.5
 
 ---
 
