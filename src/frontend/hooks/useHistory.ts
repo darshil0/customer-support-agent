@@ -1,11 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { MarketReport } from '../types';
+import { useState, useCallback } from 'react';
+import { MarketReport } from '../services/geminiService';
 
 const STORAGE_KEY = 'finagent_history';
 const MAX_HISTORY_ITEMS = 10;
 
+// Extend the service's MarketReport with a timestamp for history tracking
+export interface HistoryEntry extends MarketReport {
+  timestamp: string;
+}
+
 export const useHistory = () => {
-  const [history, setHistory] = useState<MarketReport[]>(() => {
+  const [history, setHistory] = useState<HistoryEntry[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -23,12 +28,17 @@ export const useHistory = () => {
   });
 
   const addToHistory = useCallback((report: MarketReport) => {
+    const entry: HistoryEntry = {
+      ...report,
+      timestamp: new Date().toISOString(),
+    };
+
     setHistory((prev) => {
       // Prevent duplicates based on timestamp
-      const exists = prev.some((item) => item.timestamp === report.timestamp);
+      const exists = prev.some((item) => item.timestamp === entry.timestamp);
       if (exists) return prev;
 
-      const updated = [report, ...prev].slice(0, MAX_HISTORY_ITEMS);
+      const updated = [entry, ...prev].slice(0, MAX_HISTORY_ITEMS);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       } catch (e) {
