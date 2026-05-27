@@ -1,165 +1,71 @@
-import React, { useState, useEffect } from 'react';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { Header } from './components/Header';
-import { Hero } from './components/Hero';
-import { ReportView } from './components/ReportView';
-import { MarketChart } from './components/MarketChart';
-import { TickerTracker } from './components/TickerTracker';
-import { LoadingState } from './components/LoadingState';
-import { ErrorState } from './components/ErrorState';
-import { 
-  generateMarketReport, 
-  getMockSectorData, 
-  getMockStockData,
-  type MarketReport 
-} from './services/geminiService';
+package com.example.support;
 
-function App() {
-  const [report, setReport] = useState<MarketReport | null>(() => {
-    const saved = localStorage.getItem('last_report');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse persisted report:', e);
-        return null;
-      }
-    }
-    return null;
-  });
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.*;
 
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(() => {
-    const saved = localStorage.getItem('last_updated');
-    return saved ? new Date(saved) : null;
-  });
+/** Main application entry point and REST API controller. */
+@SpringBootApplication
+@RestController
+@RequestMapping("/api")
+@CrossOrigin(origins = "*")
+public class App {
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  @Autowired private CustomerSupportAgent agent;
 
-  // Persist report when it changes
-  useEffect(() => {
-    if (report && lastUpdated) {
-      localStorage.setItem('last_report', JSON.stringify(report));
-      localStorage.setItem('last_updated', lastUpdated.toISOString());
-    }
-  }, [report, lastUpdated]);
+  public static void main(String[] args) {
+    SpringApplication.run(App.class, args);
+  }
 
-  const sectorData = getMockSectorData();
-  const stockData = getMockStockData();
+  @GetMapping("/health")
+  public Map<String, Object> healthCheck() {
+    return Map.of(
+        "status", "UP",
+        "message", "Customer Support API is running",
+        "version", "1.1.4");
+  }
 
-  const handleGenerateReport = async () => {
-    setIsLoading(true);
-    setError(null);
+  @GetMapping("/customer/{customerId}")
+  public Map<String, Object> getCustomer(@PathVariable String customerId) {
+    return agent.getCustomerAccount(customerId, null);
+  }
 
-    try {
-      const result = await generateMarketReport();
-      setReport(result);
-      setLastUpdated(new Date());
-    } catch (err: any) {
-      console.error('Error generating report:', err);
-      setError(err.message || 'Failed to generate report. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  @PutMapping("/account")
+  public Map<String, Object> updateAccount(@RequestBody Map<String, String> request) {
+    return agent.updateAccountSettings(
+        request.get("customerId"), request.get("email"), request.get("tier"), null);
+  }
 
-  const handleRefresh = () => {
-    handleGenerateReport();
-  };
+  @PostMapping("/payment")
+  public Map<String, Object> processPayment(@RequestBody Map<String, Object> request) {
+    return agent.processPayment((String) request.get("customerId"), request.get("amount"), null);
+  }
 
-  return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-        <Header />
-        
-        <main className="container mx-auto px-4 py-8">
-          {!report && !isLoading && !error && (
-            <Hero onGenerate={handleGenerateReport} />
-          )}
+  @PostMapping("/ticket")
+  public Map<String, Object> createTicket(@RequestBody Map<String, String> request) {
+    return agent.createTicket(
+        request.get("customerId"),
+        request.get("subject"),
+        request.get("description"),
+        request.get("priority"),
+        null);
+  }
 
-          {isLoading && (
-            <LoadingState />
-          )}
+  @GetMapping("/tickets/{customerId}")
+  public Map<String, Object> getTickets(
+      @PathVariable String customerId, @RequestParam(defaultValue = "all") String status) {
+    return agent.getTickets(customerId, status, null);
+  }
 
-          {error && (
-            <ErrorState 
-              message={error} 
-              onRetry={handleGenerateReport}
-            />
-          )}
+  @PostMapping("/refund/validate")
+  public Map<String, Object> validateRefund(@RequestBody Map<String, String> request) {
+    return agent.validateRefundEligibility(request.get("customerId"), null);
+  }
 
-          {report && !isLoading && (
-            <div className="space-y-8">
-              {/* Report Header */}
-              <div className="flex justify-between items-center">
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">Market Analysis Report</h2>
-                  {lastUpdated && (
-                    <p className="text-gray-400 text-sm">
-                      Last updated: {lastUpdated.toLocaleString()}
-                    </p>
-                  )}
-                </div>
-                <button
-                  data-testid="refresh-analysis-btn"
-                  onClick={handleRefresh}
-                  disabled={isLoading}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
-                  aria-label="Refresh market analysis"
-                >
-                  <svg 
-                    className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`}
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-                    />
-                  </svg>
-                  Refresh
-                </button>
-              </div>
-
-              {/* Main Content Grid */}
-              <div className="grid lg:grid-cols-3 gap-8">
-                {/* Report Section - Takes 2 columns */}
-                <div className="lg:col-span-2 space-y-6">
-                  <ReportView 
-                    report={report.text}
-                    sources={report.groundingSources}
-                  />
-                </div>
-
-                {/* Sidebar - Takes 1 column */}
-                <div className="space-y-6">
-                  <MarketChart data={sectorData} />
-                </div>
-              </div>
-
-              {/* Stock Tracker Section */}
-              <div className="mt-8">
-                <TickerTracker stocks={stockData} />
-              </div>
-            </div>
-          )}
-        </main>
-
-        {/* Footer */}
-        <footer className="container mx-auto px-4 py-8 mt-16 border-t border-gray-800">
-          <div className="text-center text-gray-400 text-sm">
-            <p>Powered by Google Gemini 2.0 Flash</p>
-            <p className="mt-2">
-              Data is AI-generated and should not be considered financial advice.
-            </p>
-          </div>
-        </footer>
-      </div>
-    </ErrorBoundary>
-  );
+  @PostMapping("/refund/process")
+  public Map<String, Object> processRefund(@RequestBody Map<String, Object> request) {
+    return agent.processRefund((String) request.get("customerId"), request.get("amount"), null);
+  }
 }
-
-export default App;
