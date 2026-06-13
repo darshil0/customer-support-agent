@@ -3,6 +3,16 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 import * as geminiService from './services/geminiService';
 import { vi } from 'vitest';
+import { Provider } from 'urql';
+
+// Mock urql client
+const mockClient = {
+  executeQuery: vi.fn(() => ({
+    subscribe: vi.fn(),
+  })),
+  executeMutation: vi.fn(),
+  executeSubscription: vi.fn(),
+};
 
 // Mock the entire geminiService module
 vi.mock('./services/geminiService', () => ({
@@ -19,7 +29,11 @@ describe('App Integration', () => {
   });
 
   it('renders the landing page correctly', () => {
-    render(<App />);
+    render(
+      <Provider value={mockClient as any}>
+        <App />
+      </Provider>
+    );
     expect(screen.getByText(/AI-Powered S&P 500 Analysis/i)).toBeInTheDocument();
     expect(screen.getByTestId('generate-report-btn')).toBeInTheDocument();
   });
@@ -33,7 +47,11 @@ describe('App Integration', () => {
     // Mock the generateMarketReport function
     vi.spyOn(geminiService, 'generateMarketReport').mockResolvedValue(mockReport);
 
-    render(<App />);
+    render(
+      <Provider value={mockClient as any}>
+        <App />
+      </Provider>
+    );
 
     // Click the generate report button
     fireEvent.click(screen.getByTestId('generate-report-btn'));
@@ -58,7 +76,11 @@ describe('App Integration', () => {
     // Mock the generateMarketReport function to reject with an error
     vi.spyOn(geminiService, 'generateMarketReport').mockRejectedValue(new Error('API Error'));
 
-    render(<App />);
+    render(
+      <Provider value={mockClient as any}>
+        <App />
+      </Provider>
+    );
 
     // Click the generate report button
     fireEvent.click(screen.getByTestId('generate-report-btn'));
@@ -79,7 +101,11 @@ describe('App Integration', () => {
     };
     vi.spyOn(geminiService, 'generateMarketReport').mockResolvedValue(mockReport);
 
-    const { unmount } = render(<App />);
+    const { unmount } = render(
+      <Provider value={mockClient as any}>
+        <App />
+      </Provider>
+    );
 
     // Generate a report
     fireEvent.click(screen.getByTestId('generate-report-btn'));
@@ -92,7 +118,11 @@ describe('App Integration', () => {
     unmount();
 
     // Re-render the component
-    render(<App />);
+    render(
+      <Provider value={mockClient as any}>
+        <App />
+      </Provider>
+    );
 
     // Check that the historical report is loaded from localStorage
     expect(screen.getByText(/Historical Report/i)).toBeInTheDocument();
@@ -113,7 +143,11 @@ describe('App Integration', () => {
       .mockResolvedValueOnce(mockReport1)
       .mockResolvedValueOnce(mockReport2);
 
-    render(<App />);
+    render(
+      <Provider value={mockClient as any}>
+        <App />
+      </Provider>
+    );
 
     // Generate the first report
     fireEvent.click(screen.getByTestId('generate-report-btn'));

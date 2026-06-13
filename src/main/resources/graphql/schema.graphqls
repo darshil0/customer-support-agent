@@ -1,0 +1,58 @@
+type Query {
+    customer(customerId: ID!): Customer
+    tickets(customerId: ID!, status: String): [Ticket]
+    analytics: Analytics
+}
+
+type Mutation {
+    processPayment(customerId: ID!, amount: Float!): PaymentResult
+    createTicket(customerId: ID!, subject: String!, description: String!, priority: String!): Ticket
+    updateAccountSettings(customerId: ID!, email: String, tier: String): UpdateResult
+}
+
+type Customer {
+    customerId: ID!
+    name: String!
+    email: String!
+    tier: String!
+    balance: Float!
+    status: String!
+}
+
+type Ticket {
+    ticketId: ID!
+    customerId: ID!
+    subject: String!
+    description: String!
+    priority: String!
+    status: String!
+    created: String!
+}
+
+type Analytics {
+    ticketStatusDistribution: [StatusCount]
+    totalRevenue: Float
+    customerTierBreakdown: [TierCount]
+}
+
+type StatusCount {
+    status: String
+    count: Int
+}
+
+type TierCount {
+    tier: String
+    count: Int
+}
+
+type PaymentResult {
+    success: Boolean!
+    transactionId: String
+    newBalance: Float
+    message: String
+}
+
+type UpdateResult {
+    success: Boolean!
+    message: String
+}

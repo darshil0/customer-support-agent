@@ -1,9 +1,11 @@
 package com.example.support;
 
+import com.example.support.logging.CustomLogger;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.*;
 
 /** Main application entry point and REST API controller. */
@@ -11,9 +13,12 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "*")
+@ComponentScan(basePackages = "com.example.support")
 public class App {
 
   @Autowired private CustomerSupportAgent agent;
+
+  @Autowired private CustomLogger logger;
 
   public static void main(String[] args) {
     SpringApplication.run(App.class, args);
@@ -21,6 +26,7 @@ public class App {
 
   @GetMapping("/health")
   public Map<String, Object> healthCheck() {
+    logger.info(App.class, "Health check requested");
     return Map.of(
         "status", "UP",
         "message", "Customer Support API is running",
@@ -40,7 +46,10 @@ public class App {
 
   @PostMapping("/payment")
   public Map<String, Object> processPayment(@RequestBody Map<String, Object> request) {
-    return agent.processPayment((String) request.get("customerId"), request.get("amount"), null);
+    return agent.processPayment(
+        (String) request.get("customerId"),
+        request.get("amount") != null ? ((Number) request.get("amount")).doubleValue() : null,
+        null);
   }
 
   @PostMapping("/ticket")
@@ -66,6 +75,9 @@ public class App {
 
   @PostMapping("/refund/process")
   public Map<String, Object> processRefund(@RequestBody Map<String, Object> request) {
-    return agent.processRefund((String) request.get("customerId"), request.get("amount"), null);
+    return agent.processRefund(
+        (String) request.get("customerId"),
+        request.get("amount") != null ? ((Number) request.get("amount")).doubleValue() : null,
+        null);
   }
 }

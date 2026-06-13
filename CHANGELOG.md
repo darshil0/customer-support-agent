@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-13
+### Added
+- **PostgreSQL Integration**: Migrated from in-memory storage to a persistent PostgreSQL database using Spring Data JPA and Hibernate.
+- **Database Migrations**: Integrated Flyway for deterministic database schema management and seeding.
+- **GraphQL API**: Introduced a new GraphQL endpoint at `/graphql` for flexible querying of customers, tickets, and analytics.
+- **Real-time WebSockets**: Implemented STOMP-based WebSocket support for live system notifications (ticket creation, payment processing).
+- **Advanced Analytics Dashboard**: Added a comprehensive dashboard in the frontend using Recharts to visualize support metrics.
+- **Custom Logger Service**: Created a unified `CustomLogger` for both backend and frontend to ensure consistent, production-ready logging.
+- **Improved Error Boundaries**: Enhanced the frontend Error Boundary with a more resilient UI and automatic retry capabilities.
+
+### Changed
+- **Backend Architecture**: Shifted to a database-first approach for all customer and ticket operations.
+- **Frontend Integration**: Switched to `urql` for GraphQL data fetching and native WebSockets for real-time updates.
+- **Test Infrastructure**: Added a self-contained test profile using H2 in-memory database and mocked external dependencies.
+
+### Fixed
+- **State Coupling**: Decoupled tests from external AI service API keys through improved configuration management.
+
 ## [1.1.5] - 2026-05-27
 ### Fixed
 - **Type Alignment (`types.ts`)**: Corrected `StockData.price` and `StockData.change` from `string` to `number`, resolving TypeScript errors and runtime failures in `TickerTracker.tsx`, `StockComparison.tsx`, and `Sparkline.tsx` where `.toFixed()` and arithmetic operations were being called on these fields. Also corrected `MarketReport` field names from `content`/`sources` to `text`/`groundingSources` to match the actual shape returned by `geminiService.ts`.

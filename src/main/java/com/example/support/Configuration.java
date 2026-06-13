@@ -1,24 +1,31 @@
 package com.example.support;
 
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /** Configuration class for managing API keys and application settings. */
 @Component
 public class Configuration {
 
-  private final String googleApiKey;
+  @Value("${google.api.key:${GOOGLE_API_KEY:}}")
+  private String googleApiKey;
 
-  public Configuration() {
-    this.googleApiKey = System.getenv("GOOGLE_API_KEY");
-    validateConfiguration();
-  }
+  @Value("${skip.api.key.validation:false}")
+  private boolean skipValidation;
+
+  public Configuration() {}
 
   /**
    * Validates that required configuration is present.
    *
    * @throws IllegalStateException if required configuration is missing
    */
+  @PostConstruct
   private void validateConfiguration() {
+    if (skipValidation) {
+      return;
+    }
     if (googleApiKey == null || googleApiKey.trim().isEmpty()) {
       throw new IllegalStateException(
           "GOOGLE_API_KEY environment variable is not set. "

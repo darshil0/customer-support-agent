@@ -1,12 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Client,
+  Provider,
+  cacheExchange,
+  fetchExchange,
+  useQuery,
+  subscriptionExchange
+} from 'urql';
+import { createClient as createWSClient } from 'graphql-ws';
+import { Client as StompClient } from '@stomp/stompjs';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { ReportView } from './components/ReportView';
 import { MarketChart } from './components/MarketChart';
 import { TickerTracker } from './components/TickerTracker';
+import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { LoadingState } from './components/LoadingState';
 import { ErrorState } from './components/ErrorState';
+import { logger } from './services/logger';
 import { 
   generateMarketReport, 
   getMockSectorData, 
@@ -35,6 +47,21 @@ function App() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'market' | 'analytics'>('market');
+
+  const [analyticsData, setAnalyticsData] = useState({
+    ticketStatusDistribution: [
+      { status: 'open', count: 12 },
+      { status: 'closed', count: 45 },
+      { status: 'pending', count: 8 }
+    ],
+    totalRevenue: 125430,
+    customerTierBreakdown: [
+      { tier: 'Basic', count: 120 },
+      { tier: 'Premium', count: 85 },
+      { tier: 'Enterprise', count: 24 }
+    ]
+  });
 
   // Persist report when it changes
   useEffect(() => {
@@ -43,6 +70,63 @@ function App() {
       localStorage.setItem('last_updated', lastUpdated.toISOString());
     }
   }, [report, lastUpdated]);
+
+  const ANALYTICS_QUERY = `
+    query GetAnalytics {
+      analytics {
+        ticketStatusDistribution {
+          status
+          count
+        }
+        totalRevenue
+        customerTierBreakdown {
+          tier
+          count
+        }
+      }
+    }
+  `;
+
+  const [analyticsResult, reexecuteAnalytics] = useQuery({
+    query: ANALYTICS_QUERY,
+    pause: activeTab !== 'analytics'
+  });
+
+  useEffect(() => {
+    if (analyticsResult.data?.analytics) {
+      setAnalyticsData(analyticsResult.data.analytics);
+    }
+  }, [analyticsResult.data]);
+
+  useEffect(() => {
+    // Setup STOMP over WebSocket for real-time updates
+    const stompClient = new StompClient({
+      brokerURL: 'ws://localhost:8000/ws',
+      onConnect: () => {
+        logger.info('STOMP connected');
+        stompClient.subscribe('/topic/analytics', (message) => {
+          logger.info('Analytics updated event received');
+          reexecuteAnalytics({ requestPolicy: 'network-only' });
+        });
+      },
+      onStompError: (frame) => {
+        logger.error('STOMP error', frame);
+      },
+    });
+
+    stompClient.activate();
+
+    return () => {
+      stompClient.deactivate();
+    };
+  }, [reexecuteAnalytics]);
+
+  const client = useMemo(() => {
+    return new Client({
+      url: 'http://localhost:8000/graphql',
+      exchanges: [cacheExchange, fetchExchange],
+    });
+  }, []);
 
   const sectorData = getMockSectorData();
   const stockData = getMockStockData();
@@ -68,12 +152,38 @@ function App() {
   };
 
   return (
+    <Provider value={client}>
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
         <Header />
         
         <main className="container mx-auto px-4 py-8">
-          {!report && !isLoading && !error && (
+          <div className="flex gap-4 mb-8 border-b border-gray-800">
+            <button
+              onClick={() => setActiveTab('market')}
+              className={`pb-4 px-2 font-medium transition-colors relative ${
+                activeTab === 'market' ? 'text-blue-500' : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              Market Analysis
+              {activeTab === 'market' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`pb-4 px-2 font-medium transition-colors relative ${
+                activeTab === 'analytics' ? 'text-blue-500' : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              Support Analytics
+              {activeTab === 'analytics' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+            </button>
+          </div>
+
+          {activeTab === 'analytics' && (
+            <AnalyticsDashboard data={analyticsData} />
+          )}
+
+          {activeTab === 'market' && !report && !isLoading && !error && (
             <Hero onGenerate={handleGenerateReport} />
           )}
 
@@ -88,7 +198,7 @@ function App() {
             />
           )}
 
-          {report && !isLoading && (
+          {activeTab === 'market' && report && !isLoading && (
             <div className="space-y-8">
               {/* Report Header */}
               <div className="flex justify-between items-center">
@@ -159,6 +269,7 @@ function App() {
         </footer>
       </div>
     </ErrorBoundary>
+    </Provider>
   );
 }
 
