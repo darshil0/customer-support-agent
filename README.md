@@ -1,6 +1,6 @@
-# 🚀 Customer Support Multi-Agent System v1.1.5
+# 🚀 Customer Support Multi-Agent System v1.2.0
 
-**Production-ready Google ADK Java solution** with **hierarchical multi-agent orchestration** and **complete test coverage**.
+**Production-ready Google ADK Java solution** with **PostgreSQL integration**, **GraphQL API**, **Real-time WebSockets**, and **Advanced Analytics**.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Tests](https://img.shields.io/badge/tests-38%20methods-blue)](https://github.com/darshil0/customer-support-agent)
@@ -41,6 +41,33 @@ The repository consists of two primary services:
 - **JDK 17+ Compatibility**: Switched to modern formatting plugins to resolve module access issues on modern JDKs.
 
 ---
+
+## ✨ New in v1.2.0
+
+### 🗄️ PostgreSQL Integration
+- Full persistence layer using JPA/Hibernate.
+- Schema management with Flyway migrations.
+- Concurrent connection handling and safe query practices.
+
+### 🕸️ GraphQL API Support
+- Flexible data fetching with a new GraphQL endpoint.
+- Support for queries (customers, tickets, analytics) and mutations (payments, settings).
+- Interactive GraphiQL playground enabled at `/graphiql`.
+
+### 🔄 Real-time Updates (WebSockets)
+- STOMP-based WebSocket messaging for live system events.
+- Automatic UI updates when tickets are created or payments processed.
+- Production-safe implementation with a standard message broker.
+
+### 📊 Advanced Analytics Dashboard
+- Rich visualization of support metrics using Recharts.
+- Real-time tracking of ticket status distribution and customer tier breakdown.
+- Visual insights into simulated total revenue.
+
+### 🛡️ Improved Error Boundaries & Logging
+- Centralized `CustomLogger` service for both backend and frontend.
+- Robust UI error boundaries with automatic retry and detailed diagnostic logging.
+- Production-ready error handling without sensitive data exposure.
 
 ## ✨ Features
 
@@ -118,20 +145,30 @@ git clone https://github.com/darshil0/customer-support-agent.git
 cd customer-support-agent
 ```
 
-### 2. Set API Key
+### 2. PostgreSQL Setup
+
+Ensure you have a PostgreSQL instance running.
 
 ```bash
-# Linux/Mac
-export GOOGLE_API_KEY="your-gemini-api-key-here"
-
-# Windows (Command Prompt)
-set GOOGLE_API_KEY=your-gemini-api-key-here
-
-# Windows (PowerShell)
-$env:GOOGLE_API_KEY="your-gemini-api-key-here"
+# Create the database
+createdb customer_support
 ```
 
-### 3. Build & Test
+### 3. Environment Variables
+
+Set the following variables in your environment or a `.env` file:
+
+```bash
+# Required
+export GOOGLE_API_KEY="your-gemini-api-key-here"
+export DB_HOST="localhost"
+export DB_PORT="5432"
+export DB_NAME="customer_support"
+export DB_USER="postgres"
+export DB_PASSWORD="yourpassword"
+```
+
+### 4. Build & Test
 
 ```bash
 mvn clean install
@@ -235,7 +272,48 @@ The system includes 3 pre-configured test customers:
 
 ---
 
-## 🔌 REST API Endpoints
+## 🔌 API Documentation
+
+### GraphQL API
+The GraphQL endpoint is available at `/graphql`. You can use the built-in GraphiQL tool at `http://localhost:8000/graphiql` to explore the schema.
+
+**Sample Query (Analytics):**
+```graphql
+query GetAnalytics {
+  analytics {
+    ticketStatusDistribution {
+      status
+      count
+    }
+    totalRevenue
+  }
+}
+```
+
+**Sample Mutation (Create Ticket):**
+```graphql
+mutation CreateTicket {
+  createTicket(
+    customerId: "CUST001",
+    subject: "Issue",
+    description: "Detail",
+    priority: "high"
+  ) {
+    ticketId
+    status
+  }
+}
+```
+
+### WebSockets
+Connect to the WebSocket endpoint at `ws://localhost:8000/ws`.
+
+**Topics:**
+- `/topic/tickets`: Real-time ticket creation events.
+- `/topic/payments`: Real-time payment processing events.
+- `/topic/analytics`: Notifications to refresh analytics data.
+
+### REST API Endpoints
 
 ### Health Check
 ```bash
@@ -571,13 +649,13 @@ This project is licensed under the **Apache License 2.0** - see the [LICENSE](LI
 - [x] Lazy state initialization
 - [x] ADK 1.3.0 & Spring Boot 3.4.5 upgrade
 
-### Version 1.2.0 (Q2 2026)
-- [ ] Database integration (PostgreSQL)
-- [ ] GraphQL API support
-- [ ] WebSocket for real-time updates
-- [ ] Advanced analytics dashboard
-- [ ] Enhanced error boundary
-- [ ] Custom logger service
+### Version 1.2.0 (June 2026)
+- [x] Database integration (PostgreSQL)
+- [x] GraphQL API support
+- [x] WebSocket for real-time updates
+- [x] Advanced analytics dashboard
+- [x] Enhanced error boundary
+- [x] Custom logger service
 
 ### Version 1.3.0 (Q3 2026)
 - [ ] Machine learning integration

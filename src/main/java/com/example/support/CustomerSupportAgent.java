@@ -1,60 +1,30 @@
 package com.example.support;
 
+import com.example.support.entity.Customer;
+import com.example.support.entity.Ticket;
+import com.example.support.logging.CustomLogger;
+import com.example.support.repository.CustomerRepository;
+import com.example.support.repository.TicketRepository;
+import com.example.support.service.NotificationService;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /** Core business logic for customer support operations. Provides 7 tools for multi-agent system. */
 @Component
 public class CustomerSupportAgent {
 
-  // Mock customer database
-  private static final Map<String, Map<String, Object>> CUSTOMERS = new HashMap<>();
+  @Autowired private CustomerRepository customerRepository;
 
-  // Mock tickets storage
-  private static final List<Map<String, Object>> TICKETS = new ArrayList<>();
+  @Autowired private TicketRepository ticketRepository;
 
-  static {
-    initializeMockData();
-  }
+  @Autowired(required = false)
+  private NotificationService notificationService;
 
-  /** Initializes mock customer data for testing. */
-  private static void initializeMockData() {
-    // Customer 1: John Doe
-    Map<String, Object> cust1 = new HashMap<>();
-    cust1.put("customerId", "CUST001");
-    cust1.put("name", "John Doe");
-    cust1.put("email", "john.doe@example.com");
-    cust1.put("tier", "Premium");
-    cust1.put("balance", 1250.00);
-    cust1.put("accountCreated", LocalDateTime.now().minusDays(45));
-    cust1.put("status", "active");
-    CUSTOMERS.put("CUST001", cust1);
-
-    // Customer 2: Jane Smith
-    Map<String, Object> cust2 = new HashMap<>();
-    cust2.put("customerId", "CUST002");
-    cust2.put("name", "Jane Smith");
-    cust2.put("email", "jane.smith@example.com");
-    cust2.put("tier", "Basic");
-    cust2.put("balance", 0.00);
-    cust2.put("accountCreated", LocalDateTime.now().minusDays(5));
-    cust2.put("status", "active");
-    CUSTOMERS.put("CUST002", cust2);
-
-    // Customer 3: Bob Johnson
-    Map<String, Object> cust3 = new HashMap<>();
-    cust3.put("customerId", "CUST003");
-    cust3.put("name", "Bob Johnson");
-    cust3.put("email", "bob.johnson@example.com");
-    cust3.put("tier", "Enterprise");
-    cust3.put("balance", 5000.00);
-    cust3.put("accountCreated", LocalDateTime.now().minusDays(10));
-    cust3.put("status", "active");
-    CUSTOMERS.put("CUST003", cust3);
-  }
+  @Autowired private CustomLogger logger;
 
   /**
    * Tool 1: Get customer account details.
@@ -82,22 +52,26 @@ public class CustomerSupportAgent {
       return result;
     }
 
+    logger.info(CustomerSupportAgent.class, "Fetching customer account: " + customerId);
     // Retrieve customer
-    Map<String, Object> customer = CUSTOMERS.get(customerId);
-    if (customer == null) {
+    Optional<Customer> customerOpt = customerRepository.findById(customerId);
+    if (customerOpt.isEmpty()) {
       result.put("success", false);
       result.put("error", "Customer not found");
       return result;
     }
 
+    Customer customer = customerOpt.get();
+    Map<String, Object> customerMap = customerToMap(customer);
+
     // Cache and return
     if (context != null) {
-      context.put(cacheKey, new HashMap<>(customer));
+      context.put(cacheKey, new HashMap<>(customerMap));
       result.put("cached", false);
     }
 
     result.put("success", true);
-    result.put("data", new HashMap<>(customer));
+    result.put("data", customerMap);
     return result;
   }
 
@@ -110,7 +84,7 @@ public class CustomerSupportAgent {
    * @return payment result
    */
   public Map<String, Object> processPayment(
-      String customerId, Object amount, Map<String, Object> context) {
+      String customerId, Double amount, Map<String, Object> context) {
     Map<String, Object> result = new HashMap<>();
 
     // Validation
@@ -120,19 +94,13 @@ public class CustomerSupportAgent {
       return result;
     }
 
-    double paymentAmount;
-    try {
-      if (amount instanceof Number) {
-        paymentAmount = ((Number) amount).doubleValue();
-      } else {
-        paymentAmount = Double.parseDouble(amount.toString());
-      }
-      paymentAmount = ValidationUtils.roundAmount(paymentAmount);
-    } catch (Exception e) {
+    if (amount == null) {
       result.put("success", false);
-      result.put("error", "Invalid amount format");
+      result.put("error", "Amount is required");
       return result;
     }
+
+    double paymentAmount = ValidationUtils.roundAmount(amount);
 
     if (!ValidationUtils.isValidAmount(paymentAmount)) {
       result.put("success", false);
@@ -141,17 +109,29 @@ public class CustomerSupportAgent {
     }
 
     // Get customer
-    Map<String, Object> customer = CUSTOMERS.get(customerId);
-    if (customer == null) {
+    Optional<Customer> customerOpt = customerRepository.findById(customerId);
+    if (customerOpt.isEmpty()) {
       result.put("success", false);
       result.put("error", "Customer not found");
       return result;
     }
 
+    Customer customer = customerOpt.get();
+
     // Process payment
-    double currentBalance = ((Number) customer.get("balance")).doubleValue();
+    double currentBalance = customer.getBalance();
     double newBalance = ValidationUtils.roundAmount(currentBalance + paymentAmount);
-    customer.put("balance", newBalance);
+    customer.setBalance(newBalance);
+    customerRepository.save(customer);
+
+    logger.info(
+        CustomerSupportAgent.class,
+        "Processed payment for customer: " + customerId + ", amount: " + paymentAmount);
+
+    if (notificationService != null) {
+      notificationService.notifyPaymentProcessed(customerId, paymentAmount);
+      notificationService.notifyAnalyticsUpdated();
+    }
 
     // Generate transaction ID
     String transactionId = TransactionIdGenerator.generate();
@@ -217,7 +197,7 @@ public class CustomerSupportAgent {
     }
 
     // Check customer exists
-    if (!CUSTOMERS.containsKey(customerId)) {
+    if (!customerRepository.existsById(customerId)) {
       result.put("success", false);
       result.put("error", "Customer not found");
       return result;
@@ -225,19 +205,24 @@ public class CustomerSupportAgent {
 
     // Create ticket
     String ticketId = TransactionIdGenerator.generateTicketId();
-    Map<String, Object> ticket = new HashMap<>();
-    ticket.put("ticketId", ticketId);
-    ticket.put("customerId", customerId);
-    ticket.put("subject", ValidationUtils.sanitize(subject));
-    ticket.put("description", ValidationUtils.sanitize(description));
-    ticket.put("priority", priority.toLowerCase());
-    ticket.put("status", "open");
-    ticket.put("created", LocalDateTime.now().toString());
+    Ticket ticket = new Ticket();
+    ticket.setTicketId(ticketId);
+    ticket.setCustomerId(customerId);
+    ticket.setSubject(ValidationUtils.sanitize(subject));
+    ticket.setDescription(ValidationUtils.sanitize(description));
+    ticket.setPriority(priority.toLowerCase());
+    ticket.setStatus("open");
+    ticket.setCreated(LocalDateTime.now());
 
-    TICKETS.add(ticket);
+    ticketRepository.save(ticket);
+
+    if (notificationService != null) {
+      notificationService.notifyTicketCreated(customerId, ticketId);
+      notificationService.notifyAnalyticsUpdated();
+    }
 
     result.put("success", true);
-    result.put("data", new HashMap<>(ticket));
+    result.put("data", ticketToMap(ticket));
     result.put("message", "Ticket created successfully");
     return result;
   }
@@ -268,7 +253,7 @@ public class CustomerSupportAgent {
     }
 
     // Check customer exists
-    if (!CUSTOMERS.containsKey(customerId)) {
+    if (!customerRepository.existsById(customerId)) {
       result.put("success", false);
       result.put("error", "Customer not found");
       return result;
@@ -276,16 +261,19 @@ public class CustomerSupportAgent {
 
     // Filter tickets
     String normalizedStatus = status.toLowerCase();
-    List<Map<String, Object>> filteredTickets =
-        TICKETS.stream()
-            .filter(t -> t.get("customerId").equals(customerId))
-            .filter(t -> normalizedStatus.equals("all") || t.get("status").equals(normalizedStatus))
-            .map(HashMap::new)
-            .collect(Collectors.toList());
+    List<Ticket> tickets;
+    if (normalizedStatus.equals("all")) {
+      tickets = ticketRepository.findByCustomerId(customerId);
+    } else {
+      tickets = ticketRepository.findByCustomerIdAndStatus(customerId, normalizedStatus);
+    }
+
+    List<Map<String, Object>> ticketMaps =
+        tickets.stream().map(this::ticketToMap).collect(Collectors.toList());
 
     result.put("success", true);
-    result.put("data", filteredTickets);
-    result.put("count", filteredTickets.size());
+    result.put("data", ticketMaps);
+    result.put("count", ticketMaps.size());
     return result;
   }
 
@@ -328,24 +316,28 @@ public class CustomerSupportAgent {
     }
 
     // Get customer
-    Map<String, Object> customer = CUSTOMERS.get(customerId);
-    if (customer == null) {
+    Optional<Customer> customerOpt = customerRepository.findById(customerId);
+    if (customerOpt.isEmpty()) {
       result.put("success", false);
       result.put("error", "Customer not found");
       return result;
     }
 
+    Customer customer = customerOpt.get();
+
     // Update fields
     Map<String, String> updates = new HashMap<>();
     if (email != null) {
-      customer.put("email", email);
+      customer.setEmail(email);
       updates.put("email", email);
     }
     if (tier != null) {
       String normalizedTier = tier.substring(0, 1).toUpperCase() + tier.substring(1).toLowerCase();
-      customer.put("tier", normalizedTier);
+      customer.setTier(normalizedTier);
       updates.put("tier", normalizedTier);
     }
+
+    customerRepository.save(customer);
 
     // Clear cache
     if (context != null) {
@@ -377,17 +369,19 @@ public class CustomerSupportAgent {
     }
 
     // Get customer
-    Map<String, Object> customer = CUSTOMERS.get(customerId);
-    if (customer == null) {
+    Optional<Customer> customerOpt = customerRepository.findById(customerId);
+    if (customerOpt.isEmpty()) {
       result.put("success", false);
       result.put("error", "Customer not found");
       return result;
     }
 
+    Customer customer = customerOpt.get();
+
     // Check eligibility criteria
-    LocalDateTime accountCreated = (LocalDateTime) customer.get("accountCreated");
+    LocalDateTime accountCreated = customer.getAccountCreated();
     long daysSinceCreation = ChronoUnit.DAYS.between(accountCreated, LocalDateTime.now());
-    String status = (String) customer.get("status");
+    String status = customer.getStatus();
 
     boolean eligible = daysSinceCreation <= 30 && "active".equals(status);
 
@@ -424,7 +418,7 @@ public class CustomerSupportAgent {
    * @return refund result
    */
   public Map<String, Object> processRefund(
-      String customerId, Object amount, Map<String, Object> context) {
+      String customerId, Double amount, Map<String, Object> context) {
     Map<String, Object> result = new HashMap<>();
 
     // Validation
@@ -441,19 +435,13 @@ public class CustomerSupportAgent {
       return result;
     }
 
-    double refundAmount;
-    try {
-      if (amount instanceof Number) {
-        refundAmount = ((Number) amount).doubleValue();
-      } else {
-        refundAmount = Double.parseDouble(amount.toString());
-      }
-      refundAmount = ValidationUtils.roundAmount(refundAmount);
-    } catch (Exception e) {
+    if (amount == null) {
       result.put("success", false);
-      result.put("error", "Invalid amount format");
+      result.put("error", "Amount is required");
       return result;
     }
+
+    double refundAmount = ValidationUtils.roundAmount(amount);
 
     if (!ValidationUtils.isValidAmount(refundAmount)) {
       result.put("success", false);
@@ -462,15 +450,17 @@ public class CustomerSupportAgent {
     }
 
     // Get customer
-    Map<String, Object> customer = CUSTOMERS.get(customerId);
-    if (customer == null) {
+    Optional<Customer> customerOpt = customerRepository.findById(customerId);
+    if (customerOpt.isEmpty()) {
       result.put("success", false);
       result.put("error", "Customer not found");
       return result;
     }
 
+    Customer customer = customerOpt.get();
+
     // Check sufficient balance
-    double currentBalance = ((Number) customer.get("balance")).doubleValue();
+    double currentBalance = customer.getBalance();
     if (currentBalance < refundAmount) {
       result.put("success", false);
       result.put("error", "Insufficient balance for refund");
@@ -479,7 +469,8 @@ public class CustomerSupportAgent {
 
     // Process refund
     double newBalance = ValidationUtils.roundAmount(currentBalance - refundAmount);
-    customer.put("balance", newBalance);
+    customer.setBalance(newBalance);
+    customerRepository.save(customer);
 
     String refundId = TransactionIdGenerator.generateRefundId();
 
@@ -502,11 +493,27 @@ public class CustomerSupportAgent {
     return result;
   }
 
-  /** Resets all mock data (for testing). */
-  public static void resetData() {
-    CUSTOMERS.clear();
-    TICKETS.clear();
-    initializeMockData();
-    TransactionIdGenerator.resetCounter();
+  private Map<String, Object> customerToMap(Customer customer) {
+    Map<String, Object> map = new HashMap<>();
+    map.put("customerId", customer.getCustomerId());
+    map.put("name", customer.getName());
+    map.put("email", customer.getEmail());
+    map.put("tier", customer.getTier());
+    map.put("balance", customer.getBalance());
+    map.put("accountCreated", customer.getAccountCreated());
+    map.put("status", customer.getStatus());
+    return map;
+  }
+
+  private Map<String, Object> ticketToMap(Ticket ticket) {
+    Map<String, Object> map = new HashMap<>();
+    map.put("ticketId", ticket.getTicketId());
+    map.put("customerId", ticket.getCustomerId());
+    map.put("subject", ticket.getSubject());
+    map.put("description", ticket.getDescription());
+    map.put("priority", ticket.getPriority());
+    map.put("status", ticket.getStatus());
+    map.put("created", ticket.getCreated().toString());
+    return map;
   }
 }

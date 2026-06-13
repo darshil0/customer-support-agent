@@ -8,22 +8,27 @@ import java.util.Map;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Comprehensive test suite for CustomerSupportAgent. 35 test methods with 100% coverage of all 7
  * tools.
  */
+@SpringBootTest
+@Transactional
+@ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CustomerSupportAgentTest {
 
-  private CustomerSupportAgent agent;
+  @Autowired private CustomerSupportAgent agent;
   private Map<String, Object> context;
 
   @BeforeEach
   void setUp() {
-    agent = new CustomerSupportAgent();
     context = new HashMap<>();
-    CustomerSupportAgent.resetData();
   }
 
   @AfterEach
@@ -110,7 +115,7 @@ class CustomerSupportAgentTest {
   @Order(7)
   @DisplayName("Test 7: Process valid payment - integer")
   void testProcessPaymentValidInteger() {
-    Map<String, Object> result = agent.processPayment("CUST002", 100, context);
+    Map<String, Object> result = agent.processPayment("CUST002", 100.0, context);
 
     assertTrue((Boolean) result.get("success"));
     assertEquals("Payment processed successfully", result.get("message"));
@@ -154,7 +159,7 @@ class CustomerSupportAgentTest {
   @Order(10)
   @DisplayName("Test 10: Process payment - invalid customer")
   void testProcessPaymentInvalidCustomer() {
-    Map<String, Object> result = agent.processPayment("CUST999", 100, context);
+    Map<String, Object> result = agent.processPayment("CUST999", 100.0, context);
 
     assertFalse((Boolean) result.get("success"));
     assertEquals("Customer not found", result.get("error"));
@@ -164,7 +169,7 @@ class CustomerSupportAgentTest {
   @Order(11)
   @DisplayName("Test 11: Process payment - amount too high")
   void testProcessPaymentAmountTooHigh() {
-    Map<String, Object> result = agent.processPayment("CUST001", 150000, context);
+    Map<String, Object> result = agent.processPayment("CUST001", 150000.0, context);
 
     assertFalse((Boolean) result.get("success"));
     assertEquals("Amount must be between 0 and 100000", result.get("error"));
@@ -174,10 +179,10 @@ class CustomerSupportAgentTest {
   @Order(12)
   @DisplayName("Test 12: Process payment - invalid amount format")
   void testProcessPaymentInvalidFormat() {
-    Map<String, Object> result = agent.processPayment("CUST001", "invalid", context);
+    Map<String, Object> result = agent.processPayment("CUST001", null, context);
 
     assertFalse((Boolean) result.get("success"));
-    assertEquals("Invalid amount format", result.get("error"));
+    assertEquals("Amount is required", result.get("error"));
   }
 
   // ==================== Tool 3: createTicket Tests ====================
