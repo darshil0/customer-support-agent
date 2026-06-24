@@ -49,7 +49,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'market' | 'analytics'>('market');
 
-  const [analyticsData, setAnalyticsData] = useState({
+  const defaultAnalyticsData = useMemo(() => ({
     ticketStatusDistribution: [
       { status: 'open', count: 12 },
       { status: 'closed', count: 45 },
@@ -61,7 +61,7 @@ function App() {
       { tier: 'Premium', count: 85 },
       { tier: 'Enterprise', count: 24 }
     ]
-  });
+  }), []);
 
   // Persist report when it changes
   useEffect(() => {
@@ -92,11 +92,7 @@ function App() {
     pause: activeTab !== 'analytics'
   });
 
-  useEffect(() => {
-    if (analyticsResult.data?.analytics) {
-      setAnalyticsData(analyticsResult.data.analytics);
-    }
-  }, [analyticsResult.data]);
+  const analyticsData = analyticsResult.data?.analytics || defaultAnalyticsData;
 
   useEffect(() => {
     // Setup STOMP over WebSocket for real-time updates
