@@ -4,7 +4,7 @@
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Test Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
-[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/darshil0/customer-support-agent)
+[![Version](https://img.shields.io/badge/version-1.2.1-blue)](https://github.com/darshil0/customer-support-agent)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange)](https://www.oracle.com/java/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
@@ -19,7 +19,7 @@ This system implements a multi-agent architecture that intelligently routes cust
 - **Account Agent** — Profile management, tier updates, account settings
 - **Refund Workflow** — Sequential validation and processing with compliance controls
 
-**All 38 test methods pass** with 100% coverage, ensuring production reliability.
+**All 41 test methods pass** (38 tool tests + 3 repository tests), ensuring production reliability.
 
 ---
 
@@ -29,6 +29,7 @@ This system implements a multi-agent architecture that intelligently routes cust
 - **Java 17+** (verify: `java -version`)
 - **Maven 3.8+** (verify: `mvn -version`)
 - **PostgreSQL** (running locally or accessible)
+- **Node.js & npm** (for frontend)
 - **Google API Key** (Gemini API access)
 
 ### Setup
@@ -39,6 +40,7 @@ git clone https://github.com/darshil0/customer-support-agent.git
 cd customer-support-agent
 
 # 2. Configure environment
+# Backend
 export GOOGLE_API_KEY="your-gemini-api-key"
 export DB_HOST="localhost"
 export DB_PORT="5432"
@@ -49,9 +51,10 @@ export DB_PASSWORD="yourpassword"
 # 3. Create database
 createdb customer_support
 
-# 4. Build & test
+# 4. Install dependencies & Build
+npm install
 mvn clean install
-# Expected: Tests run: 38, Failures: 0, BUILD SUCCESS
+# Expected: Tests run: 41, Failures: 0, BUILD SUCCESS
 
 # 5. Run
 mvn spring-boot:run
@@ -89,8 +92,8 @@ customer-support-agent/
 | Layer | Technology | Version |
 |-------|-----------|---------|
 | Backend | Spring Boot | 3.4.5 |
-| Frontend | React + Vite | 19 + 7 |
-| AI Engine | Google ADK | 1.3.0 |
+| Frontend | React + Vite | 19 + 8 |
+| AI Engine | Google ADK | 1.5.0 |
 | Database | PostgreSQL + JPA/Hibernate | Latest |
 | Testing | JUnit 5 + Mockito | 5.11.4 + 5.23.0 |
 | Styling | Tailwind CSS | 4 |
@@ -149,10 +152,10 @@ DB_PASSWORD=password
 
 ### Test Coverage
 
-**100% coverage across 7 tools with 38 test executions:**
+**Comprehensive coverage across all layers with 41 test executions:**
 
-| Tool | Test Methods | Coverage | Focus Areas |
-|------|--------------|----------|-------------|
+| Tool / Layer | Test Methods | Focus Areas |
+|------|--------------|-------------|
 | `getCustomerAccount` | 6 | Valid retrieval, caching, error handling, null contexts |
 | `processPayment` | 6 | Valid payments, decimal rounding, $100k limits, format validation |
 | `createTicket` | 5 | Creation, all priority levels (parameterized), input sanitization |
@@ -204,7 +207,7 @@ All inputs are validated for:
 
 ```bash
 # Build image
-docker build -t customer-support:1.2.0 .
+docker build -t customer-support:1.2.1 .
 
 # Run container
 docker run -p 8000:8000 \
@@ -212,7 +215,7 @@ docker run -p 8000:8000 \
   -e DB_HOST=postgres-db \
   -e DB_USER=postgres \
   -e DB_PASSWORD=$DB_PASSWORD \
-  customer-support:1.2.0
+  customer-support:1.2.1
 ```
 
 #### JAR Deployment
@@ -222,18 +225,18 @@ docker run -p 8000:8000 \
 mvn clean package
 
 # Run
-java -jar target/customer-support-agent-1.2.0.jar
+java -jar target/customer-support-agent-1.2.1.jar
 ```
 
 #### Google Cloud Run
 
 ```bash
 # Build and push
-gcloud builds submit --tag gcr.io/PROJECT/support-agent:1.2.0
+gcloud builds submit --tag gcr.io/PROJECT/support-agent:1.2.1
 
 # Deploy
 gcloud run deploy customer-support \
-  --image gcr.io/PROJECT/support-agent:1.2.0 \
+  --image gcr.io/PROJECT/support-agent:1.2.1 \
   --platform managed \
   --region us-central1 \
   --set-env-vars GOOGLE_API_KEY=$GOOGLE_API_KEY,DB_HOST=$DB_HOST \
@@ -470,7 +473,9 @@ docs: update deployment guide
 
 ## Roadmap
 
-**v1.2.0 (June 2026)** ✅ Released
+**v1.2.1 (June 2026)** ✅ Released
+- Stability fixes for test environment
+- Updated Google ADK and AI Platform
 - PostgreSQL integration
 - GraphQL API
 - WebSocket real-time updates
@@ -529,7 +534,7 @@ Apache License 2.0 — See [LICENSE](LICENSE) for details.
 
 ---
 
-**Last Updated:** June 2026  
+**Last Updated:** June 24, 2026
 **Maintainer:** Darshil Shah  
 **Status:** ✅ Production-Ready | 100% Test Coverage | Zero Critical Issues
 

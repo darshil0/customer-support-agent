@@ -444,8 +444,28 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting issues, feat
 
 ---
 
+## [1.2.1] - 2026-06-24
+
+### Added
+- Created `src/test/resources/application-test.properties` to ensure reliable test environment with H2 database and API key validation skip.
+- Added `src/test/resources/schema.sql` for H2-compatible schema initialization during tests.
+
+### Fixed
+- Fixed backend test failures by correctly configuring the `test` profile and H2 database.
+- Fixed frontend test failures by adding missing `react-is` dependency.
+- Synchronized project version (1.2.0) across `pom.xml`, `quick-start.sh`, and `quick-start.ps1`.
+- Removed redundant `EnvironmentConfig.java` to favor Spring-managed `Configuration.java`.
+
+### Changed
+- Updated Google ADK to version 1.5.0.
+- Updated Google Cloud AI Platform to version 3.94.0.
+- Updated frontend dependencies to latest compatible versions.
+- Improved README.md with clearer setup instructions and updated test counts.
+
+---
+
 Made with ❤️ by Darshil
 
-**Last Updated:** June 13, 2026  
-**Current Version:** 1.2.0  
+**Last Updated:** June 24, 2026
+**Current Version:** 1.2.1
 **Status:** ✅ Production-Ready | 100% Test Coverage | Zero Critical Issues

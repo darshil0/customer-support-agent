@@ -9,11 +9,14 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'chart-vendor': ['recharts'],
-          'ai-vendor': ['@google/generative-ai'],
-          'markdown-vendor': ['react-markdown']
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
+            if (id.includes('recharts')) return 'chart-vendor';
+            if (id.includes('@google/generative-ai')) return 'ai-vendor';
+            if (id.includes('react-markdown')) return 'markdown-vendor';
+            return 'vendor';
+          }
         }
       }
     },

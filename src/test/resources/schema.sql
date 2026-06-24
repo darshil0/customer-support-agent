@@ -18,9 +18,8 @@ CREATE TABLE tickets (
     created TIMESTAMP NOT NULL
 );
 
--- Seed mock data for tests
-MERGE INTO customers (customer_id, name, email, tier, balance, account_created, status)
-KEY (customer_id)
-VALUES ('CUST001', 'John Doe', 'john.doe@example.com', 'Premium', 1250.00, '2026-01-01 10:00:00', 'active'),
-       ('CUST002', 'Jane Smith', 'jane.smith@example.com', 'Basic', 0.00, CURRENT_TIMESTAMP, 'active'),
-       ('CUST003', 'Bob Johnson', 'bob.johnson@example.com', 'Enterprise', 5000.00, CURRENT_TIMESTAMP, 'active');
+-- Seed mock data
+INSERT INTO customers (customer_id, name, email, tier, balance, account_created, status)
+VALUES ('CUST001', 'John Doe', 'john.doe@example.com', 'Premium', 1250.00, DATEADD('DAY', -45, CURRENT_TIMESTAMP), 'active'),
+       ('CUST002', 'Jane Smith', 'jane.smith@example.com', 'Basic', 0.00, DATEADD('DAY', -5, CURRENT_TIMESTAMP), 'active'),
+       ('CUST003', 'Bob Johnson', 'bob.johnson@example.com', 'Enterprise', 5000.00, DATEADD('DAY', -10, CURRENT_TIMESTAMP), 'active');
