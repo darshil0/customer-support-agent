@@ -28,7 +28,7 @@
     "urql": "^4.2.2"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.2",
@@ -48,7 +48,7 @@
     "eslint-plugin-react-refresh": "^0.4.26",
     "globals": "^17.4.0",
     "jsdom": "^27.4.0",
-    "postcss": "^8.5.15",
+    "postcss": "^8.5.24",
     "react-is": "^19.2.7",
     "tailwindcss": "^4.1.18",
     "text-encoding": "^0.7.0",
