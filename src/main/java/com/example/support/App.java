@@ -30,7 +30,7 @@ public class App {
     return Map.of(
         "status", "UP",
         "message", "Customer Support API is running",
-        "version", "1.1.4");
+        "version", "1.2.1");
   }
 
   @GetMapping("/customer/{customerId}")
@@ -40,12 +40,18 @@ public class App {
 
   @PutMapping("/account")
   public Map<String, Object> updateAccount(@RequestBody Map<String, String> request) {
+    if (request == null) {
+      return Map.of("success", false, "error", "Request body is missing");
+    }
     return agent.updateAccountSettings(
         request.get("customerId"), request.get("email"), request.get("tier"), null);
   }
 
   @PostMapping("/payment")
   public Map<String, Object> processPayment(@RequestBody Map<String, Object> request) {
+    if (request == null) {
+      return Map.of("success", false, "error", "Request body is missing");
+    }
     return agent.processPayment(
         (String) request.get("customerId"),
         request.get("amount") != null ? ((Number) request.get("amount")).doubleValue() : null,
@@ -54,6 +60,9 @@ public class App {
 
   @PostMapping("/ticket")
   public Map<String, Object> createTicket(@RequestBody Map<String, String> request) {
+    if (request == null) {
+      return Map.of("success", false, "error", "Request body is missing");
+    }
     return agent.createTicket(
         request.get("customerId"),
         request.get("subject"),
@@ -70,11 +79,17 @@ public class App {
 
   @PostMapping("/refund/validate")
   public Map<String, Object> validateRefund(@RequestBody Map<String, String> request) {
+    if (request == null) {
+      return Map.of("success", false, "error", "Request body is missing");
+    }
     return agent.validateRefundEligibility(request.get("customerId"), null);
   }
 
   @PostMapping("/refund/process")
   public Map<String, Object> processRefund(@RequestBody Map<String, Object> request) {
+    if (request == null) {
+      return Map.of("success", false, "error", "Request body is missing");
+    }
     return agent.processRefund(
         (String) request.get("customerId"),
         request.get("amount") != null ? ((Number) request.get("amount")).doubleValue() : null,
