@@ -13,8 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.graphql.GraphQlTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.graphql.test.tester.GraphQlTester;
+import org.springframework.test.context.ActiveProfiles;
 
 @GraphQlTest(SupportGraphQLController.class)
+@ActiveProfiles("test")
 public class SupportGraphQLControllerTest {
 
   @Autowired private GraphQlTester graphQlTester;
