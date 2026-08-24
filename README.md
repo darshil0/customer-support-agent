@@ -1,6 +1,6 @@
 # Customer Support Multi-Agent System
 
-**Enterprise-grade Java 17 / Spring Boot 3 solution** for intelligent customer support routing, powered by Google's Generative AI Development Kit (ADK) and Gemini models. Includes PostgreSQL persistence, GraphQL API, real-time WebSockets, production safety guardrails, and React frontend dashboard.
+**Enterprise-grade Java 17 / Spring Boot 3 solution** for intelligent customer support routing, powered by Google's Generative AI Development Kit (ADK) and Gemini models. Includes PostgreSQL persistence, a GraphQL API, real-time WebSockets, production safety guardrails, and a React frontend dashboard.
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/darshil0/customer-support-agent)
 [![Test Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen)](https://github.com/darshil0/customer-support-agent)
@@ -52,6 +52,7 @@ rootCustomerSupportAgent (customer-support-orchestrator)
 - **Java 17+** (`java -version`)
 - **Maven 3.8+** (`mvn -version`)
 - **Node.js 18+ & npm** (`npm -version`)
+- **PostgreSQL 13+** — required for persistence in a normal run (the Maven test suite uses an in-memory H2 database instead, so PostgreSQL isn't needed just to run `mvn test`)
 - **Google API Key** (Gemini API access)
 
 ### 1. Configuration
@@ -60,11 +61,23 @@ Copy `.env.example` to configure environment variables:
 ```bash
 cp .env.example .env
 export GOOGLE_API_KEY="your-gemini-api-key"
+
+# Database connection (required to run the app outside the test profile)
+export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/customer_support"
+export SPRING_DATASOURCE_USERNAME="postgres"
+export SPRING_DATASOURCE_PASSWORD="password"
 ```
+
+Create the database if it doesn't already exist:
+```bash
+createdb customer_support
+```
+
+Schema creation and seed data are handled automatically by Flyway on startup.
 
 ### 2. Build & Test
 ```bash
-# Build & run backend test suite (50 tests)
+# Build & run backend test suite (50 tests, uses in-memory H2 — no Postgres needed)
 mvn clean test
 
 # Install & run frontend test suite (15 tests)
@@ -77,13 +90,13 @@ npm test -- --watch=false
 # Start backend API (port 8000)
 mvn spring-boot:run
 
-# In another terminal: Start frontend dev server (port 3000)
+# In another terminal: start frontend dev server (port 3000)
 npm run dev
 ```
 
 ---
 
-## Core Tools & Endpoints
+## Core Tools & API Endpoints
 
 ### Core Backend Tools (7 Total)
 1. **`getCustomerAccount`** — Retrieve and cache customer profile details.
@@ -104,6 +117,16 @@ npm run dev
 - `POST /api/refund/validate` — Validate refund eligibility.
 - `POST /api/refund/process` — Execute refund.
 
+### GraphQL API
+- `POST /graphql` — Flexible queries and mutations. Query customers, tickets, and analytics; mutate to create payments and update settings.
+- `GET /graphiql` — Interactive GraphiQL playground for exploring the schema.
+
+### WebSocket Channels
+STOMP messaging is available on `/ws`, with the following topics:
+- `/topic/tickets` — Broadcasts on new ticket creation.
+- `/topic/payments` — Broadcasts on payment processing.
+- `/topic/analytics` — Refresh signals for the analytics dashboard.
+
 ---
 
 ## Docker Support
@@ -113,9 +136,16 @@ npm run dev
 # Build multi-stage image
 docker build -t customer-support-agent:1.2.1 .
 
-# Run container
-docker run -p 8000:8000 -e GOOGLE_API_KEY="your-key" customer-support-agent:1.2.1
+# Run container (requires a reachable PostgreSQL instance)
+docker run -p 8000:8000 \
+  -e GOOGLE_API_KEY="your-key" \
+  -e SPRING_DATASOURCE_URL="jdbc:postgresql://host.docker.internal:5432/customer_support" \
+  -e SPRING_DATASOURCE_USERNAME="postgres" \
+  -e SPRING_DATASOURCE_PASSWORD="password" \
+  customer-support-agent:1.2.1
 ```
+
+> If PostgreSQL is also running in a container, replace `host.docker.internal` with the appropriate container hostname or Docker network alias, and adjust the port if it isn't mapped to the default `5432`.
 
 ---
 
